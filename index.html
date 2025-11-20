@@ -494,22 +494,26 @@
 
         .comparison-labels {
             position: absolute;
-            inset: 20px;
+            bottom: 15px;
+            left: 0;
+            right: 0;
             z-index: 4;
             pointer-events: none;
             display: flex;
             justify-content: space-between;
+            padding: 0 15px;
         }
 
         .comparison-label {
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(10, 10, 10, 0.7);
             backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
             font-weight: 700;
             color: var(--gold);
             border: 1px solid rgba(212, 175, 55, 0.3);
+            letter-spacing: 1px;
         }
 
         /* Section Title */

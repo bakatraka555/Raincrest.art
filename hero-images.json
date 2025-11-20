@@ -1,6 +1,8 @@
 {
-  "before": "https://replicate.delivery/xezq/jdkfLIBlWFQoXiluGd67l5t0tCRGaLcQI2xhxs6f4iYm0MrVA/out-0.png",
-  "after": "https://replicate.delivery/xezq/2dLgF4wPLKYvJlnIKuLcSoT1LWav2RehY7Reh1z58P2v0MrVA/out-0.png",
-  "generated": "2025-11-20T13:44:17.249Z",
-  "cost": "$0.08 (estimated)"
+  "before": "https://replicate.delivery/xezq/E0g53dFen4WNNK55OSrke0CNuN36o8dZBhwlXyJdJ7Z7FNrVA/out-0.png",
+  "medievalBase": "https://replicate.delivery/xezq/VOyd5A2bZRKaJpwJ1Myj7CftGtCSAJIRLMRfhtecf1ZFa0sWB/out-0.png",
+  "faceSwapped": "https://replicate.delivery/xezq/62Dhr3BoQa7sGxrtwsvwAmen4rUkCevUiTvVRgFaHjN6GNrVA/1763647418.jpg",
+  "after": "https://replicate.delivery/xezq/dKbeYYfUh2miWU9NV1kA8djDVGJpJceJoh6izG071O14NaWrA/output.png",
+  "generated": "2025-11-20T14:03:44.400Z",
+  "cost": "$0.15 (estimated)"
 }

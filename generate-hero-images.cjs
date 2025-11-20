@@ -37,35 +37,48 @@ function downloadImage(url, filepath) {
   });
 }
 
+function extractUrl(result) {
+  if (!result) return null;
+  if (typeof result === 'string') return result;
+  if (Array.isArray(result)) return result[0];
+  if (typeof result === 'object') {
+    if (typeof result.url === 'function') return result.url();
+    if (typeof result.url === 'string') return result.url;
+    if (result.output) return extractUrl(result.output);
+    if (result.image) return result.image;
+    if (Array.isArray(result.data)) return result.data[0];
+  }
+  return null;
+}
+
 async function generateHeroImages() {
-  console.log('🎨 Generating BEFORE/AFTER hero images for landing page...\n');
-  console.log('💰 Cost estimate: ~$0.08 (2 images × $0.04)\n');
+  console.log('🎨 Generating BEFORE/AFTER hero images with face consistency...\n');
+  console.log('💰 Cost estimate: ~$0.15 (4 model calls)\n');
 
   const links = {
     before: '',
+    beforeUpload: '',
+    medievalBase: '',
+    faceSwapped: '',
     after: ''
   };
 
   try {
     // ============================================
-    // BEFORE Image - Casual Portrait
+    // BEFORE Image - Advertising portrait
     // ============================================
-    console.log('📸 Step 1/2: Generating BEFORE image (casual portrait)...');
-    console.log('⏳ This will take 30-60 seconds...\n');
-    
+    console.log('📸 Step 1/4: Generating BEFORE image (advertising portrait)...');
     const beforeOutput = await replicate.run(
       "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
       {
         input: {
-          prompt: "professional portrait photo of a young man in his late 20s, casual modern clothing, dark navy blue t-shirt, natural friendly expression, slight smile, plain light gray studio background, soft studio lighting, natural skin texture, contemporary short hairstyle, neat groomed appearance, relaxed confident pose, looking directly at camera, photorealistic, high quality photography, sharp focus, shallow depth of field, 85mm portrait lens, 8k, professional headshot, natural colors",
-          
-          negative_prompt: "crown, medieval, costume, fantasy, armor, royal clothing, dramatic lighting, artistic filter, painted, anime, cartoon, low quality, blurry, distorted, bad anatomy, glasses, sunglasses, hat, cap, accessories, multiple people, celebrity",
-          
-          num_outputs: 1,
+          prompt: "award-winning advertising photo of a handsome young man in his late 20s, medium shot from chest up, wearing a fitted dark navy crew neck t-shirt, confident friendly expression, clean shave, modern hairstyle, studio photography with soft gradient background, perfect even lighting, neutral gray tones, photorealistic, ultra sharp focus, 85mm lens, commercial campaign look, high-end fashion brand, subtle vignette, cinematic color grading",
+          negative_prompt: "crown, medieval, costume, armor, fantasy clothing, jewelry, hat, glasses, sunglasses, anime, cartoon, painting, low quality, distorted face, extra limbs, multiple people",
           width: 768,
           height: 1024,
-          guidance_scale: 7.5,
-          num_inference_steps: 50
+          num_outputs: 1,
+          guidance_scale: 8,
+          num_inference_steps: 60
         }
       }
     );
@@ -73,42 +86,81 @@ async function generateHeroImages() {
     links.before = beforeOutput[0] || beforeOutput;
     console.log('✅ BEFORE image generated!');
     console.log(`📥 URL: ${links.before}\n`);
-
-    // Download BEFORE image
     await downloadImage(links.before, 'before.jpg');
 
-    // Wait between requests
-    console.log('\n⏳ Waiting 2 seconds before next generation...\n');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Use the same hosted URL for face swap
+    links.beforeUpload = links.before;
 
     // ============================================
-    // AFTER Image - King in Dubrovnik
+    // Medieval Base without specific face
     // ============================================
-    console.log('👑 Step 2/2: Generating AFTER image (King in Dubrovnik)...');
-    console.log('⏳ This will take 30-60 seconds...\n');
-
-    const afterOutput = await replicate.run(
+    console.log('🏰 Step 2/4: Generating medieval base (without personal face)...');
+    const medieval = await replicate.run(
       "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
       {
         input: {
-          prompt: "epic cinematic portrait of a medieval king in his late 20s, Game of Thrones style, wearing ornate golden crown with intricate details, luxurious royal red and gold clothing with detailed embroidery, dark fur collar cape, regal commanding presence, standing on ancient Dubrovnik city walls, massive weathered stone fortifications, Adriatic Sea with deep blue water in background, orange terracotta rooftops of old town visible below, dramatic golden hour sunset lighting, warm orange and gold tones, epic cinematic atmosphere, professional photography, ultra detailed face and royal clothing, 8k resolution, sharp focus on subject, shallow depth of field, bokeh background, 85mm portrait lens, heroic noble posture, confident determined expression, weathered stone architecture texture, medieval fantasy realism, Game of Thrones cinematography style",
-          
-          negative_prompt: "modern clothing, contemporary, casual, t-shirt, jeans, glasses, sunglasses, smile, happy expression, anime, cartoon, painted, artistic, low quality, blurry, distorted, bad anatomy, deformed, ugly, amateur photo, cell phone photo, tourist, backpack, multiple people, crowd, long flowing hair",
-          
-          num_outputs: 1,
+          prompt: "cinematic portrait of a medieval king standing on Dubrovnik city walls, ornate golden crown, royal red and gold robes, fur collar, dramatic sunset lighting, Adriatic Sea and terracotta rooftops in background, detailed armor texture, epic fantasy realism, high quality photography, 8k resolution, sharp focus on costume and setting, shallow depth of field, Game of Thrones aesthetic, serious regal pose, confident posture, strong jawline",
+          negative_prompt: "modern clothing, casual, smiling, glasses, sunglasses, distorted face, blurry, low quality, anime, cartoon",
           width: 768,
           height: 1024,
-          guidance_scale: 8,
+          num_outputs: 1,
+          guidance_scale: 7.5,
           num_inference_steps: 50
         }
       }
     );
 
-    links.after = afterOutput[0] || afterOutput;
-    console.log('✅ AFTER image generated!');
-    console.log(`📥 URL: ${links.after}\n`);
+    links.medievalBase = medieval[0] || medieval;
+    console.log('✅ Medieval base generated!');
+    console.log(`📥 URL: ${links.medievalBase}\n`);
 
-    // Download AFTER image
+    // ============================================
+    // Face Swap
+    // ============================================
+    console.log('🔄 Step 3/4: Applying face swap (before → medieval king)...');
+    const faceSwapRaw = await replicate.run(
+      "codeplugtech/face-swap:278a81e7ebb22db98bcba54de985d22cc1abeead2754eb1f2af717247be69b34",
+      {
+        input: {
+          swap_image: links.beforeUpload,
+          input_image: links.medievalBase
+        }
+      }
+    );
+
+    links.faceSwapped = extractUrl(faceSwapRaw);
+
+    if (!links.faceSwapped) {
+      throw new Error('Face swap did not return a valid image URL.');
+    }
+
+    console.log('✅ Face swap complete!');
+    console.log(`📥 URL: ${links.faceSwapped}\n`);
+
+    // ============================================
+    // CodeFormer Enhancement
+    // ============================================
+    console.log('✨ Step 4/4: Enhancing final image with CodeFormer...');
+    const restoredRaw = await replicate.run(
+      "sczhou/codeformer:cc4956dd26fa5a7185d5660cc9100fab1b8070a1d1654a8bb5eb6d443b020bb2",
+      {
+        input: {
+          image: links.faceSwapped,
+          upscale: 2,
+          face_upsample: true,
+          background_enhance: true,
+          codeformer_fidelity: 0.1
+        }
+      }
+    );
+
+    links.after = extractUrl(restoredRaw);
+
+    if (!links.after) {
+      throw new Error('CodeFormer did not return a valid image URL.');
+    }
+    console.log('✅ Final AFTER image ready!');
+    console.log(`📥 URL: ${links.after}\n`);
     await downloadImage(links.after, 'after.jpg');
 
     // ============================================
@@ -119,16 +171,20 @@ async function generateHeroImages() {
     console.log('='.repeat(60));
     
     console.log('\n📁 Files saved:');
-    console.log('  ✅ before.jpg (casual portrait)');
-    console.log('  ✅ after.jpg (King in Dubrovnik)');
+    console.log('  ✅ before.jpg (advertising portrait)');
+    console.log('  ✅ after.jpg (King in Dubrovnik with same face)');
     
     console.log('\n📋 Image URLs:');
-    console.log('\nBEFORE:');
+    console.log('\nBEFORE (portrait):');
     console.log(links.before);
-    console.log('\nAFTER:');
+    console.log('\nMEDIEVAL BASE (no face swap):');
+    console.log(links.medievalBase);
+    console.log('\nFACE SWAP RESULT:');
+    console.log(links.faceSwapped);
+    console.log('\nAFTER (final hero image):');
     console.log(links.after);
     
-    console.log('\n💰 Cost: ~$0.08 (2 images × $0.04)');
+    console.log('\n💰 Cost: ~$0.15 (4 model calls)');
     
     console.log('\n🚀 Next steps:');
     console.log('  1. Check the images (before.jpg, after.jpg)');
@@ -145,9 +201,11 @@ async function generateHeroImages() {
     // Save URLs to file
     const urlsData = {
       before: links.before,
+      medievalBase: links.medievalBase,
+      faceSwapped: links.faceSwapped,
       after: links.after,
       generated: new Date().toISOString(),
-      cost: '$0.08 (estimated)'
+      cost: '$0.15 (estimated)'
     };
 
     fs.writeFileSync('hero-images.json', JSON.stringify(urlsData, null, 2));
@@ -157,13 +215,19 @@ async function generateHeroImages() {
     const linksContent = `HERO IMAGES FOR LANDING PAGE
 Generated: ${new Date().toLocaleString()}
 
-BEFORE (Casual Portrait):
+BEFORE (Advertising Portrait):
 ${links.before}
+
+MEDIEVAL BASE:
+${links.medievalBase}
+
+FACE SWAP RESULT:
+${links.faceSwapped}
 
 AFTER (King in Dubrovnik):
 ${links.after}
 
-Cost: ~$0.08
+Cost: ~$0.15
 `;
     fs.writeFileSync('hero-links.txt', linksContent);
     console.log('💾 Links saved to: hero-links.txt\n');

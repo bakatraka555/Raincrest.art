@@ -1,10 +1,16 @@
 HERO IMAGES FOR LANDING PAGE
-Generated: 20. 11. 2025. 14:44:17
+Generated: 20. 11. 2025. 15:03:44
 
-BEFORE (Casual Portrait):
-https://replicate.delivery/xezq/jdkfLIBlWFQoXiluGd67l5t0tCRGaLcQI2xhxs6f4iYm0MrVA/out-0.png
+BEFORE (Advertising Portrait):
+https://replicate.delivery/xezq/E0g53dFen4WNNK55OSrke0CNuN36o8dZBhwlXyJdJ7Z7FNrVA/out-0.png
+
+MEDIEVAL BASE:
+https://replicate.delivery/xezq/VOyd5A2bZRKaJpwJ1Myj7CftGtCSAJIRLMRfhtecf1ZFa0sWB/out-0.png
+
+FACE SWAP RESULT:
+https://replicate.delivery/xezq/62Dhr3BoQa7sGxrtwsvwAmen4rUkCevUiTvVRgFaHjN6GNrVA/1763647418.jpg
 
 AFTER (King in Dubrovnik):
-https://replicate.delivery/xezq/2dLgF4wPLKYvJlnIKuLcSoT1LWav2RehY7Reh1z58P2v0MrVA/out-0.png
+https://replicate.delivery/xezq/dKbeYYfUh2miWU9NV1kA8djDVGJpJceJoh6izG071O14NaWrA/output.png
 
-Cost: ~$0.08
+Cost: ~$0.15

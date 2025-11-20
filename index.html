@@ -15,22 +15,139 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0A0A0A;
-            color: #FFFFFF;
-            overflow-x: hidden;
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #F4D03F;
+            --black: #0A0A0A;
+            --dark-gray: #1A1A1A;
+            --card-bg: #2B2B2B;
         }
 
-        /* Navigation */
+        body {
+            font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--black);
+            color: #FFFFFF;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* Custom Cursor (desktop only) */
+        @media (min-width: 768px) {
+            body {
+                cursor: none;
+            }
+            
+            #custom-cursor {
+                position: fixed;
+                width: 20px;
+                height: 20px;
+                border: 2px solid var(--gold);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                transition: transform 0.15s ease;
+                mix-blend-mode: difference;
+            }
+            
+            #custom-cursor.click {
+                transform: scale(0.8);
+            }
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--black);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-crown {
+            font-size: 64px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .loading-text {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-top: 20px;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Scroll Progress Bar */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+            z-index: 9999;
+            transition: width 0.1s;
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particle-float 10s infinite;
+        }
+
+        @keyframes particle-float {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Navigation with Glassmorphism */
         nav {
             position: fixed;
             top: 0;
             width: 100%;
             z-index: 1000;
-            background: rgba(26, 26, 26, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #D4AF37;
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
             padding: 15px 5%;
             display: flex;
             justify-content: space-between;
@@ -41,8 +158,14 @@
             font-family: 'Cinzel', serif;
             font-size: 20px;
             font-weight: 700;
-            color: #D4AF37;
+            color: var(--gold);
             letter-spacing: 2px;
+            animation: logo-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes logo-glow {
+            0%, 100% { text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.8); }
         }
 
         .menu-toggle {
@@ -55,9 +178,41 @@
         .menu-toggle span {
             width: 25px;
             height: 3px;
-            background: #D4AF37;
+            background: var(--gold);
             border-radius: 2px;
             transition: all 0.3s;
+        }
+
+        /* Social Proof Badge */
+        .social-proof {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            z-index: 999;
+            animation: slideInRight 0.5s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .social-proof-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+        }
+
+        .social-proof-text {
+            font-size: 12px;
+            color: #CCCCCC;
+            margin-top: 5px;
         }
 
         /* Card Container */
@@ -66,120 +221,336 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 30px;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
         }
 
-        /* Card Base Styles */
+        /* Card with 3D Tilt Effect */
         .card {
-            background: linear-gradient(135deg, #1A1A1A 0%, #2B2B2B 100%);
-            border-radius: 16px;
+            background: linear-gradient(135deg, var(--dark-gray) 0%, var(--card-bg) 100%);
+            border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(212, 175, 55, 0.2);
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
-        .card:active {
-            transform: scale(0.98);
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        /* Hero Card */
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Hero Card with Video Background */
         .hero-card {
             position: relative;
             padding: 0;
             overflow: hidden;
-            min-height: 500px;
-            border: 2px solid #D4AF37;
+            min-height: 600px;
+            border: 2px solid var(--gold);
         }
 
-        .hero-card::before {
-            content: '';
+        .hero-video {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(26, 26, 26, 0.8));
-            z-index: 1;
-        }
-
-        .hero-card img {
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            opacity: 0.6;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(26, 26, 26, 0.9));
         }
 
         .hero-content {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(10, 10, 10, 0.95), transparent);
-            padding: 40px 30px;
-            color: #FFFFFF;
+            position: relative;
             z-index: 2;
+            padding: 60px 30px 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gold);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: 700;
+            margin-bottom: 20px;
+            width: fit-content;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
         }
 
         .hero-content h1 {
             font-family: 'Cinzel', serif;
-            font-size: 36px;
+            font-size: 42px;
             margin-bottom: 15px;
-            color: #D4AF37;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            color: var(--gold);
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .hero-content p {
             font-size: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             color: #CCCCCC;
+            line-height: 1.6;
+            animation: fadeInUp 0.8s ease 0.2s backwards;
         }
 
         .hero-button {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
-            color: #1A1A1A;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             font-family: 'Cinzel', serif;
             letter-spacing: 1px;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease 0.4s backwards;
         }
 
-        .hero-button:active {
-            transform: scale(0.95);
+        .hero-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
 
-        .swipe-hint {
+        .hero-button:active::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .countdown {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
             text-align: center;
-            color: #D4AF37;
-            font-size: 14px;
-            margin-top: 15px;
-            animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
+        .countdown-text {
+            font-size: 12px;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .countdown-timer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .countdown-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+        }
+
+        .countdown-label {
+            font-size: 10px;
+            color: #CCCCCC;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Before/After Slider */
+        .comparison-slider {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            overflow: hidden;
+            border-radius: 16px;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .comparison-slider img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .before-image {
+            z-index: 1;
+        }
+
+        .after-image {
+            z-index: 2;
+            clip-path: inset(0 50% 0 0);
+        }
+
+        .slider-handle {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--gold);
+            z-index: 3;
+            transform: translateX(-50%);
+            cursor: ew-resize;
+        }
+
+        .slider-button {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 50px;
+            height: 50px;
+            background: var(--gold);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.5);
+            cursor: ew-resize;
+        }
+
+        .slider-button::before,
+        .slider-button::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-top: 3px solid var(--black);
+            border-right: 3px solid var(--black);
+        }
+
+        .slider-button::before {
+            transform: rotate(-135deg);
+            left: 12px;
+        }
+
+        .slider-button::after {
+            transform: rotate(45deg);
+            right: 12px;
+        }
+
+        .comparison-labels {
+            position: absolute;
+            inset: 20px;
+            z-index: 4;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .comparison-label {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
         /* Section Title */
         .section-title {
             font-family: 'Cinzel', serif;
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #D4AF37;
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: var(--gold);
             text-align: center;
+            position: relative;
         }
 
-        /* How It Works Card */
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .glass-card:hover {
+            background: rgba(26, 26, 26, 0.8);
+            border-color: rgba(212, 175, 55, 0.4);
+            transform: translateY(-5px);
+        }
+
+        /* Steps with Animation */
         .steps-card {
             display: flex;
             gap: 20px;
@@ -195,62 +566,46 @@
         }
 
         .step-card {
-            min-width: 250px;
-            background: linear-gradient(135deg, #2B2B2B 0%, #1A1A1A 100%);
-            border-radius: 12px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            padding: 30px;
+            min-width: 270px;
             scroll-snap-align: start;
-            text-align: center;
         }
 
         .step-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 56px;
+            margin-bottom: 20px;
+            animation: bounce 2s ease-in-out infinite;
         }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .step-card:nth-child(1) .step-icon { animation-delay: 0s; }
+        .step-card:nth-child(2) .step-icon { animation-delay: 0.2s; }
+        .step-card:nth-child(3) .step-icon { animation-delay: 0.4s; }
 
         .step-card h3 {
             font-family: 'Cinzel', serif;
             font-size: 20px;
-            margin-bottom: 10px;
-            color: #D4AF37;
+            margin-bottom: 12px;
+            color: var(--gold);
         }
 
         .step-card p {
             font-size: 14px;
             color: #CCCCCC;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
-        /* Gallery Card */
-        .gallery-card {
-            padding: 0;
-        }
-
-        .gallery-header {
-            padding: 25px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-        }
-
-        .gallery-header h2 {
-            font-family: 'Cinzel', serif;
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #D4AF37;
-        }
-
-        .gallery-header p {
-            color: #999999;
-            font-size: 14px;
-        }
-
+        /* Gallery with Ken Burns Effect */
         .gallery-carousel {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            padding: 20px;
+            padding: 20px 0;
             scrollbar-width: none;
         }
 
@@ -259,25 +614,48 @@
         }
 
         .gallery-item {
-            min-width: 220px;
-            border-radius: 12px;
+            min-width: 240px;
+            border-radius: 16px;
             overflow: hidden;
             scroll-snap-align: start;
             border: 2px solid rgba(212, 175, 55, 0.3);
             transition: all 0.3s;
-        }
-
-        .gallery-item:active {
-            transform: scale(0.95);
+            position: relative;
         }
 
         .gallery-item img {
             width: 100%;
-            height: 320px;
+            height: 340px;
             object-fit: cover;
+            transition: transform 0.5s ease;
         }
 
-        /* Scenes Card */
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10, 10, 10, 0.9), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+
+        .gallery-info {
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Scenes Grid with Hover Effects */
         .scenes-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -285,44 +663,58 @@
         }
 
         .scene-mini-card {
-            background: linear-gradient(135deg, #2B2B2B 0%, #1A1A1A 100%);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
             cursor: pointer;
             transition: all 0.3s;
         }
 
-        .scene-mini-card:active {
-            transform: scale(0.95);
-        }
-
-        .scene-mini-card.selected {
-            background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
-            border-color: #D4AF37;
-        }
-
-        .scene-mini-card.selected h3 {
-            color: #1A1A1A;
-        }
-
         .scene-mini-card img {
             width: 100%;
-            height: 100px;
+            height: 140px;
             object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: transform 0.5s ease;
+        }
+
+        .scene-mini-card:hover img {
+            transform: scale(1.1) rotate(2deg);
+        }
+
+        .scene-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10, 10, 10, 0.9), transparent 60%);
+            display: flex;
+            align-items: flex-end;
+            padding: 15px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+
+        .scene-mini-card:hover .scene-overlay {
+            border-color: var(--gold);
+        }
+
+        .scene-mini-card.selected .scene-overlay {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.9), rgba(244, 208, 63, 0.7));
+            border-color: var(--gold);
         }
 
         .scene-mini-card h3 {
             font-family: 'Cinzel', serif;
-            font-size: 14px;
-            color: #D4AF37;
+            font-size: 16px;
+            color: var(--gold);
+            position: relative;
+            z-index: 2;
         }
 
-        /* Pricing Card */
+        .scene-mini-card.selected h3 {
+            color: var(--black);
+        }
+
+        /* Pricing with Shine Effect */
         .pricing-cards {
             display: flex;
             flex-direction: column;
@@ -330,23 +722,35 @@
         }
 
         .pricing-card {
-            background: linear-gradient(135deg, #1A1A1A 0%, #2B2B2B 100%);
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: 16px;
-            padding: 30px;
-            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         .pricing-card.popular {
-            border-color: #D4AF37;
-            background: linear-gradient(135deg, #2B2B2B 0%, #1A1A1A 100%);
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            border-color: var(--gold);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
         }
 
         .pricing-badge {
             display: inline-block;
-            background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
-            color: #1A1A1A;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
             padding: 8px 20px;
             border-radius: 20px;
             font-size: 12px;
@@ -354,33 +758,49 @@
             font-family: 'Cinzel', serif;
             letter-spacing: 1px;
             margin-bottom: 15px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .pricing-card h3 {
             font-family: 'Cinzel', serif;
-            font-size: 22px;
+            font-size: 24px;
             margin-bottom: 15px;
-            color: #D4AF37;
+            color: var(--gold);
         }
 
         .price {
             font-family: 'Cinzel', serif;
-            font-size: 48px;
+            font-size: 52px;
             font-weight: 700;
-            color: #D4AF37;
+            color: var(--gold);
             margin-bottom: 20px;
         }
 
         .features {
             list-style: none;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .features li {
             padding: 12px 0;
-            font-size: 14px;
+            font-size: 15px;
             color: #CCCCCC;
             border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--gold);
+            font-weight: 700;
         }
 
         .features li:last-child {
@@ -389,31 +809,40 @@
 
         .card-button {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
-            color: #1A1A1A;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 700;
             font-family: 'Cinzel', serif;
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
-        .card-button:active {
-            transform: scale(0.95);
+        .card-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
         }
 
-        /* FAQ Card */
+        /* FAQ with Smooth Animations */
         .faq-item {
             border-bottom: 1px solid rgba(212, 175, 55, 0.2);
             padding: 20px 0;
+            transition: all 0.3s;
         }
 
-        .faq-item:last-child {
-            border-bottom: none;
+        .faq-item:hover {
+            background: rgba(212, 175, 55, 0.05);
+            padding-left: 15px;
+            padding-right: 15px;
+            margin-left: -15px;
+            margin-right: -15px;
+            border-radius: 12px;
         }
 
         .faq-question {
@@ -423,26 +852,27 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 16px;
-            color: #D4AF37;
+            color: var(--gold);
         }
 
         .faq-answer {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s;
-            margin-top: 10px;
+            transition: max-height 0.5s ease, margin-top 0.3s;
+            margin-top: 0;
             color: #CCCCCC;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.7;
         }
 
         .faq-item.active .faq-answer {
             max-height: 500px;
+            margin-top: 15px;
         }
 
         .faq-toggle {
             font-size: 20px;
-            color: #D4AF37;
+            color: var(--gold);
             transition: transform 0.3s;
         }
 
@@ -450,46 +880,66 @@
             transform: rotate(180deg);
         }
 
-        /* Sticky CTA */
+        /* Sticky CTA with Pulse */
         .sticky-cta {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, #1A1A1A 0%, #0A0A0A 100%);
-            border-top: 2px solid #D4AF37;
+            background: rgba(26, 26, 26, 0.98);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid var(--gold);
             padding: 15px 20px;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.8);
             z-index: 999;
+            animation: slideInUp 0.5s ease;
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100px); }
+            to { transform: translateY(0); }
         }
 
         .sticky-cta-button {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
-            color: #1A1A1A;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 700;
             font-family: 'Cinzel', serif;
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.3s;
+            animation: pulse-cta 2s ease-in-out infinite;
         }
 
-        .sticky-cta-button:active {
-            transform: scale(0.95);
+        @keyframes pulse-cta {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+            }
+            50% {
+                transform: scale(1.02);
+                box-shadow: 0 0 20px 10px rgba(212, 175, 55, 0);
+            }
         }
 
         /* Footer */
         footer {
-            background: #0A0A0A;
+            background: var(--black);
             border-top: 1px solid rgba(212, 175, 55, 0.2);
             color: #FFFFFF;
-            padding: 40px 20px;
+            padding: 50px 20px;
             text-align: center;
-            margin-bottom: 80px;
+            margin-bottom: 90px;
+        }
+
+        footer .logo {
+            font-size: 24px;
+            margin-bottom: 20px;
         }
 
         footer p {
@@ -499,44 +949,26 @@
         }
 
         footer .social-links {
-            margin-top: 20px;
+            margin-top: 25px;
             display: flex;
             justify-content: center;
             gap: 20px;
         }
 
         footer .social-links a {
-            color: #D4AF37;
-            font-size: 24px;
+            color: var(--gold);
+            font-size: 28px;
             transition: all 0.3s;
         }
 
-        /* Swipe Indicators */
-        .swipe-indicators {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 15px;
-        }
-
-        .indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(212, 175, 55, 0.3);
-            transition: all 0.3s;
-        }
-
-        .indicator.active {
-            background: #D4AF37;
-            width: 24px;
-            border-radius: 4px;
+        footer .social-links a:hover {
+            transform: scale(1.2) rotate(10deg);
         }
 
         /* Responsive Desktop */
         @media (min-width: 768px) {
             .card-container {
-                max-width: 800px;
+                max-width: 900px;
             }
 
             .scenes-grid {
@@ -549,12 +981,38 @@
             }
 
             .hero-content h1 {
-                font-size: 48px;
+                font-size: 56px;
+            }
+
+            .social-proof {
+                bottom: 120px;
+            }
+        }
+
+        /* Hide on mobile */
+        @media (max-width: 767px) {
+            #custom-cursor {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Custom Cursor (Desktop only) -->
+    <div id="custom-cursor"></div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-crown">👑</div>
+        <div class="loading-text">LOADING THRONE...</div>
+    </div>
+
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
     <!-- Navigation -->
     <nav>
         <div class="logo">RAINCREST.ART</div>
@@ -565,175 +1023,264 @@
         </div>
     </nav>
 
+    <!-- Social Proof Badge -->
+    <div class="social-proof">
+        <div class="social-proof-count" id="transform-count">127</div>
+        <div class="social-proof-text">Transformations today</div>
+    </div>
+
     <!-- Card Container -->
     <div class="card-container">
         <!-- Hero Card -->
         <div class="card hero-card">
-            <img src="https://images.unsplash.com/photo-1555881754-0bc77796ea06?w=600&h=800&fit=crop" alt="Dubrovnik City Walls">
+            <video class="hero-video" autoplay muted loop playsinline>
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-ancient-castle-on-top-of-a-hill-5299-large.mp4" type="video/mp4">
+            </video>
+            <div class="hero-overlay"></div>
             <div class="hero-content">
+                <div class="hero-badge">🔥 LAUNCH SPECIAL - 50% OFF</div>
                 <h1>Claim Your Throne</h1>
-                <p>Transform into Game of Thrones royalty in the real King's Landing. Your face. Our magic. Pure legend.</p>
-                <button class="hero-button">BECOME ROYALTY</button>
-                <div class="swipe-hint">↓ Scroll to explore ↓</div>
+                <p>Transform into Game of Thrones royalty in the real King's Landing. Your face. Our AI magic. Pure legend.</p>
+                <button class="hero-button">BECOME ROYALTY NOW</button>
+                
+                <!-- Countdown Timer -->
+                <div class="countdown">
+                    <div class="countdown-text">⏰ Launch offer ends in:</div>
+                    <div class="countdown-timer">
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="days">03</div>
+                            <div class="countdown-label">Days</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="hours">12</div>
+                            <div class="countdown-label">Hours</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="minutes">45</div>
+                            <div class="countdown-label">Min</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="seconds">30</div>
+                            <div class="countdown-label">Sec</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- How It Works Card -->
+        <!-- Before/After Comparison -->
+        <div class="card glass-card">
+            <h2 class="section-title">See The Transformation</h2>
+            <p style="text-align: center; color: #CCCCCC; margin-bottom: 20px;">Drag the slider to reveal the magic ✨</p>
+            
+            <div class="comparison-slider" id="comparison-slider">
+                <img class="before-image" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop" alt="Before">
+                <img class="after-image" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=600&fit=crop" alt="After">
+                
+                <div class="slider-handle" id="slider-handle">
+                    <div class="slider-button"></div>
+                </div>
+                
+                <div class="comparison-labels">
+                    <div class="comparison-label">BEFORE</div>
+                    <div class="comparison-label">AFTER</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
         <div class="card">
             <h2 class="section-title">How It Works</h2>
             <div class="steps-card">
-                <div class="step-card">
+                <div class="step-card glass-card">
                     <div class="step-icon">🏰</div>
                     <h3>Choose Scene</h3>
-                    <p>Pick from 5 iconic Dubrovnik locations where Game of Thrones was filmed</p>
+                    <p>Pick from 5 iconic Dubrovnik locations where Game of Thrones was filmed. Each scene tells a story.</p>
                 </div>
-                <div class="step-card">
+                <div class="step-card glass-card">
                     <div class="step-icon">📸</div>
                     <h3>Upload Photo</h3>
-                    <p>Send us a clear face photo and select King or Queen</p>
+                    <p>Send us a clear face photo and select King or Queen variant. Our AI does the rest.</p>
                 </div>
-                <div class="step-card">
+                <div class="step-card glass-card">
                     <div class="step-icon">👑</div>
                     <h3>Get Results</h3>
-                    <p>Receive high-res photo + cinematic video in 24 hours</p>
+                    <p>Receive high-res photo + cinematic video in 24 hours. Royal quality guaranteed.</p>
                 </div>
-            </div>
-            <div class="swipe-indicators">
-                <div class="indicator active"></div>
-                <div class="indicator"></div>
-                <div class="indicator"></div>
             </div>
         </div>
 
-        <!-- Gallery Card -->
-        <div class="card gallery-card">
-            <div class="gallery-header">
-                <h2>Transformation Gallery</h2>
-                <p>← Swipe to see more examples →</p>
-            </div>
+        <!-- Gallery -->
+        <div class="card glass-card">
+            <h2 class="section-title">Transformation Gallery</h2>
+            <p style="text-align: center; color: #CCCCCC; margin-bottom: 20px;">Swipe to see more transformations →</p>
+            
             <div class="gallery-carousel">
                 <div class="gallery-item">
                     <img src="https://images.unsplash.com/photo-1583150681300-f039586d5da8?w=300&h=400&fit=crop" alt="Transformation 1">
+                    <div class="gallery-overlay">
+                        <div class="gallery-info">City Walls - King</div>
+                    </div>
                 </div>
                 <div class="gallery-item">
                     <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=400&fit=crop" alt="Transformation 2">
+                    <div class="gallery-overlay">
+                        <div class="gallery-info">Stradun - Queen</div>
+                    </div>
                 </div>
                 <div class="gallery-item">
                     <img src="https://images.unsplash.com/photo-1551771956-f8d1a0a6d6d2?w=300&h=400&fit=crop" alt="Transformation 3">
+                    <div class="gallery-overlay">
+                        <div class="gallery-info">Lovrijenac - King</div>
+                    </div>
                 </div>
                 <div class="gallery-item">
                     <img src="https://images.unsplash.com/photo-1596887020269-19eda37c2c4a?w=300&h=400&fit=crop" alt="Transformation 4">
+                    <div class="gallery-overlay">
+                        <div class="gallery-info">Harbor - Queen</div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Scenes Card -->
-        <div class="card">
+        <!-- Choose Scene -->
+        <div class="card glass-card">
             <h2 class="section-title">Choose Your Scene</h2>
+            <p style="text-align: center; color: #CCCCCC; margin-bottom: 25px;">Tap to select your legendary location</p>
+            
             <div class="scenes-grid">
                 <div class="scene-mini-card" data-scene="stradun">
                     <img src="https://images.unsplash.com/photo-1580629905303-fadc95133e10?w=200&h=120&fit=crop" alt="Stradun">
-                    <h3>Stradun</h3>
+                    <div class="scene-overlay">
+                        <h3>Stradun</h3>
+                    </div>
                 </div>
                 <div class="scene-mini-card" data-scene="walls">
                     <img src="https://images.unsplash.com/photo-1555881754-0bc77796ea06?w=200&h=120&fit=crop" alt="City Walls">
-                    <h3>City Walls</h3>
+                    <div class="scene-overlay">
+                        <h3>City Walls</h3>
+                    </div>
                 </div>
                 <div class="scene-mini-card" data-scene="gate">
                     <img src="https://images.unsplash.com/photo-1583150681300-f039586d5da8?w=200&h=120&fit=crop" alt="Pile Gate">
-                    <h3>Pile Gate</h3>
+                    <div class="scene-overlay">
+                        <h3>Pile Gate</h3>
+                    </div>
                 </div>
                 <div class="scene-mini-card" data-scene="lovrijenac">
                     <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200&h=120&fit=crop" alt="Lovrijenac">
-                    <h3>Lovrijenac</h3>
+                    <div class="scene-overlay">
+                        <h3>Lovrijenac</h3>
+                    </div>
                 </div>
                 <div class="scene-mini-card" data-scene="harbor">
                     <img src="https://images.unsplash.com/photo-1551771956-f8d1a0a6d6d2?w=200&h=120&fit=crop" alt="Harbor">
-                    <h3>Harbor</h3>
+                    <div class="scene-overlay">
+                        <h3>Harbor</h3>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pricing Card -->
-        <div class="card">
-            <h2 class="section-title">Pricing</h2>
+        <!-- Pricing -->
+        <div class="card glass-card">
+            <h2 class="section-title">Choose Your Package</h2>
+            <p style="text-align: center; color: #CCCCCC; margin-bottom: 25px;">All packages include photo + video delivery</p>
+            
             <div class="pricing-cards">
-                <div class="pricing-card">
+                <div class="pricing-card glass-card">
                     <h3>Basic</h3>
                     <div class="price">€9.99</div>
                     <ul class="features">
-                        <li>✓ 1 scene transformation</li>
-                        <li>✓ High-res photo</li>
-                        <li>✓ 5-second video</li>
-                        <li>✓ 24h delivery</li>
+                        <li>1 scene transformation</li>
+                        <li>High-res photo (2K)</li>
+                        <li>5-second video</li>
+                        <li>24h delivery</li>
+                        <li>1 free revision</li>
                     </ul>
-                    <button class="card-button">SELECT</button>
+                    <button class="card-button">SELECT BASIC</button>
                 </div>
-                <div class="pricing-card popular">
-                    <div class="pricing-badge">MOST POPULAR</div>
+                <div class="pricing-card popular glass-card">
+                    <div class="pricing-badge">⭐ MOST POPULAR</div>
                     <h3>Popular</h3>
                     <div class="price">€24.99</div>
                     <ul class="features">
-                        <li>✓ 3 scene transformations</li>
-                        <li>✓ High-res photos</li>
-                        <li>✓ 5-second videos</li>
-                        <li>✓ Priority support</li>
-                        <li>✓ Save 25%</li>
+                        <li>3 scene transformations</li>
+                        <li>High-res photos (2K)</li>
+                        <li>5-second videos</li>
+                        <li>Priority 18h delivery</li>
+                        <li>2 free revisions</li>
+                        <li>Save 25%</li>
                     </ul>
-                    <button class="card-button">SELECT</button>
+                    <button class="card-button">SELECT POPULAR</button>
                 </div>
-                <div class="pricing-card">
+                <div class="pricing-card glass-card">
                     <h3>Royal</h3>
                     <div class="price">€34.99</div>
                     <ul class="features">
-                        <li>✓ All 5 scenes</li>
-                        <li>✓ High-res photos</li>
-                        <li>✓ 10-second premium videos</li>
-                        <li>✓ Rush 12h delivery</li>
-                        <li>✓ Save 40%</li>
+                        <li>All 5 scenes</li>
+                        <li>4K premium photos</li>
+                        <li>10-second cinematic videos</li>
+                        <li>Rush 12h delivery</li>
+                        <li>Unlimited revisions</li>
+                        <li>Save 40%</li>
                     </ul>
-                    <button class="card-button">SELECT</button>
+                    <button class="card-button">SELECT ROYAL</button>
                 </div>
             </div>
         </div>
 
-        <!-- FAQ Card -->
-        <div class="card">
+        <!-- FAQ -->
+        <div class="card glass-card">
             <h2 class="section-title">Frequently Asked Questions</h2>
+            
             <div class="faq-item">
                 <div class="faq-question">
                     <span>How does the transformation work?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    You upload a clear face photo, choose your scenes (King or Queen variant), and our AI transforms you into medieval royalty. You'll receive high-res photos and cinematic videos within 24 hours.
+                    You upload a clear face photo, choose your scenes (King or Queen variant), and our AI transforms you into medieval royalty using the real Game of Thrones filming locations in Dubrovnik. You'll receive high-res photos and cinematic videos within 24 hours.
                 </div>
             </div>
+            
             <div class="faq-item">
                 <div class="faq-question">
                     <span>Do I need to travel to Dubrovnik?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    No! Everything is done digitally using the real Game of Thrones filming locations in Dubrovnik. Just upload your photo and we handle the rest.
+                    No! Everything is done digitally. We use AI to place you in Dubrovnik's iconic locations. Just upload your photo and we handle the rest. Perfect for fans who can't travel to Croatia.
                 </div>
             </div>
+            
             <div class="faq-item">
                 <div class="faq-question">
                     <span>What if I don't like the result?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    We offer 100% money-back guarantee within 7 days. Plus one free revision per order to ensure you're completely satisfied.
+                    We offer 100% money-back guarantee within 7 days. Plus free revisions per order (1 for Basic, 2 for Popular, unlimited for Royal) to ensure you're completely satisfied with your royal transformation.
                 </div>
             </div>
+            
             <div class="faq-item">
                 <div class="faq-question">
                     <span>How long does delivery take?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    Standard delivery is 24 hours. Royal package includes 12-hour rush delivery. All transformations are manually reviewed for quality before delivery.
+                    Standard delivery is 24 hours for Basic, 18 hours for Popular (priority), and 12 hours for Royal (rush). All transformations are manually reviewed for quality before delivery. You'll receive an email with download links.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Can I use this for social media?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    Absolutely! Your photos and videos are fully licensed for personal use, including social media. Tag us @raincrest.art and use #ClaimYourThrone for a chance to be featured on our page!
                 </div>
             </div>
         </div>
@@ -741,14 +1288,15 @@
 
     <!-- Sticky CTA -->
     <div class="sticky-cta">
-        <button class="sticky-cta-button">CLAIM YOUR THRONE</button>
+        <button class="sticky-cta-button">CLAIM YOUR THRONE - 50% OFF</button>
     </div>
 
     <!-- Footer -->
     <footer>
-        <p style="color: #D4AF37; font-family: 'Cinzel', serif; font-size: 18px; margin-bottom: 15px;">RAINCREST.ART</p>
-        <p>Transform into Game of Thrones royalty in Dubrovnik</p>
+        <div class="logo">RAINCREST.ART</div>
+        <p style="color: var(--gold); margin-top: 10px;">Transform into Game of Thrones royalty in Dubrovnik</p>
         <p>© 2024 Raincrest.art • Not affiliated with HBO or Game of Thrones</p>
+        <p style="font-size: 12px; margin-top: 20px;">Made with ⚔️ in Croatia</p>
         <div class="social-links">
             <a href="#" aria-label="Instagram">📷</a>
             <a href="#" aria-label="TikTok">🎵</a>
@@ -757,6 +1305,126 @@
     </footer>
 
     <script>
+        // Loading Screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 1500);
+        });
+
+        // Custom Cursor (Desktop only)
+        if (window.innerWidth >= 768) {
+            const cursor = document.getElementById('custom-cursor');
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+
+            document.addEventListener('mousedown', () => {
+                cursor.classList.add('click');
+            });
+
+            document.addEventListener('mouseup', () => {
+                cursor.classList.remove('click');
+            });
+        }
+
+        // Scroll Progress Bar
+        window.addEventListener('scroll', () => {
+            const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+            document.getElementById('scroll-progress').style.width = scrolled + '%';
+        });
+
+        // Floating Particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Social Proof Counter (animated)
+        let count = 100;
+        const targetCount = 127;
+        const counterElement = document.getElementById('transform-count');
+        const interval = setInterval(() => {
+            count++;
+            counterElement.textContent = count;
+            if (count >= targetCount) clearInterval(interval);
+        }, 50);
+
+        // Countdown Timer
+        function updateCountdown() {
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + 3);
+            endDate.setHours(endDate.getHours() + 12);
+            
+            setInterval(() => {
+                const now = new Date().getTime();
+                const distance = endDate - now;
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            }, 1000);
+        }
+        updateCountdown();
+
+        // Before/After Slider
+        const slider = document.getElementById('comparison-slider');
+        const handle = document.getElementById('slider-handle');
+        const afterImage = slider.querySelector('.after-image');
+        let isDragging = false;
+
+        function updateSlider(clientX) {
+            const rect = slider.getBoundingClientRect();
+            let x = clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            const percentage = (x / rect.width) * 100;
+            
+            handle.style.left = percentage + '%';
+            afterImage.style.clipPath = `inset(0 ${100 - percentage}% 0 0)`;
+        }
+
+        // Mouse events
+        handle.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) updateSlider(e.clientX);
+        });
+
+        // Touch events
+        handle.addEventListener('touchstart', () => isDragging = true);
+        document.addEventListener('touchend', () => isDragging = false);
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) updateSlider(e.touches[0].clientX);
+        });
+
+        // Click/tap to move slider
+        slider.addEventListener('click', (e) => {
+            updateSlider(e.clientX);
+        });
+
+        // Scene Selection
+        document.querySelectorAll('.scene-mini-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.scene-mini-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
         // FAQ Toggle
         document.querySelectorAll('.faq-question').forEach(question => {
             question.addEventListener('click', () => {
@@ -775,75 +1443,46 @@
             });
         });
 
-        // Scene Selection
-        document.querySelectorAll('.scene-mini-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.scene-mini-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-            });
-        });
-
-        // Swipe Indicators for Steps
-        const stepsCard = document.querySelector('.steps-card');
-        const indicators = document.querySelectorAll('.indicator');
-        
-        if (stepsCard && indicators.length > 0) {
-            stepsCard.addEventListener('scroll', () => {
-                const scrollPos = stepsCard.scrollLeft;
-                const cardWidth = stepsCard.querySelector('.step-card').offsetWidth + 20; // +20 for gap
-                const activeIndex = Math.round(scrollPos / cardWidth);
+        // Smooth scroll for all buttons
+        document.querySelectorAll('.hero-button, .sticky-cta-button, .card-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Haptic feedback on mobile
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(50);
+                }
                 
-                indicators.forEach((ind, index) => {
-                    if (index === activeIndex) {
-                        ind.classList.add('active');
-                    } else {
-                        ind.classList.remove('active');
-                    }
-                });
+                // Scroll to pricing (or trigger your checkout)
+                const pricingCard = document.querySelector('.pricing-cards').closest('.card');
+                pricingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
-        }
-
-        // Touch swipe enhancement for mobile
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        document.querySelectorAll('.steps-card, .gallery-carousel').forEach(carousel => {
-            carousel.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-
-            carousel.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe(carousel);
-            }, { passive: true });
         });
 
-        function handleSwipe(carousel) {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
-            
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    // Swipe left
-                    carousel.scrollBy({ left: 300, behavior: 'smooth' });
-                } else {
-                    // Swipe right
-                    carousel.scrollBy({ left: -300, behavior: 'smooth' });
-                }
+        // Konami Code Easter Egg (↑↑↓↓←→←→BA)
+        let konamiCode = [];
+        const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.key);
+            if (konamiCode.length > konamiPattern.length) {
+                konamiCode.shift();
             }
-        }
+            
+            if (konamiCode.join(',') === konamiPattern.join(',')) {
+                alert('🎉 Secret unlocked! Use code THRONE30 for extra 30% OFF! 👑');
+                konamiCode = [];
+            }
+        });
 
-        // Smooth scroll for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+        // Parallax effect on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = window.scrollY;
+            const parallaxElements = document.querySelectorAll('.hero-card');
+            
+            parallaxElements.forEach(el => {
+                const speed = 0.5;
+                el.style.transform = `translateY(${scrolled * speed}px)`;
             });
         });
     </script>
 </body>
 </html>
-

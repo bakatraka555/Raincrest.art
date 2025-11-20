@@ -1,0 +1,32 @@
+{
+  "name": "raincrest-art",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Raincrest.art - Game of Thrones transformations in Dubrovnik",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod",
+    "build": "echo 'No build needed - static site'"
+  },
+  "keywords": [
+    "ai",
+    "adult",
+    "chat",
+    "gallery"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "cloudinary": "^1.41.0",
+    "openai": "^4.20.0",
+    "replicate": "^0.25.2",
+    "stripe": "^14.10.0",
+    "together-ai": "^0.6.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.10.0"
+  }
+}

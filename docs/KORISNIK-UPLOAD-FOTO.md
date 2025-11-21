@@ -20,14 +20,17 @@
 
 ---
 
-### **Korak 3: Odaberi Scene**
-1. Odaberi scene koje želiš (ovisno o paketu):
+### **Korak 3: Odaberi Scene i Character**
+1. Nakon što uploadaš foto, pojavit će se **"Choose Your Scenes"** sekcija
+2. Odaberi scene koje želiš (ovisno o paketu):
    - **Basic:** 1 scene
    - **Popular:** 3 scene
-   - **Royal:** 5 scene
-2. Za svaku scenu odaberi:
-   - **King** 👑 (muškarac)
-   - **Queen** 👸 (žena)
+   - **Royal:** 5 scene (sve scene)
+3. Za svaku odabranu scenu klikni:
+   - **👑 King** (muškarac)
+   - **👸 Queen** (žena)
+4. Odabrane scene će se prikazati u **"Selected Scenes"** summary-u
+5. Button "Continue" će biti aktivan tek kada odabereš sve scene koje paket nudi
 
 ---
 

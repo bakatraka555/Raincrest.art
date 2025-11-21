@@ -1450,6 +1450,150 @@
         .btn-modal-secondary:hover {
             background: rgba(212, 175, 55, 0.1);
         }
+
+        /* Scene Selection in Modal */
+        .scene-selection-modal {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .scene-selection-title {
+            color: var(--gold);
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .scene-selection-subtitle {
+            color: #CCCCCC;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .scenes-grid-modal {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .scene-card-modal {
+            position: relative;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #2B2B2B;
+        }
+
+        .scene-card-modal:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        .scene-card-modal.selected {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .scene-card-modal.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .scene-card-modal img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .scene-card-modal-content {
+            padding: 15px;
+        }
+
+        .scene-card-modal h4 {
+            color: #FFFFFF;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .scene-character-toggle {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .character-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            background: transparent;
+            color: #CCCCCC;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .character-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .character-btn.active {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--black);
+            font-weight: 700;
+        }
+
+        .selected-scenes-summary {
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .selected-scenes-summary h4 {
+            color: var(--gold);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .selected-scene-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #2B2B2B;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .selected-scene-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .selected-scene-name {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+
+        .selected-scene-character {
+            color: var(--gold);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .scenes-grid-modal {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1844,6 +1988,21 @@
                     </div>
                 </div>
 
+                <!-- Scene Selection -->
+                <div class="scene-selection-modal" id="sceneSelectionModal" style="display: none;">
+                    <h3 class="scene-selection-title">Choose Your Scenes</h3>
+                    <p class="scene-selection-subtitle" id="sceneSelectionSubtitle">Select <span id="sceneCount">1</span> scene(s) for your transformation</p>
+                    
+                    <div class="scenes-grid-modal" id="scenesGridModal">
+                        <!-- Scenes will be populated by JavaScript -->
+                    </div>
+
+                    <div class="selected-scenes-summary" id="selectedScenesSummary" style="display: none;">
+                        <h4>Selected Scenes:</h4>
+                        <div id="selectedScenesList"></div>
+                    </div>
+                </div>
+
                 <div class="upload-modal-actions">
                     <button class="btn-modal btn-modal-primary" id="uploadBtnModal">Upload & Continue</button>
                     <button class="btn-modal btn-modal-secondary" id="changePhotoBtnModal">Choose Different Photo</button>
@@ -2024,14 +2183,35 @@
 
         let selectedFile = null;
         let selectedPackage = null;
+        let selectedScenes = {}; // { sceneId: 'king' | 'queen' }
+        
+        // Scene data
+        const scenes = [
+            { id: 'stradun', name: 'Stradun', image: 'scene-stradun.jpg' },
+            { id: 'walls', name: 'City Walls', image: 'scene-city-walls.jpg' },
+            { id: 'gate', name: 'Pile Gate', image: 'scene-pile-gate.jpg' },
+            { id: 'lovrijenac', name: 'Lovrijenac', image: 'scene-lovrijenac.jpg' },
+            { id: 'harbor', name: 'Harbor', image: 'scene-harbor.jpg' }
+        ];
+        
+        // Package limits
+        const packageLimits = {
+            basic: 1,
+            popular: 3,
+            royal: 5
+        };
 
         // Open modal when package button is clicked
         document.querySelectorAll('.card-button').forEach((button, index) => {
             button.addEventListener('click', () => {
                 const packages = ['basic', 'popular', 'royal'];
                 selectedPackage = packages[index];
+                selectedScenes = {}; // Reset scenes
                 uploadModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
+                // Reset button state
+                uploadBtnModal.textContent = 'Upload Photo First';
+                uploadBtnModal.disabled = true;
             });
         });
 
@@ -2123,16 +2303,153 @@
                         return;
                     }
 
-                    showSuccess('Photo looks good! Click "Upload & Continue" to proceed.');
+                    showSuccess('Photo looks good! Now choose your scenes below.');
+                    // Show scene selection after photo is validated
+                    showSceneSelection();
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
+        
+        // Show scene selection
+        function showSceneSelection() {
+            const sceneSelectionModal = document.getElementById('sceneSelectionModal');
+            const sceneCount = packageLimits[selectedPackage] || 1;
+            
+            document.getElementById('sceneCount').textContent = sceneCount;
+            sceneSelectionModal.style.display = 'block';
+            
+            // Populate scenes grid
+            const scenesGrid = document.getElementById('scenesGridModal');
+            scenesGrid.innerHTML = '';
+            
+            scenes.forEach((scene, index) => {
+                const sceneCard = document.createElement('div');
+                sceneCard.className = 'scene-card-modal';
+                sceneCard.dataset.sceneId = scene.id;
+                
+                // Disable if over limit
+                if (index >= sceneCount) {
+                    sceneCard.classList.add('disabled');
+                }
+                
+                sceneCard.innerHTML = `
+                    <img src="${scene.image}" alt="${scene.name}" />
+                    <div class="scene-card-modal-content">
+                        <h4>${scene.name}</h4>
+                        <div class="scene-character-toggle">
+                            <button class="character-btn" data-character="king">👑 King</button>
+                            <button class="character-btn" data-character="queen">👸 Queen</button>
+                        </div>
+                    </div>
+                `;
+                
+                scenesGrid.appendChild(sceneCard);
+            });
+            
+            // Add click handlers for scene cards
+            document.querySelectorAll('.scene-card-modal').forEach(card => {
+                if (!card.classList.contains('disabled')) {
+                    card.addEventListener('click', () => {
+                        const sceneId = card.dataset.sceneId;
+                        const currentCount = Object.keys(selectedScenes).length;
+                        const limit = packageLimits[selectedPackage];
+                        
+                        if (card.classList.contains('selected')) {
+                            // Deselect
+                            card.classList.remove('selected');
+                            delete selectedScenes[sceneId];
+                            updateSelectedScenesSummary();
+                        } else if (currentCount < limit) {
+                            // Select
+                            card.classList.add('selected');
+                            // Default to king if not set
+                            if (!selectedScenes[sceneId]) {
+                                selectedScenes[sceneId] = 'king';
+                                // Set king button as active
+                                const kingBtn = card.querySelector('[data-character="king"]');
+                                if (kingBtn) kingBtn.classList.add('active');
+                            }
+                            updateSelectedScenesSummary();
+                        }
+                    });
+                }
+            });
+            
+            // Add click handlers for character buttons
+            document.querySelectorAll('.character-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Don't trigger scene card click
+                    
+                    const sceneCard = btn.closest('.scene-card-modal');
+                    const sceneId = sceneCard.dataset.sceneId;
+                    const character = btn.dataset.character;
+                    
+                    // Only if scene is selected
+                    if (sceneCard.classList.contains('selected')) {
+                        // Update selected character
+                        selectedScenes[sceneId] = character;
+                        
+                        // Update button states
+                        sceneCard.querySelectorAll('.character-btn').forEach(b => {
+                            b.classList.remove('active');
+                        });
+                        btn.classList.add('active');
+                        
+                        updateSelectedScenesSummary();
+                    }
+                });
+            });
+        }
+        
+        // Update selected scenes summary
+        function updateSelectedScenesSummary() {
+            const summary = document.getElementById('selectedScenesSummary');
+            const list = document.getElementById('selectedScenesList');
+            const limit = packageLimits[selectedPackage];
+            const currentCount = Object.keys(selectedScenes).length;
+            
+            if (currentCount > 0) {
+                summary.style.display = 'block';
+                list.innerHTML = '';
+                
+                Object.entries(selectedScenes).forEach(([sceneId, character]) => {
+                    const scene = scenes.find(s => s.id === sceneId);
+                    if (scene) {
+                        const item = document.createElement('div');
+                        item.className = 'selected-scene-item';
+                        item.innerHTML = `
+                            <span class="selected-scene-name">${scene.name}</span>
+                            <span class="selected-scene-character">${character === 'king' ? '👑 King' : '👸 Queen'}</span>
+                        `;
+                        list.appendChild(item);
+                    }
+                });
+            } else {
+                summary.style.display = 'none';
+            }
+            
+            // Update button state
+            const uploadBtn = document.getElementById('uploadBtnModal');
+            if (currentCount === limit) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = `Continue with ${currentCount} Scene${currentCount > 1 ? 's' : ''}`;
+            } else {
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = `Select ${limit - currentCount} More Scene${limit - currentCount > 1 ? 's' : ''}`;
+            }
+        }
 
         // Upload button
         uploadBtnModal.addEventListener('click', async () => {
             if (!selectedFile) return;
+            
+            const limit = packageLimits[selectedPackage];
+            if (Object.keys(selectedScenes).length !== limit) {
+                showError(`Please select ${limit} scene(s) for your package.`);
+                return;
+            }
 
             hideMessages();
             loadingModal.classList.add('active');
@@ -2144,6 +2461,7 @@
                 const formData = new FormData();
                 formData.append('photo', selectedFile);
                 formData.append('package', selectedPackage);
+                formData.append('scenes', JSON.stringify(selectedScenes));
 
                 // Simulate upload (replace with actual API call)
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -2152,18 +2470,28 @@
                 showSuccess('Photo uploaded successfully! Redirecting to payment...');
                 
                 // Store in localStorage for payment page
-                const photoData = {
-                    name: selectedFile.name,
-                    size: selectedFile.size,
+                const orderData = {
+                    photo: {
+                        name: selectedFile.name,
+                        size: selectedFile.size
+                    },
                     package: selectedPackage,
+                    scenes: selectedScenes,
                     timestamp: Date.now()
                 };
-                localStorage.setItem('uploadedPhoto', JSON.stringify(photoData));
+                localStorage.setItem('orderData', JSON.stringify(orderData));
                 
                 // Redirect to payment (replace with actual URL)
                 setTimeout(() => {
-                    alert('Photo uploaded! (Payment integration coming soon)\n\nPackage: ' + selectedPackage.toUpperCase() + '\nPhoto: ' + selectedFile.name);
-                    // window.location.href = '/payment?package=' + selectedPackage;
+                    const scenesList = Object.entries(selectedScenes)
+                        .map(([id, char]) => {
+                            const scene = scenes.find(s => s.id === id);
+                            return `${scene.name} (${char === 'king' ? 'King' : 'Queen'})`;
+                        })
+                        .join(', ');
+                    
+                    alert(`Order Summary:\n\nPackage: ${selectedPackage.toUpperCase()}\nPhoto: ${selectedFile.name}\nScenes: ${scenesList}\n\n(Payment integration coming soon)`);
+                    // window.location.href = '/payment';
                 }, 1500);
 
             } catch (error) {
@@ -2209,9 +2537,14 @@
 
         function resetUploadForm() {
             selectedFile = null;
+            selectedScenes = {};
             previewContainerModal.classList.remove('active');
+            document.getElementById('sceneSelectionModal').style.display = 'none';
+            document.getElementById('selectedScenesSummary').style.display = 'none';
             fileInputModal.value = '';
             hideMessages();
+            uploadBtnModal.textContent = 'Upload & Continue';
+            uploadBtnModal.disabled = true;
         }
 
         // Smooth scroll for hero and sticky CTA buttons

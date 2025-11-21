@@ -2320,19 +2320,17 @@
             document.getElementById('sceneCount').textContent = sceneCount;
             sceneSelectionModal.style.display = 'block';
             
+            // Reset selected scenes when showing selection
+            selectedScenes = {};
+            
             // Populate scenes grid
             const scenesGrid = document.getElementById('scenesGridModal');
             scenesGrid.innerHTML = '';
             
-            scenes.forEach((scene, index) => {
+            scenes.forEach((scene) => {
                 const sceneCard = document.createElement('div');
                 sceneCard.className = 'scene-card-modal';
                 sceneCard.dataset.sceneId = scene.id;
-                
-                // Disable if over limit
-                if (index >= sceneCount) {
-                    sceneCard.classList.add('disabled');
-                }
                 
                 sceneCard.innerHTML = `
                     <img src="${scene.image}" alt="${scene.name}" />
@@ -2348,9 +2346,9 @@
                 scenesGrid.appendChild(sceneCard);
             });
             
-            // Add click handlers for scene cards
-            document.querySelectorAll('.scene-card-modal').forEach(card => {
-                if (!card.classList.contains('disabled')) {
+            // Add click handlers for scene cards (after DOM is ready)
+            setTimeout(() => {
+                document.querySelectorAll('.scene-card-modal').forEach(card => {
                     card.addEventListener('click', () => {
                         const sceneId = card.dataset.sceneId;
                         const currentCount = Object.keys(selectedScenes).length;
@@ -2360,47 +2358,64 @@
                             // Deselect
                             card.classList.remove('selected');
                             delete selectedScenes[sceneId];
+                            // Reset character buttons
+                            card.querySelectorAll('.character-btn').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
                             updateSelectedScenesSummary();
-                        } else if (currentCount < limit) {
-                            // Select
-                            card.classList.add('selected');
-                            // Default to king if not set
-                            if (!selectedScenes[sceneId]) {
-                                selectedScenes[sceneId] = 'king';
-                                // Set king button as active
-                                const kingBtn = card.querySelector('[data-character="king"]');
-                                if (kingBtn) kingBtn.classList.add('active');
+                        } else {
+                            // If limit is 1, deselect all others first
+                            if (limit === 1) {
+                                document.querySelectorAll('.scene-card-modal').forEach(c => {
+                                    c.classList.remove('selected');
+                                    c.querySelectorAll('.character-btn').forEach(btn => {
+                                        btn.classList.remove('active');
+                                    });
+                                });
+                                selectedScenes = {};
                             }
+                            
+                            // Select if under limit
+                            if (currentCount < limit || limit === 1) {
+                                card.classList.add('selected');
+                                // Default to king if not set
+                                if (!selectedScenes[sceneId]) {
+                                    selectedScenes[sceneId] = 'king';
+                                    // Set king button as active
+                                    const kingBtn = card.querySelector('[data-character="king"]');
+                                    if (kingBtn) kingBtn.classList.add('active');
+                                }
+                                updateSelectedScenesSummary();
+                            }
+                        }
+                    });
+                });
+            
+                // Add click handlers for character buttons
+                document.querySelectorAll('.character-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Don't trigger scene card click
+                        
+                        const sceneCard = btn.closest('.scene-card-modal');
+                        const sceneId = sceneCard.dataset.sceneId;
+                        const character = btn.dataset.character;
+                        
+                        // Only if scene is selected
+                        if (sceneCard.classList.contains('selected')) {
+                            // Update selected character
+                            selectedScenes[sceneId] = character;
+                            
+                            // Update button states
+                            sceneCard.querySelectorAll('.character-btn').forEach(b => {
+                                b.classList.remove('active');
+                            });
+                            btn.classList.add('active');
+                            
                             updateSelectedScenesSummary();
                         }
                     });
-                }
-            });
-            
-            // Add click handlers for character buttons
-            document.querySelectorAll('.character-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Don't trigger scene card click
-                    
-                    const sceneCard = btn.closest('.scene-card-modal');
-                    const sceneId = sceneCard.dataset.sceneId;
-                    const character = btn.dataset.character;
-                    
-                    // Only if scene is selected
-                    if (sceneCard.classList.contains('selected')) {
-                        // Update selected character
-                        selectedScenes[sceneId] = character;
-                        
-                        // Update button states
-                        sceneCard.querySelectorAll('.character-btn').forEach(b => {
-                            b.classList.remove('active');
-                        });
-                        btn.classList.add('active');
-                        
-                        updateSelectedScenesSummary();
-                    }
                 });
-            });
+            }, 100);
         }
         
         // Update selected scenes summary

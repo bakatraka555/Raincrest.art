@@ -1172,6 +1172,284 @@
                 display: none;
             }
         }
+
+        /* Upload Modal */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .upload-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-modal-content {
+            background: #1A1A1A;
+            border-radius: 16px;
+            border: 2px solid var(--gold);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .upload-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .upload-modal-header h2 {
+            color: var(--gold);
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .upload-modal-close {
+            background: none;
+            border: none;
+            color: #CCCCCC;
+            font-size: 36px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .upload-modal-close:hover {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold);
+        }
+
+        .upload-modal-body {
+            padding: 30px;
+        }
+
+        .upload-requirements-modal {
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 4px solid var(--gold);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .upload-requirements-modal h3 {
+            color: var(--gold);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .upload-requirements-modal ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .upload-requirements-modal li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #CCCCCC;
+        }
+
+        .upload-requirements-modal li:before {
+            content: "✓ ";
+            color: var(--gold);
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .upload-area-modal {
+            border: 3px dashed var(--gold);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(212, 175, 55, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .upload-area-modal:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--gold-light);
+        }
+
+        .upload-area-modal.dragover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--gold-light);
+        }
+
+        .upload-icon-modal {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text-modal {
+            font-size: 18px;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .upload-hint-modal {
+            font-size: 14px;
+            color: #999999;
+        }
+
+        #fileInputModal {
+            display: none;
+        }
+
+        .preview-container-modal {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .preview-container-modal.active {
+            display: block;
+        }
+
+        .preview-image-modal {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 12px;
+            margin: 0 auto 20px;
+            display: block;
+            border: 2px solid var(--gold);
+        }
+
+        .photo-info-modal {
+            background: #2B2B2B;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .photo-info-item-modal {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .photo-info-item-modal:last-child {
+            margin-bottom: 0;
+        }
+
+        .photo-info-label-modal {
+            color: #999999;
+        }
+
+        .photo-info-value-modal {
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .error-message-modal,
+        .success-message-modal {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message-modal.active {
+            display: block;
+            background: rgba(255, 68, 68, 0.2);
+            border: 2px solid #ff4444;
+            color: #ff6666;
+        }
+
+        .success-message-modal.active {
+            display: block;
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            color: #81C784;
+        }
+
+        .loading-modal {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-modal.active {
+            display: block;
+        }
+
+        .spinner-modal {
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .upload-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--black);
+        }
+
+        .btn-modal-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-modal-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-modal-secondary {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-modal-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1512,6 +1790,68 @@
         </div>
     </div>
 
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <div class="upload-modal-content">
+            <div class="upload-modal-header">
+                <h2>📸 Upload Your Photo</h2>
+                <button class="upload-modal-close" id="closeModal">×</button>
+            </div>
+            
+            <div class="upload-modal-body">
+                <div class="error-message-modal" id="errorMessageModal"></div>
+                <div class="success-message-modal" id="successMessageModal"></div>
+
+                <div class="upload-requirements-modal">
+                    <h3>Photo Requirements:</h3>
+                    <ul>
+                        <li>Format: JPG, PNG, or HEIC</li>
+                        <li>Size: 512×512 pixels minimum</li>
+                        <li>Max file size: 10MB</li>
+                        <li>Clear face, front-facing</li>
+                        <li>Good lighting</li>
+                        <li>No sunglasses or face coverings</li>
+                    </ul>
+                </div>
+
+                <div class="upload-area-modal" id="uploadAreaModal">
+                    <div class="upload-icon-modal">📷</div>
+                    <div class="upload-text-modal">Click to Upload or Drag & Drop</div>
+                    <div class="upload-hint-modal">JPG, PNG, or HEIC up to 10MB</div>
+                    <input type="file" id="fileInputModal" accept="image/jpeg,image/jpg,image/png,image/heic" />
+                </div>
+
+                <div class="loading-modal" id="loadingModal">
+                    <div class="spinner-modal"></div>
+                    <p>Uploading...</p>
+                </div>
+
+                <div class="preview-container-modal" id="previewContainerModal">
+                    <img id="previewImageModal" class="preview-image-modal" alt="Preview" />
+                    <div class="photo-info-modal">
+                        <div class="photo-info-item-modal">
+                            <span class="photo-info-label-modal">File name:</span>
+                            <span class="photo-info-value-modal" id="fileNameModal">-</span>
+                        </div>
+                        <div class="photo-info-item-modal">
+                            <span class="photo-info-label-modal">File size:</span>
+                            <span class="photo-info-value-modal" id="fileSizeModal">-</span>
+                        </div>
+                        <div class="photo-info-item-modal">
+                            <span class="photo-info-label-modal">Dimensions:</span>
+                            <span class="photo-info-value-modal" id="fileDimensionsModal">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-modal-actions">
+                    <button class="btn-modal btn-modal-primary" id="uploadBtnModal">Upload & Continue</button>
+                    <button class="btn-modal btn-modal-secondary" id="changePhotoBtnModal">Choose Different Photo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Sticky CTA -->
     <div class="sticky-cta">
         <button class="sticky-cta-button">CLAIM YOUR THRONE - 50% OFF</button>
@@ -1669,15 +2009,220 @@
             });
         });
 
-        // Smooth scroll for all buttons
-        document.querySelectorAll('.hero-button, .sticky-cta-button, .card-button').forEach(button => {
+        // Upload Modal Functionality
+        const uploadModal = document.getElementById('uploadModal');
+        const closeModal = document.getElementById('closeModal');
+        const uploadAreaModal = document.getElementById('uploadAreaModal');
+        const fileInputModal = document.getElementById('fileInputModal');
+        const previewContainerModal = document.getElementById('previewContainerModal');
+        const previewImageModal = document.getElementById('previewImageModal');
+        const uploadBtnModal = document.getElementById('uploadBtnModal');
+        const changePhotoBtnModal = document.getElementById('changePhotoBtnModal');
+        const loadingModal = document.getElementById('loadingModal');
+        const errorMessageModal = document.getElementById('errorMessageModal');
+        const successMessageModal = document.getElementById('successMessageModal');
+
+        let selectedFile = null;
+        let selectedPackage = null;
+
+        // Open modal when package button is clicked
+        document.querySelectorAll('.card-button').forEach((button, index) => {
+            button.addEventListener('click', () => {
+                const packages = ['basic', 'popular', 'royal'];
+                selectedPackage = packages[index];
+                uploadModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        // Close modal
+        closeModal.addEventListener('click', () => {
+            uploadModal.classList.remove('active');
+            document.body.style.overflow = '';
+            resetUploadForm();
+        });
+
+        uploadModal.addEventListener('click', (e) => {
+            if (e.target === uploadModal) {
+                uploadModal.classList.remove('active');
+                document.body.style.overflow = '';
+                resetUploadForm();
+            }
+        });
+
+        // Click to upload
+        uploadAreaModal.addEventListener('click', () => {
+            fileInputModal.click();
+        });
+
+        // Drag and drop
+        uploadAreaModal.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadAreaModal.classList.add('dragover');
+        });
+
+        uploadAreaModal.addEventListener('dragleave', () => {
+            uploadAreaModal.classList.remove('dragover');
+        });
+
+        uploadAreaModal.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadAreaModal.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInputModal.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Handle file
+        function handleFile(file) {
+            hideMessages();
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic'];
+            if (!validTypes.includes(file.type)) {
+                showError('Invalid file type. Please upload JPG, PNG, or HEIC.');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File is too large. Maximum size is 10MB.');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImageModal.src = e.target.result;
+                previewContainerModal.classList.add('active');
+
+                // Update file info
+                document.getElementById('fileNameModal').textContent = file.name;
+                document.getElementById('fileSizeModal').textContent = formatFileSize(file.size);
+
+                // Get image dimensions
+                const img = new Image();
+                img.onload = () => {
+                    document.getElementById('fileDimensionsModal').textContent = `${img.width} × ${img.height} px`;
+                    
+                    // Validate dimensions
+                    if (img.width < 512 || img.height < 512) {
+                        showError('Image is too small. Minimum size is 512×512 pixels.');
+                        previewContainerModal.classList.remove('active');
+                        selectedFile = null;
+                        return;
+                    }
+
+                    showSuccess('Photo looks good! Click "Upload & Continue" to proceed.');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Upload button
+        uploadBtnModal.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            hideMessages();
+            loadingModal.classList.add('active');
+            uploadBtnModal.disabled = true;
+
+            try {
+                // TODO: Replace with actual upload endpoint (Cloudinary/Bunny.net)
+                // For now, just simulate upload
+                const formData = new FormData();
+                formData.append('photo', selectedFile);
+                formData.append('package', selectedPackage);
+
+                // Simulate upload (replace with actual API call)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Success
+                showSuccess('Photo uploaded successfully! Redirecting to payment...');
+                
+                // Store in localStorage for payment page
+                const photoData = {
+                    name: selectedFile.name,
+                    size: selectedFile.size,
+                    package: selectedPackage,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('uploadedPhoto', JSON.stringify(photoData));
+                
+                // Redirect to payment (replace with actual URL)
+                setTimeout(() => {
+                    alert('Photo uploaded! (Payment integration coming soon)\n\nPackage: ' + selectedPackage.toUpperCase() + '\nPhoto: ' + selectedFile.name);
+                    // window.location.href = '/payment?package=' + selectedPackage;
+                }, 1500);
+
+            } catch (error) {
+                showError('Upload failed. Please try again.');
+                console.error('Upload error:', error);
+            } finally {
+                loadingModal.classList.remove('active');
+                uploadBtnModal.disabled = false;
+            }
+        });
+
+        // Change photo button
+        changePhotoBtnModal.addEventListener('click', () => {
+            selectedFile = null;
+            previewContainerModal.classList.remove('active');
+            fileInputModal.value = '';
+            hideMessages();
+        });
+
+        // Helper functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showError(message) {
+            errorMessageModal.textContent = message;
+            errorMessageModal.classList.add('active');
+        }
+
+        function showSuccess(message) {
+            successMessageModal.textContent = message;
+            successMessageModal.classList.add('active');
+        }
+
+        function hideMessages() {
+            errorMessageModal.classList.remove('active');
+            successMessageModal.classList.remove('active');
+        }
+
+        function resetUploadForm() {
+            selectedFile = null;
+            previewContainerModal.classList.remove('active');
+            fileInputModal.value = '';
+            hideMessages();
+        }
+
+        // Smooth scroll for hero and sticky CTA buttons
+        document.querySelectorAll('.hero-button, .sticky-cta-button').forEach(button => {
             button.addEventListener('click', () => {
                 // Haptic feedback on mobile
                 if ('vibrate' in navigator) {
                     navigator.vibrate(50);
                 }
                 
-                // Scroll to pricing (or trigger your checkout)
+                // Scroll to pricing
                 const pricingCard = document.querySelector('.pricing-cards').closest('.card');
                 pricingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Photo - Raincrest.art</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0A0A0A;
+            color: #FFFFFF;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #1A1A1A;
+            border-radius: 16px;
+            padding: 40px;
+            border: 2px solid #D4AF37;
+        }
+
+        h1 {
+            color: #D4AF37;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #CCCCCC;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #D4AF37;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(212, 175, 55, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: #F4D03F;
+        }
+
+        .upload-area.dragover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #F4D03F;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            color: #D4AF37;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #999999;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .preview-container.active {
+            display: block;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 12px;
+            margin: 0 auto 20px;
+            display: block;
+            border: 2px solid #D4AF37;
+        }
+
+        .photo-info {
+            background: #2B2B2B;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .photo-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .photo-info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .photo-info-label {
+            color: #999999;
+        }
+
+        .photo-info-value {
+            color: #D4AF37;
+            font-weight: 700;
+        }
+
+        .requirements {
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 4px solid #D4AF37;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .requirements h3 {
+            color: #D4AF37;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .requirements ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .requirements li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #CCCCCC;
+        }
+
+        .requirements li:before {
+            content: "✓ ";
+            color: #D4AF37;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.2);
+            border: 2px solid #ff4444;
+            color: #ff6666;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            color: #81C784;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%);
+            color: #0A0A0A;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-top: 3px solid #D4AF37;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .upload-area {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Upload Your Photo</h1>
+        <p class="subtitle">Choose a clear face photo for your royal transformation</p>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <div class="requirements">
+            <h3>Photo Requirements:</h3>
+            <ul>
+                <li>Format: JPG, PNG, or HEIC</li>
+                <li>Size: 512×512 pixels minimum</li>
+                <li>Max file size: 10MB</li>
+                <li>Clear face, front-facing</li>
+                <li>Good lighting</li>
+                <li>No sunglasses or face coverings</li>
+            </ul>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Click to Upload or Drag & Drop</div>
+            <div class="upload-hint">JPG, PNG, or HEIC up to 10MB</div>
+            <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png,image/heic" />
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Uploading...</p>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" class="preview-image" alt="Preview" />
+            <div class="photo-info">
+                <div class="photo-info-item">
+                    <span class="photo-info-label">File name:</span>
+                    <span class="photo-info-value" id="fileName">-</span>
+                </div>
+                <div class="photo-info-item">
+                    <span class="photo-info-label">File size:</span>
+                    <span class="photo-info-value" id="fileSize">-</span>
+                </div>
+                <div class="photo-info-item">
+                    <span class="photo-info-label">Dimensions:</span>
+                    <span class="photo-info-value" id="fileDimensions">-</span>
+                </div>
+                <div class="photo-info-item">
+                    <span class="photo-info-label">Format:</span>
+                    <span class="photo-info-value" id="fileFormat">-</span>
+                </div>
+            </div>
+            <button class="btn" id="uploadBtn">Upload Photo</button>
+            <button class="btn btn-secondary" id="changePhotoBtn">Choose Different Photo</button>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const changePhotoBtn = document.getElementById('changePhotoBtn');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        let selectedFile = null;
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Handle file
+        function handleFile(file) {
+            hideMessages();
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic'];
+            if (!validTypes.includes(file.type)) {
+                showError('Invalid file type. Please upload JPG, PNG, or HEIC.');
+                return;
+            }
+
+            // Validate file size (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File is too large. Maximum size is 10MB.');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.classList.add('active');
+
+                // Update file info
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                document.getElementById('fileFormat').textContent = file.type.toUpperCase();
+
+                // Get image dimensions
+                const img = new Image();
+                img.onload = () => {
+                    document.getElementById('fileDimensions').textContent = `${img.width} × ${img.height} px`;
+                    
+                    // Validate dimensions
+                    if (img.width < 512 || img.height < 512) {
+                        showError('Image is too small. Minimum size is 512×512 pixels.');
+                        previewContainer.classList.remove('active');
+                        selectedFile = null;
+                        return;
+                    }
+
+                    showSuccess('Photo looks good! Click "Upload Photo" to continue.');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Upload button
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            hideMessages();
+            loading.classList.add('active');
+            uploadBtn.disabled = true;
+
+            try {
+                // TODO: Replace with actual upload endpoint
+                // For now, just simulate upload
+                const formData = new FormData();
+                formData.append('photo', selectedFile);
+
+                // Simulate upload (replace with actual API call)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Success
+                showSuccess('Photo uploaded successfully! Redirecting to payment...');
+                
+                // TODO: Store photo URL and redirect to payment
+                // For now, just log
+                console.log('Photo uploaded:', selectedFile.name);
+                
+                // Redirect to payment (replace with actual URL)
+                setTimeout(() => {
+                    // window.location.href = '/payment?photo=' + photoUrl;
+                    alert('Photo uploaded! (Payment integration coming soon)');
+                }, 1500);
+
+            } catch (error) {
+                showError('Upload failed. Please try again.');
+                console.error('Upload error:', error);
+            } finally {
+                loading.classList.remove('active');
+                uploadBtn.disabled = false;
+            }
+        });
+
+        // Change photo button
+        changePhotoBtn.addEventListener('click', () => {
+            selectedFile = null;
+            previewContainer.classList.remove('active');
+            fileInput.value = '';
+            hideMessages();
+        });
+
+        // Helper functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.add('active');
+        }
+
+        function hideMessages() {
+            errorMessage.classList.remove('active');
+            successMessage.classList.remove('active');
+        }
+    </script>
+</body>
+</html>
+

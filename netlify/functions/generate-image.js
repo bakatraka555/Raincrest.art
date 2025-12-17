@@ -19,7 +19,7 @@
  */
 
 const fetch = require('node-fetch');
-const { getPrompt } = require('./prompts');
+const { getPrompt, templateScenes } = require('./prompts');
 
 exports.handler = async (event, context) => {
   // Log svaki poziv funkcije
@@ -108,15 +108,17 @@ exports.handler = async (event, context) => {
     const REPLICATE_MODEL = process.env.REPLICATE_MODEL || 'google/nano-banana-pro'; // Fallback na pro verziju
     console.log('Using Replicate model:', REPLICATE_MODEL);
 
-    // Učitaj template database za prompt
-    const templates = require('../../docs/couples-templates-database.json');
-    const template = templates.templates.find(t => t.id === templateId);
-    
-    if (!template) {
+    // Provjeri da li template postoji
+    if (!templateScenes[templateId]) {
+      console.log('Template not found:', templateId);
+      console.log('Available templates:', Object.keys(templateScenes));
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: 'Template not found' })
+        body: JSON.stringify({ 
+          error: 'Template not found',
+          availableTemplates: Object.keys(templateScenes)
+        })
       };
     }
 

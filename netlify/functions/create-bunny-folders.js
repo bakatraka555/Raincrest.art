@@ -77,14 +77,10 @@ exports.handler = async (event, context) => {
   try {
     console.log('=== create-bunny-folders function called ===');
 
-    // Load templates database
-    const templatesPath = path.join(__dirname, '../../docs/couples-templates-database.json');
-    const templatesDb = JSON.parse(fs.readFileSync(templatesPath, 'utf8'));
-
     const foldersCreated = [];
     const errors = [];
 
-    // Create temp folder
+    // Create temp folder for user uploads
     const tempResult = await createFolder('temp');
     if (tempResult.success) {
       foldersCreated.push('temp');
@@ -94,29 +90,14 @@ exports.handler = async (event, context) => {
       console.log(`[FAIL] temp/ - ${tempResult.error}`);
     }
 
-    // Create template folders and thumbs
-    for (const template of templatesDb.templates) {
-      const templateId = template.id;
-      
-      // Create template folder
-      const templateResult = await createFolder(templateId);
-      if (templateResult.success) {
-        foldersCreated.push(templateId);
-        console.log(`[OK] ${templateId}/`);
-      } else {
-        errors.push({ folder: templateId, error: templateResult.error });
-        console.log(`[FAIL] ${templateId}/ - ${templateResult.error}`);
-      }
-
-      // Create thumbs folder
-      const thumbsResult = await createFolder(`${templateId}/thumbs`);
-      if (thumbsResult.success) {
-        foldersCreated.push(`${templateId}/thumbs`);
-        console.log(`[OK] ${templateId}/thumbs/`);
-      } else {
-        errors.push({ folder: `${templateId}/thumbs`, error: thumbsResult.error });
-        console.log(`[FAIL] ${templateId}/thumbs/ - ${thumbsResult.error}`);
-      }
+    // Create public folder for demo images
+    const publicResult = await createFolder('public');
+    if (publicResult.success) {
+      foldersCreated.push('public');
+      console.log('[OK] public/');
+    } else {
+      errors.push({ folder: 'public', error: publicResult.error });
+      console.log(`[FAIL] public/ - ${publicResult.error}`);
     }
 
     const summary = {

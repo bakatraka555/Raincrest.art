@@ -9,8 +9,6 @@
  */
 
 const fetch = require('node-fetch');
-const fs = require('fs');
-const path = require('path');
 
 // Bunny.net konfiguracija
 const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE || 'raincrest-art';
@@ -198,30 +196,16 @@ exports.handler = async (event, context) => {
     console.log(`Storage Zone: ${BUNNY_STORAGE_ZONE}`);
     console.log(`CDN Domain: ${CDN_DOMAIN}`);
 
-    // Load templates database
-    const templatesPath = path.join(__dirname, '../../docs/couples-templates-database.json');
-    const templatesDb = JSON.parse(fs.readFileSync(templatesPath, 'utf8'));
-
     // Create temp folder
     await createTempFolder();
 
-    // Setup each template
-    const allResults = [];
-    for (const template of templatesDb.templates) {
-      const results = await setupTemplateExamples(template);
-      allResults.push(...results);
-    }
-
     const summary = {
       success: true,
-      uploaded: allResults.length,
-      templates: templatesDb.templates.length,
-      message: 'Bunny.net structure setup completed'
+      message: 'Bunny.net structure setup completed - temp folder created'
     };
 
     console.log('\n=== Summary ===');
-    console.log(`Uploaded: ${allResults.length} placeholder images`);
-    console.log(`Templates: ${templatesDb.templates.length}`);
+    console.log('Temp folder created successfully');
 
     return {
       statusCode: 200,

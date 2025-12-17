@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Your Transformation - Raincrest Art</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- QR code library removed - not needed for kiosk mode -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js"></script>
     <style>
         * {
@@ -2530,55 +2530,7 @@
             }
         }
         
-        // Generiraj QR kod za sliku
-        function generateQRCodeForImage(imageUrl, container) {
-            // Provjeri da li je base64 data URL (predugačak za QR kod)
-            if (imageUrl && imageUrl.startsWith('data:image')) {
-                console.log('⚠️ Skipping QR code generation for base64 data URL (too large)');
-                return; // Preskoči QR kod za base64 slike
-            }
-            
-            const qrDiv = document.createElement('div');
-            qrDiv.className = 'result-item';
-            qrDiv.style.textAlign = 'center';
-            qrDiv.style.padding = '20px';
-            qrDiv.style.background = '#f8f9fa';
-            qrDiv.style.borderRadius = '12px';
-            qrDiv.style.marginTop = '20px';
-            qrDiv.innerHTML = '<h4>📱 Scan QR code to access on your phone</h4><div id="qrCodeContainer" style="display: inline-block; padding: 20px; background: white; border-radius: 8px; margin-top: 10px;"></div>';
-            container.appendChild(qrDiv);
-            
-            const qrContainer = qrDiv.querySelector('#qrCodeContainer');
-            qrContainer.innerHTML = '<div style="text-align: center; padding: 20px;">Loading QR code...</div>';
-            
-            // Check if QRCode library is loaded
-            if (typeof QRCode === 'undefined') {
-                console.error('QRCode library not loaded');
-                qrContainer.innerHTML = '<p style="color: red;">QR library not loaded</p>';
-                return;
-            }
-            
-            // qrcodejs uses constructor approach
-            try {
-                // Clear previous QR code
-                qrContainer.innerHTML = '';
-                
-                // Generate QR code using qrcodejs API
-                new QRCode(qrContainer, {
-                    text: imageUrl,
-                    width: 250,
-                    height: 250,
-                    colorDark: '#667eea',
-                    colorLight: '#ffffff',
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-                
-                console.log('QR code generated successfully');
-            } catch (error) {
-                console.error('QR code error:', error);
-                qrContainer.innerHTML = '<p style="color: red;">Error generating QR code</p>';
-            }
-        }
+        // QR code function removed - not needed for kiosk mode
 
         // Initialize
         loadTemplateInfo();

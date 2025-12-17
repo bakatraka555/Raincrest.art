@@ -1,0 +1,66 @@
+# Netlify Configuration for Raincrest Art Photo Booth
+
+[build]
+  # Base directory (root of the project)
+  base = "."
+  
+  # Build command (empty - static site, no build needed)
+  command = ""
+  
+  # Publish directory (root - all files are in root)
+  publish = "."
+
+# Redirects for clean URLs
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/order"
+  to = "/order.html"
+  status = 200
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/docs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# Functions directory
+[functions]
+  directory = "netlify/functions"
+
+# Function-specific configuration
+[functions."upload-user-image"]
+  timeout = 30  # 30 seconds for mobile uploads (default is 10s)
+
+[functions."generate-image"]
+  timeout = 30  # 30 seconds for AI generation calls
+
+# Environment variables (set these in Netlify dashboard, not here!)
+# REPLICATE_API_TOKEN = "your-token-here"  # Set in Netlify UI!
+

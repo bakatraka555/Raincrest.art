@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cursor rules (local only, not for GitHub)
+.cursorrules
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+generation-results.json
+
+# API Keys (ne commitaj!)
+*api-key*
+*api_token*
+*secret*
+
+# Test files
+test-couple.jpg
+logo.png
+test-bunny-env.js
+*test*.js
+
+# Node modules
+node_modules/
+
+# Backup folder (old Love Stories code)
+backup_old/
+

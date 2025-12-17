@@ -61,6 +61,9 @@
 [functions."generate-image"]
   timeout = 30  # 30 seconds for AI generation calls
 
+[functions."generate-image-google"]
+  timeout = 60  # 60 seconds for Google AI (can be slower, especially with image generation)
+
 # Environment variables (set these in Netlify dashboard, not here!)
 # REPLICATE_API_TOKEN = "your-token-here"  # Set in Netlify UI!
 

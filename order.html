@@ -1559,37 +1559,72 @@
                 });
                 
                 let generateResponse;
-                try {
-                    // Izaberi endpoint prema toggle-u
-                    const endpoint = USE_GOOGLE_AI 
-                        ? '/.netlify/functions/generate-image-google'  // 🧪 Google AI (test)
-                        : '/.netlify/functions/generate-image';         // ✅ Replicate (original)
-                    
-                    console.log('📡 Endpoint:', endpoint);
-                    
-                    generateResponse = await fetchWithTimeout(endpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            templateId: currentTemplate.id,
-                            image1Url: image1Url,  // URL umjesto base64!
-                            image2Url: image2Url,  // URL umjesto base64!
-                            isCouple: isCouple
-                        })
-                    }, 30000); // 30 sekundi timeout
-                    
-                    console.log('✅✅✅ generate-image response received');
-                    console.log('✅ Response status:', generateResponse.status);
-                } catch (fetchError) {
-                    if (fetchError.message === 'Request timeout') {
-                        throw new Error('Request timeout - the server took too long to respond. Please try again.');
-                    } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
-                        throw new Error('Network error - please check your internet connection and try again.');
-                    } else {
-                        throw new Error('Failed to connect to server: ' + fetchError.message);
+                
+                // Auto retry za timeout greške
+                const maxRetries = 2; // Max 2 retry-a (ukupno 3 pokušaja)
+                let retryAttempt = 0;
+                let lastError = null;
+                
+                // Izaberi endpoint prema toggle-u
+                const endpoint = USE_GOOGLE_AI 
+                    ? '/.netlify/functions/generate-image-google'  // 🧪 Google AI (test)
+                    : '/.netlify/functions/generate-image';         // ✅ Replicate (original)
+                
+                console.log('📡 Endpoint:', endpoint);
+                
+                // Retry loop
+                while (retryAttempt <= maxRetries) {
+                    try {
+                        if (retryAttempt > 0) {
+                            const delay = Math.min(2000 * retryAttempt, 5000); // Exponential backoff: 2s, 4s, max 5s
+                            console.log(`⏱️ Timeout occurred - auto retry ${retryAttempt}/${maxRetries} (waiting ${delay}ms)...`);
+                            updateLoadingStep(2, `Retrying... (${retryAttempt}/${maxRetries})`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                        
+                        generateResponse = await fetchWithTimeout(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                templateId: currentTemplate.id,
+                                image1Url: image1Url,  // URL umjesto base64!
+                                image2Url: image2Url,  // URL umjesto base64!
+                                isCouple: isCouple
+                            })
+                        }, 60000); // 60 sekundi timeout (povećano za Google AI)
+                        
+                        console.log('✅✅✅ generate-image response received');
+                        console.log('✅ Response status:', generateResponse.status);
+                        
+                        // Uspješno - izađi iz retry loop-a
+                        break;
+                        
+                    } catch (fetchError) {
+                        lastError = fetchError;
+                        
+                        // Provjeri da li je timeout greška i imamo još retry-a
+                        if (fetchError.message === 'Request timeout' && retryAttempt < maxRetries) {
+                            retryAttempt++;
+                            console.warn(`⚠️ Request timeout (attempt ${retryAttempt}/${maxRetries + 1})`);
+                            continue; // Pokušaj ponovno
+                        }
+                        
+                        // Ako nije timeout ili smo iscrpili retry-e, baci grešku
+                        if (fetchError.message === 'Request timeout') {
+                            throw new Error(`Request timeout - the server took too long to respond after ${maxRetries + 1} attempts. Please try again.`);
+                        } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
+                            throw new Error('Network error - please check your internet connection and try again.');
+                        } else {
+                            throw new Error('Failed to connect to server: ' + fetchError.message);
+                        }
                     }
+                }
+                
+                // Provjeri da li imamo response nakon retry-a
+                if (!generateResponse) {
+                    throw new Error('Failed to get response after retries: ' + (lastError?.message || 'Unknown error'));
                 }
 
                 // Provjeri status kod prije svega

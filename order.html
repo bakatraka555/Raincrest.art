@@ -1694,7 +1694,7 @@
                     console.log('✅ Google AI direct response - image ready immediately!');
                     console.log('Provider:', generateResult.provider);
                     console.log('Model:', generateResult.model);
-                    finalImageUrl = generateResult.image;
+                    finalImageUrl = generateResult.image; // Base64 data URL - QR kod će biti preskočen
                     updateLoadingStep(5, 'Image generated successfully! 🎉');
                     updateProgress(100);
                 } else if (generateResult.predictionId) {
@@ -2533,6 +2533,12 @@
         
         // Generiraj QR kod za sliku
         function generateQRCodeForImage(imageUrl, container) {
+            // Provjeri da li je base64 data URL (predugačak za QR kod)
+            if (imageUrl && imageUrl.startsWith('data:image')) {
+                console.log('⚠️ Skipping QR code generation for base64 data URL (too large)');
+                return; // Preskoči QR kod za base64 slike
+            }
+            
             const qrDiv = document.createElement('div');
             qrDiv.className = 'result-item';
             qrDiv.style.textAlign = 'center';

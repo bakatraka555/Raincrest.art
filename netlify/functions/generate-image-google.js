@@ -344,19 +344,32 @@ exports.handler = async (event, context) => {
     let imagePart = null;
     let generatedImageBase64 = null;
 
-    // Opcija 1: parts array sa inline_data
+    // Opcija 1: parts array - provjeri i inlineData (camelCase) i inline_data (snake_case)
     if (candidate.content?.parts) {
-      imagePart = candidate.content.parts.find(part => part.inline_data);
+      // Provjeri camelCase format (inlineData) - što Google API vraća
+      imagePart = candidate.content.parts.find(part => part.inlineData || part.inline_data);
+      
       if (imagePart) {
-        console.log('Found image in parts[].inline_data');
-        generatedImageBase64 = imagePart.inline_data.data;
+        // Provjeri oba formata
+        if (imagePart.inlineData) {
+          console.log('Found image in parts[].inlineData (camelCase)');
+          generatedImageBase64 = imagePart.inlineData.data;
+        } else if (imagePart.inline_data) {
+          console.log('Found image in parts[].inline_data (snake_case)');
+          generatedImageBase64 = imagePart.inline_data.data;
+        }
       }
     }
 
-    // Opcija 2: direktno u candidate (fallback)
-    if (!generatedImageBase64 && candidate.inline_data) {
-      console.log('Found image in candidate.inline_data');
-      generatedImageBase64 = candidate.inline_data.data;
+    // Opcija 2: direktno u candidate (fallback) - provjeri oba formata
+    if (!generatedImageBase64) {
+      if (candidate.inlineData) {
+        console.log('Found image in candidate.inlineData (camelCase)');
+        generatedImageBase64 = candidate.inlineData.data;
+      } else if (candidate.inline_data) {
+        console.log('Found image in candidate.inline_data (snake_case)');
+        generatedImageBase64 = candidate.inline_data.data;
+      }
     }
 
     // Opcija 3: Provjeri format i konvertuj ako treba
@@ -385,10 +398,10 @@ exports.handler = async (event, context) => {
       else if (typeof generatedImageBase64 === 'string') {
         // Ako već počinje sa /9j/ (JPEG magic bytes u base64), već je base64
         if (generatedImageBase64.startsWith('/9j/') || generatedImageBase64.startsWith('iVBORw0KG')) {
-          console.log('Data appears to be base64 string (starts with /9j/ or iVBORw0KG)');
-          // Već je base64, nema potrebe za konverziju
+          console.log('✅ Data is already base64 string (starts with /9j/ or iVBORw0KG) - using directly!');
+          // Već je base64, nema potrebe za konverziju - koristi direktno!
         } else {
-          console.log('Data is string, assuming it is base64');
+          console.log('Data is string but format unclear, assuming it is base64');
         }
       }
       else {
@@ -398,16 +411,32 @@ exports.handler = async (event, context) => {
     }
 
     if (!generatedImageBase64) {
-      console.error('No image data found in any expected location');
+      console.error('❌ No image data found in any expected location');
+      
+      // Detaljno logiranje strukture za debugging
+      if (candidate.content?.parts) {
+        console.log('Parts array structure:');
+        candidate.content.parts.forEach((part, index) => {
+          console.log(`Part ${index}:`, Object.keys(part));
+          if (part.inlineData) {
+            console.log(`  Part ${index} has inlineData (camelCase):`, typeof part.inlineData.data, part.inlineData.data?.substring(0, 50));
+          }
+          if (part.inline_data) {
+            console.log(`  Part ${index} has inline_data (snake_case):`, typeof part.inline_data.data, part.inline_data.data?.substring(0, 50));
+          }
+        });
+      }
+      
       console.log('Full candidate structure:', JSON.stringify(candidate, null, 2).substring(0, 2000));
+      
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
           error: 'No image generated',
-          details: 'Response has candidate but no image data found',
-          candidate: JSON.stringify(candidate).substring(0, 500),
-          hint: 'Check logs for full response structure'
+          details: 'Response has candidate but no image data found in expected format',
+          candidate: JSON.stringify(candidate).substring(0, 1000),
+          hint: 'Check Netlify Function logs for detailed structure analysis'
         })
       };
     }

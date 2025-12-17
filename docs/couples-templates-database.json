@@ -2,7 +2,7 @@
   "templates": [
     {
       "id": "template-02",
-      "number": "1",
+      "number": 1,
       "name": "The Ruler of Dubrovnik",
       "description": "Transform into medieval royalty on Dubrovnik's ancient walls. Each generation creates a unique artwork - no two are the same!",
       "category": "fantasy",

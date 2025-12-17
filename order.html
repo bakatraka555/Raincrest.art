@@ -1525,9 +1525,9 @@
                 updateLoadingStep(2, 'Starting AI generation...');
                 
                 // ⚙️ TOGGLE: Izaberi AI provider
-                // true = Google AI Studio (NEDOSTUPNO - Gemini API ne generira slike, samo tekst)
-                // false = Replicate (original, pouzdano, $0.039/slika, PODRŽAVA image generation)
-                const USE_GOOGLE_AI = false; // ⚠️ Google AI ne radi - vratili smo na Replicate
+                // true = Google AI Studio (gemini-3-pro-image-preview - Nano Banana Pro, podržava image generation!)
+                // false = Replicate (original, pouzdano, $0.039/slika)
+                const USE_GOOGLE_AI = true; // ✅ Koristi Google AI Studio (Nano Banana Pro)
                 
                 console.log('🤖 AI Provider:', USE_GOOGLE_AI ? 'Google AI Studio (TEST)' : 'Replicate (ORIGINAL)');
                 console.log('Calling generate-image function with URLs...');

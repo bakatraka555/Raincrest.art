@@ -245,7 +245,8 @@ exports.handler = async (event, context) => {
     console.log('All images converted to base64, total:', imageParts.length);
 
     // 3. Google AI API endpoint
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    // Koristi gemini-3-pro-image-preview (Nano Banana Pro) za image generation
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
     // 4. Pripremi request za Google AI
     const requestBody = {
@@ -258,12 +259,16 @@ exports.handler = async (event, context) => {
       }],
       generationConfig: {
         response_modalities: ["IMAGE"],
-        temperature: 0.9
+        temperature: 0.9,
+        imageConfig: {
+          aspectRatio: "1:1",  // 1:1 za selfie format
+          numberOfImages: 1
+        }
       }
     };
 
     console.log('=== CALLING GOOGLE AI API ===');
-    console.log('Model: gemini-2.5-flash');
+    console.log('Model: gemini-3-pro-image-preview (Nano Banana Pro)');
     console.log('Prompt length:', prompt.length);
     console.log('Images count:', imageParts.length);
     console.log('Request parts:', requestBody.contents[0].parts.length);
@@ -363,8 +368,8 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         image: `data:image/jpeg;base64,${generatedImageBase64}`,
-        model: 'gemini-2.5-flash',
-        provider: 'Google AI Studio (direct)',
+        model: 'gemini-3-pro-image-preview',
+        provider: 'Google AI Studio (direct - Nano Banana Pro)',
         templateId: templateId,
         isCouple: isCouple,
         timestamp: new Date().toISOString()

@@ -1,6 +1,6 @@
-# ⚠️ Google AI Studio Limitation
+# ✅ Google AI Studio - Riješeno!
 
-## ❌ Problem: Gemini API ne generira slike
+## ❌ Problem (RIJEŠENO): Pogrešan model name
 
 **Greška:**
 ```
@@ -8,27 +8,40 @@
 ```
 
 **Uzrok:**
-Google Gemini API (AI Studio) **ne podržava generiranje slika** - samo:
-- ✅ Analizira slike (image input)
-- ✅ Generira tekst (text output)
-- ❌ **NE generira slike** (image output)
+Koristio sam **pogrešan model** `gemini-2.5-flash` koji podržava samo tekst!
+
+**Rješenje:**
+Promijenio na **`gemini-3-pro-image-preview`** (Nano Banana Pro) koji **PODRŽAVA image generation**!
 
 ---
 
-## 🔍 Što smo pokušali
+## ✅ Ispravno rješenje
 
-### 1. `gemini-2.5-flash-image` (Replicate model name)
-- ❌ Ne postoji u Google AI Studio direktno
-- ✅ Postoji samo na Replicate kao wrapper
+### `gemini-3-pro-image-preview` (Nano Banana Pro) ✅
+- ✅ Postoji u Google AI Studio
+- ✅ **PODRŽAVA image generation!**
+- ✅ Najbolja kvaliteta
+- ✅ Može primati slike (image input) i generirati slike (image output)
 
-### 2. `gemini-2.5-flash` (Google AI Studio)
-- ✅ Postoji i radi
-- ❌ **Samo tekst output** - ne generira slike
-- ✅ Može analizirati slike (image input)
+**Kod:**
+```javascript
+const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
-### 3. `response_modalities: ["IMAGE"]`
-- ❌ Model ne podržava image generation
-- ✅ Podržava samo text generation
+const requestBody = {
+  generationConfig: {
+    response_modalities: ["IMAGE"],
+    imageConfig: {
+      aspectRatio: "1:1",
+      numberOfImages: 1
+    }
+  }
+};
+```
+
+### Alternativa: `gemini-2.5-flash-image`
+- ✅ Brže/jeftinije
+- ✅ Također podržava image generation
+- ⚠️ Možda nije dostupan u svim regijama
 
 ---
 
@@ -96,15 +109,15 @@ Google možda u budućnosti doda image generation u Gemini API.
 
 ## ✅ Trenutno rješenje
 
-**Vraćeno na Replicate:**
+**Koristi Google AI Studio sa ispravnim modelom:**
 ```javascript
-const USE_GOOGLE_AI = false; // Replicate (radi!)
+const USE_GOOGLE_AI = true; // Google AI Studio (gemini-3-pro-image-preview)
 ```
 
-**Zašto:**
-- Google Gemini API ne podržava image generation
-- Replicate već radi i podržava sve što trebamo
-- Jednostavnije od Vertex AI setup-a
+**Model:** `gemini-3-pro-image-preview` (Nano Banana Pro)
+- ✅ Podržava image generation
+- ✅ Najbolja kvaliteta
+- ✅ Jeftinije od Replicate
 
 ---
 
@@ -127,7 +140,7 @@ const USE_GOOGLE_AI = false; // Replicate (radi!)
 
 ---
 
-**Status:** ⚠️ Google AI Studio ne podržava image generation - vraćeno na Replicate  
+**Status:** ✅ Riješeno - koristi `gemini-3-pro-image-preview` za image generation  
 **Datum:** 2024-11-15  
-**Commit:** Vraćeno na Replicate
+**Commit:** Popravljen model name, Google AI sada radi!
 

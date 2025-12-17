@@ -2,10 +2,12 @@
   "templates": [
     {
       "id": "template-02",
-      "name": "Medieval Romance (King & Queen)",
-      "description": "Transform into royalty in Dubrovnik",
+      "number": "1",
+      "name": "The Ruler of Dubrovnik",
+      "description": "Transform into medieval royalty on Dubrovnik's ancient walls. Each generation creates a unique artwork - no two are the same!",
       "category": "fantasy",
       "price": 20,
+      "style": "Medieval King/Queen on city walls with dramatic sunset over Adriatic Sea",
       "enabled": true
     }
   ]

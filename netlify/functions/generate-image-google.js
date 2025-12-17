@@ -319,11 +319,13 @@ exports.handler = async (event, context) => {
     }
 
     console.log('Response parsed successfully');
+    console.log('Full response structure:', JSON.stringify(result).substring(0, 1000));
 
-    // 5. Pronađi generiranu sliku
+    // 5. Pronađi generiranu sliku - provjeri različite moguće strukture
     const candidate = result.candidates?.[0];
     if (!candidate) {
       console.error('No candidates in response');
+      console.log('Full result:', JSON.stringify(result, null, 2).substring(0, 1000));
       return {
         statusCode: 500,
         headers,
@@ -334,26 +336,81 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const imagePart = candidate.content?.parts?.find(
-      part => part.inline_data
-    );
+    console.log('Candidate found:', JSON.stringify(candidate).substring(0, 500));
+    console.log('Candidate content:', candidate.content);
+    console.log('Candidate parts:', candidate.content?.parts);
 
-    if (!imagePart) {
-      console.error('No image part found in candidate');
-      console.log('Candidate structure:', JSON.stringify(candidate).substring(0, 500));
+    // Provjeri različite moguće strukture
+    let imagePart = null;
+    let generatedImageBase64 = null;
+
+    // Opcija 1: parts array sa inline_data
+    if (candidate.content?.parts) {
+      imagePart = candidate.content.parts.find(part => part.inline_data);
+      if (imagePart) {
+        console.log('Found image in parts[].inline_data');
+        generatedImageBase64 = imagePart.inline_data.data;
+      }
+    }
+
+    // Opcija 2: direktno u candidate (fallback)
+    if (!generatedImageBase64 && candidate.inline_data) {
+      console.log('Found image in candidate.inline_data');
+      generatedImageBase64 = candidate.inline_data.data;
+    }
+
+    // Opcija 3: Provjeri format i konvertuj ako treba
+    if (generatedImageBase64) {
+      console.log('Image data found, type:', typeof generatedImageBase64);
+      console.log('Image data length:', generatedImageBase64.length || 'N/A');
+      console.log('Image data preview:', typeof generatedImageBase64 === 'string' 
+        ? generatedImageBase64.substring(0, 50) + '...' 
+        : 'Not a string');
+
+      // Ako je Buffer, konvertuj u base64 string
+      if (Buffer.isBuffer(generatedImageBase64)) {
+        console.log('Data is Buffer, converting to base64 string');
+        generatedImageBase64 = generatedImageBase64.toString('base64');
+      } 
+      // Ako je Uint8Array ili ArrayBuffer, konvertuj u Buffer pa u base64
+      else if (generatedImageBase64 instanceof Uint8Array) {
+        console.log('Data is Uint8Array, converting to base64 string');
+        generatedImageBase64 = Buffer.from(generatedImageBase64).toString('base64');
+      }
+      else if (generatedImageBase64 instanceof ArrayBuffer) {
+        console.log('Data is ArrayBuffer, converting to base64 string');
+        generatedImageBase64 = Buffer.from(generatedImageBase64).toString('base64');
+      }
+      // Ako je string, provjeri da li je već base64
+      else if (typeof generatedImageBase64 === 'string') {
+        // Ako već počinje sa /9j/ (JPEG magic bytes u base64), već je base64
+        if (generatedImageBase64.startsWith('/9j/') || generatedImageBase64.startsWith('iVBORw0KG')) {
+          console.log('Data appears to be base64 string (starts with /9j/ or iVBORw0KG)');
+          // Već je base64, nema potrebe za konverziju
+        } else {
+          console.log('Data is string, assuming it is base64');
+        }
+      }
+      else {
+        console.log('Unknown data type, attempting to convert to string');
+        generatedImageBase64 = String(generatedImageBase64);
+      }
+    }
+
+    if (!generatedImageBase64) {
+      console.error('No image data found in any expected location');
+      console.log('Full candidate structure:', JSON.stringify(candidate, null, 2).substring(0, 2000));
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
           error: 'No image generated',
-          details: 'Response has candidate but no image data',
-          candidate: JSON.stringify(candidate).substring(0, 300)
+          details: 'Response has candidate but no image data found',
+          candidate: JSON.stringify(candidate).substring(0, 500),
+          hint: 'Check logs for full response structure'
         })
       };
     }
-
-    // 6. Slika je base64
-    const generatedImageBase64 = imagePart.inline_data.data;
 
     console.log('=== ✅ SUCCESS ===');
     console.log('Image generated via Google AI Studio!');

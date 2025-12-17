@@ -1523,6 +1523,13 @@
                 
                 // SADA: Pozovi Netlify Function za generiranje s URL-ovima (mali request!)
                 updateLoadingStep(2, 'Starting AI generation...');
+                
+                // ⚙️ TOGGLE: Izaberi AI provider
+                // true = Google AI Studio (70% jeftinije, ~$0.001/slika, besplatno do 1500/dan)
+                // false = Replicate (original, pouzdano, $0.039/slika)
+                const USE_GOOGLE_AI = false; // 🧪 Promijeni u true za testiranje Google AI
+                
+                console.log('🤖 AI Provider:', USE_GOOGLE_AI ? 'Google AI Studio (TEST)' : 'Replicate (ORIGINAL)');
                 console.log('Calling generate-image function with URLs...');
                 
                 // Validacija URL-ova prije slanja
@@ -1553,7 +1560,14 @@
                 
                 let generateResponse;
                 try {
-                    generateResponse = await fetchWithTimeout('/.netlify/functions/generate-image', {
+                    // Izaberi endpoint prema toggle-u
+                    const endpoint = USE_GOOGLE_AI 
+                        ? '/.netlify/functions/generate-image-google'  // 🧪 Google AI (test)
+                        : '/.netlify/functions/generate-image';         // ✅ Replicate (original)
+                    
+                    console.log('📡 Endpoint:', endpoint);
+                    
+                    generateResponse = await fetchWithTimeout(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1672,26 +1686,31 @@
 
                 console.log('Generation result:', generateResult);
 
-                if (!generateResult.success || !generateResult.predictionId) {
-                    console.error('Missing success or predictionId in result:', {
-                        success: generateResult.success,
-                        predictionId: generateResult.predictionId,
-                        fullResult: generateResult
-                    });
-                    throw new Error('No prediction ID returned');
-                }
+                // 🔀 Provjeri format odgovora: Google AI (direktna slika) vs Replicate (predictionId)
+                let finalImageUrl;
+                
+                if (generateResult.image) {
+                    // ✅ Google AI - direktna slika (bez pollinga)
+                    console.log('✅ Google AI direct response - image ready immediately!');
+                    console.log('Provider:', generateResult.provider);
+                    console.log('Model:', generateResult.model);
+                    finalImageUrl = generateResult.image;
+                    updateLoadingStep(5, 'Image generated successfully! 🎉');
+                    updateProgress(100);
+                } else if (generateResult.predictionId) {
+                    // ✅ Replicate - polling flow
+                    console.log('✅ Replicate response - starting polling...');
+                    const predictionId = generateResult.predictionId;
+                    console.log('Prediction ID:', predictionId);
+                    console.log('Polling for prediction status...');
 
-                const predictionId = generateResult.predictionId;
-                console.log('Prediction ID:', predictionId);
-                console.log('Polling for prediction status...');
+                    // Poll status dok nije "succeeded" ili "failed"
+                    let statusResult;
+                    let maxAttempts = 150; // Max 5 minuta (150 * 2 sekunde)
+                    let attempt = 0;
 
-                // Poll status dok nije "succeeded" ili "failed"
-                let statusResult;
-                let maxAttempts = 150; // Max 5 minuta (150 * 2 sekunde)
-                let attempt = 0;
-
-                // Update to processing step
-                updateLoadingStep(3, 'Processing your photos...');
+                    // Update to processing step
+                    updateLoadingStep(3, 'Processing your photos...');
 
                 while (attempt < maxAttempts) {
                     await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
@@ -1778,47 +1797,56 @@
                     throw new Error('Generation timeout - prediction took too long');
                 }
 
-                if (!statusResult.imageUrl) {
-                    throw new Error('No image URL in result');
-                }
+                    if (!statusResult.imageUrl) {
+                        throw new Error('No image URL in result');
+                    }
 
-                // Upload na Bunny.net
-                console.log('Uploading to Bunny.net...');
-                console.log('Calling upload-to-bunny with:', {
-                    imageUrl: statusResult.imageUrl,
-                    templateId: currentTemplate.id,
-                    userId: generateUserId()
-                });
-                const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
+                    // Upload na Bunny.net
+                    console.log('Uploading to Bunny.net...');
+                    console.log('Calling upload-to-bunny with:', {
                         imageUrl: statusResult.imageUrl,
                         templateId: currentTemplate.id,
-                        userId: generateUserId() // Generiraj unique user ID
-                    })
-                });
+                        userId: generateUserId()
+                    });
+                    const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            imageUrl: statusResult.imageUrl,
+                            templateId: currentTemplate.id,
+                            userId: generateUserId() // Generiraj unique user ID
+                        })
+                    });
 
-                // Parse response body samo jednom
-                let uploadResult;
-                try {
-                    uploadResult = await uploadResponse.json();
-                } catch (e) {
-                    // Ako json() ne uspije, body je već potrošen - ne pokušavaj čitati text()
-                    console.error('Failed to parse upload JSON response:', e);
-                    throw new Error('Failed to parse upload response: ' + (e.message || 'Invalid JSON'));
+                    // Parse response body samo jednom
+                    let uploadResult;
+                    try {
+                        uploadResult = await uploadResponse.json();
+                    } catch (e) {
+                        // Ako json() ne uspije, body je već potrošen - ne pokušavaj čitati text()
+                        console.error('Failed to parse upload JSON response:', e);
+                        throw new Error('Failed to parse upload response: ' + (e.message || 'Invalid JSON'));
+                    }
+
+                    if (!uploadResponse.ok) {
+                        throw new Error(uploadResult.error || uploadResult.details || 'Upload failed');
+                    }
+
+                    console.log('Upload result:', uploadResult);
+
+                    // Set final image URL from Bunny.net CDN
+                    finalImageUrl = uploadResult.cdnUrl;
+                } else {
+                    // ❌ Nepoznat format odgovora
+                    console.error('Unknown response format:', generateResult);
+                    throw new Error('Invalid response format - missing both image and predictionId');
                 }
 
-                if (!uploadResponse.ok) {
-                    throw new Error(uploadResult.error || uploadResult.details || 'Upload failed');
-                }
-
-                console.log('Upload result:', uploadResult);
-
-                // Prikaži rezultate
-                showResults(uploadResult.cdnUrl, null);
+                // 🎉 Prikaži finalni rezultat (bilo Google AI ili Replicate)
+                console.log('📸 Displaying final image:', finalImageUrl ? finalImageUrl.substring(0, 80) + '...' : 'MISSING');
+                showResults(finalImageUrl, null);
                 
             } catch (error) {
                 console.error('Generation error:', error);

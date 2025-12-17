@@ -122,9 +122,9 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Učitaj prompt iz MD filea
-    const prompt = getPrompt(template.id, isCouple);
-    console.log('Using prompt from MD file for:', template.id, 'isCouple:', isCouple);
+    // Učitaj prompt iz prompts.js
+    const prompt = getPrompt(templateId, isCouple);
+    console.log('Using prompt from prompts.js for:', templateId, 'isCouple:', isCouple);
 
     // Helper funkcija za upload na Bunny.net
     const uploadToBunny = async (imageBase64, filename) => {

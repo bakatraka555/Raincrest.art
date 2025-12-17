@@ -245,7 +245,7 @@ exports.handler = async (event, context) => {
     console.log('All images converted to base64, total:', imageParts.length);
 
     // 3. Google AI API endpoint
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
     // 4. Pripremi request za Google AI
     const requestBody = {
@@ -263,7 +263,7 @@ exports.handler = async (event, context) => {
     };
 
     console.log('=== CALLING GOOGLE AI API ===');
-    console.log('Model: gemini-2.5-flash-image');
+    console.log('Model: gemini-2.5-flash');
     console.log('Prompt length:', prompt.length);
     console.log('Images count:', imageParts.length);
     console.log('Request parts:', requestBody.contents[0].parts.length);
@@ -363,7 +363,7 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         image: `data:image/jpeg;base64,${generatedImageBase64}`,
-        model: 'gemini-2.5-flash-image',
+        model: 'gemini-2.5-flash',
         provider: 'Google AI Studio (direct)',
         templateId: templateId,
         isCouple: isCouple,

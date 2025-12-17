@@ -1,0 +1,13 @@
+{
+  "templates": [
+    {
+      "id": "template-02",
+      "name": "Medieval Romance (King & Queen)",
+      "description": "Transform into royalty in Dubrovnik",
+      "category": "fantasy",
+      "price": 20,
+      "enabled": true
+    }
+  ]
+}
+

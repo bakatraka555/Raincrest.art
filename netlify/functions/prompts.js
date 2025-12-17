@@ -103,6 +103,13 @@ const templateScenes = {
     location: 'Dubrovnik scenic viewpoint, ancient walls, Adriatic Sea, Croatian coast',
     style: 'Professional travel photography, cinematic, National Geographic style, high quality, dramatic',
     specialInstructions: 'Both people in casual travel outfits, exploring Dubrovnik, candid travel photography style'
+  },
+  'template-14': {
+    name: 'Westeros Trading Card (Sellsword)',
+    scene: 'An ultra-photorealistic, gritty cinematic dark fantasy illustration in the style of Game of Thrones, depicting a hardened female adventurer/sellsword (evoking Lara Croft\'s agility but clad in weathered Westerosi leather armor, chainmail, and furs) dynamically bursting through the frame of an ancient, stone-carved "Legends of the Seven Kingdoms" trading card. She is caught mid-leap from a high battlement, wielding a Valyrian steel sword and perhaps holding a grappling hook with a thick rope. The massive limestone border of the card, carved with dragon and lion motifs, shatters violently. Instead of muzzle flashes, magical fissures glow with faint wildfire green energy and spatial distortions, creating a dimensional rupture. Debris scatters outward: fragments of sun-baked stone walls, broken terracotta roof tiles specific to Dubrovnik, bent arrows, and scattered Gold Dragon coins with Lannister sigils. Flying debris and dust emphasize the powerful moment of breaking through the flat surface of the card.',
+    location: 'Inside the card (the background) is a sprawling, detailed depiction of the walled city of Dubrovnik doubling as King\'s Landing, with the Red Keep looming over Blackwater Bay, filled with medieval ships. The title "CITY OF KINGS" and the character designation "Westeros Mercenary" (accompanied by a stylized iron throne or dragon icon) remain visible on remaining cracked, parchment-like parts of the card frame.',
+    style: 'Ultra-photorealistic, gritty cinematic dark fantasy, Game of Thrones aesthetic, dramatic moody golden-hour sunset light filtering through heavy clouds, emphasizing textures of stone, steel, and the perilous drop below',
+    specialInstructions: 'The person/people transformed into hardened Westerosi adventurer/sellsword bursting through ancient trading card frame. Dynamic action pose mid-leap from battlement. Trading card aesthetic with shattered stone border, magical fissures, and debris. Dubrovnik as King\'s Landing in background. Dramatic golden-hour lighting with heavy clouds. Ultra-photorealistic detail on armor, weapons, and stone textures.'
   }
 };
 

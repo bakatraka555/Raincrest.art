@@ -9,6 +9,16 @@
       "price": 20,
       "style": "Medieval King/Queen on city walls with dramatic sunset over Adriatic Sea",
       "enabled": true
+    },
+    {
+      "id": "template-14",
+      "number": 2,
+      "name": "Westeros Trading Card",
+      "description": "Burst through an ancient trading card as a hardened Westerosi sellsword! Dynamic action scene with Dubrovnik as King's Landing in the background.",
+      "category": "fantasy",
+      "price": 20,
+      "style": "Ultra-photorealistic Game of Thrones trading card with shattered frame, magical effects, and dramatic golden-hour lighting",
+      "enabled": true
     }
   ]
 }

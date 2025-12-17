@@ -260,9 +260,8 @@ exports.handler = async (event, context) => {
       generationConfig: {
         response_modalities: ["IMAGE"],
         temperature: 0.9,
-        imageConfig: {
-          aspectRatio: "1:1",  // 1:1 za selfie format
-          numberOfImages: 1
+        image_config: {
+          aspect_ratio: "1:1"  // 1:1 za selfie format, number_of_images je 1 po defaultu
         }
       }
     };

@@ -2552,11 +2552,12 @@
         checkGenerateButton();
         loadSavedProgress();
         
-        // ANDROID FIX: Setup listeners if using Android fix
+        // ANDROID FIX: Setup listeners - ALWAYS (buttons use these functions on all platforms)
+        debugLog('Setting up file input listeners', 'info');
+        setupAndroidInputListeners();
+        
         if (useAndroidFix) {
-            debugLog('Using Android fix with separate camera/gallery inputs', 'success');
-            setupAndroidInputListeners();
-            // Hide original buttons, show Android-specific message
+            debugLog('Android fix enabled: Using optimized file selection', 'success');
             showValidationMessage('📱 Android detected: Using optimized file selection', 'success');
         } else {
             debugLog('Using standard file input approach', 'info');

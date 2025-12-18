@@ -681,6 +681,55 @@
     </div>
 
     <script>
+        // ============================================
+        // CONSOLE LOG INTERCEPTOR - Prikuplja sve F12 logove
+        // ============================================
+        const consoleLogs = [];
+        const originalConsole = {
+            log: console.log.bind(console),
+            error: console.error.bind(console),
+            warn: console.warn.bind(console),
+            info: console.info.bind(console),
+            debug: console.debug.bind(console)
+        };
+
+        // Interceptiraj sve console metode
+        ['log', 'error', 'warn', 'info', 'debug'].forEach(method => {
+            console[method] = function(...args) {
+                // Pozovi originalnu metodu
+                originalConsole[method].apply(console, args);
+                
+                // Spremi u naš array
+                const timestamp = new Date().toISOString();
+                const message = args.map(arg => {
+                    if (typeof arg === 'object' && arg !== null) {
+                        try {
+                            // Pokušaj formatirati kao JSON
+                            if (arg instanceof Error) {
+                                return `${arg.name}: ${arg.message}\n${arg.stack || ''}`;
+                            }
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                consoleLogs.push({
+                    timestamp,
+                    method,
+                    message,
+                    raw: args
+                });
+                
+                // Limit na 1000 logova (da ne zauzme previše memorije)
+                if (consoleLogs.length > 1000) {
+                    consoleLogs.shift();
+                }
+            };
+        });
+        
         // Get template from URL
         const urlParams = new URLSearchParams(window.location.search);
         const templateId = urlParams.get('template');
@@ -846,6 +895,156 @@
                 panel.style.display = 'block';
                 updateDebugPanel();
             }
+        }
+        
+        // ============================================
+        // SHOW ALL LOGS IN DEBUG PANEL (F12 equivalent)
+        // ============================================
+        function showAllLogsInDebugPanel() {
+            const debugLogsDiv = document.getElementById('debugLogs');
+            if (!debugLogsDiv) return;
+            
+            // Dodaj header sa copy button
+            const header = document.createElement('div');
+            header.style.cssText = 'margin-bottom: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;';
+            header.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <strong>📋 Full Console Logs (F12 equivalent)</strong>
+                    <button onclick="copyAllLogsToClipboard()" style="padding: 8px 15px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                        📋 Copy All Logs
+                    </button>
+                </div>
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    Total console logs: ${consoleLogs.length} | Debug logs: ${debugLogs.length}
+                </div>
+            `;
+            
+            // Clear i dodaj header
+            debugLogsDiv.innerHTML = '';
+            debugLogsDiv.appendChild(header);
+            
+            // Dodaj sve console logove
+            const logsContainer = document.createElement('div');
+            logsContainer.id = 'allConsoleLogs';
+            logsContainer.style.cssText = 'max-height: 400px; overflow-y: auto; font-family: "Courier New", monospace; font-size: 11px; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px; margin-top: 10px; line-height: 1.4;';
+            
+            // Kombiniraj console logove i debug logove
+            const allLogs = [
+                ...consoleLogs.map(log => ({
+                    timestamp: log.timestamp,
+                    method: log.method,
+                    message: log.message,
+                    type: log.method === 'error' ? 'error' : log.method === 'warn' ? 'warning' : 'info'
+                })),
+                ...debugLogs.map(log => ({
+                    timestamp: log.timestamp,
+                    method: 'debug',
+                    message: log.message,
+                    type: log.type
+                }))
+            ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Sortiraj po vremenu
+            
+            if (allLogs.length === 0) {
+                logsContainer.textContent = 'No logs available yet.';
+            } else {
+                allLogs.forEach(log => {
+                    const logElement = document.createElement('div');
+                    logElement.style.cssText = `margin-bottom: 3px; padding: 4px 8px; border-left: 3px solid ${
+                        log.type === 'error' ? '#f44336' : 
+                        log.type === 'warning' ? '#ff9800' : 
+                        log.type === 'success' ? '#4caf50' : 
+                        '#2196f3'
+                    }; word-wrap: break-word; white-space: pre-wrap;`;
+                    
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    const method = log.method.toUpperCase().padEnd(6);
+                    logElement.textContent = `[${time}] ${method} ${log.message}`;
+                    
+                    logsContainer.appendChild(logElement);
+                });
+            }
+            
+            debugLogsDiv.appendChild(logsContainer);
+            
+            // Auto-scroll to bottom
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            
+            // Auto-otvori debug panel ako je zatvoren
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugPanel && debugPanel.style.display === 'none') {
+                debugPanel.style.display = 'block';
+            }
+        }
+        
+        // ============================================
+        // COPY ALL LOGS TO CLIPBOARD
+        // ============================================
+        function copyAllLogsToClipboard() {
+            // Kombiniraj sve logove
+            const allLogs = [
+                ...consoleLogs.map(log => {
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    return `[${time}] ${log.method.toUpperCase()} ${log.message}`;
+                }),
+                ...debugLogs.map(log => {
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    return `[${time}] DEBUG ${log.message}`;
+                })
+            ].sort((a, b) => {
+                const timeA = a.match(/\[(.*?)\]/)?.[1];
+                const timeB = b.match(/\[(.*?)\]/)?.[1];
+                return timeA && timeB ? timeA.localeCompare(timeB) : 0;
+            });
+            
+            const logsText = allLogs.join('\n');
+            
+            // Dodaj header sa informacijama
+            const fullText = `=== RAINCREST.ART ERROR LOGS ===
+Timestamp: ${new Date().toISOString()}
+User Agent: ${navigator.userAgent}
+URL: ${window.location.href}
+Template: ${currentTemplate?.id || 'N/A'}
+Is Couple: ${!!uploadedImages.couple}
+Network: ${navigator.onLine ? 'online' : 'offline'}
+Platform: ${isAndroid ? 'Android' : isIOS ? 'iOS' : 'Desktop'}
+Browser: ${isChrome ? 'Chrome' : 'Other'}
+
+=== CONSOLE LOGS ===
+${logsText}
+
+=== END LOGS ===`;
+            
+            // Kopiraj u clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullText).then(() => {
+                    alert('✅ All logs copied to clipboard! You can now paste and send them for analysis.');
+                }).catch(err => {
+                    console.error('Clipboard copy failed:', err);
+                    fallbackCopyToClipboard(fullText);
+                });
+            } else {
+                fallbackCopyToClipboard(fullText);
+            }
+        }
+        
+        // Fallback za starije browsere
+        function fallbackCopyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('✅ All logs copied to clipboard!');
+            } catch (e) {
+                alert('❌ Could not copy automatically. Please manually select and copy the logs from debug panel.');
+                // Prikaži tekst u alert-u kao fallback
+                console.log('=== LOGS TO COPY ===\n' + text);
+            }
+            document.body.removeChild(textarea);
         }
         
         function updateDebugPanel() {
@@ -1947,6 +2146,9 @@
                 }
                 
                 console.error('Final error message:', errorMessage);
+                
+                // NOVO: Prikaži sve logove u debug panelu za analizu
+                showAllLogsInDebugPanel();
                 
                 showError(errorMessage, true);
                 document.getElementById('loadingSection').style.display = 'none';

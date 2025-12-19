@@ -1893,348 +1893,72 @@ ${logsText}
                 
                 console.log('📋 Job details:', { jobId, gcsUrl, gcsFilename });
                 
-                // 4. Call Google Cloud Function DIRECTLY (no Netlify timeout!)
+                // 4. Show loading UI - "Generating... please wait ~30 seconds"
                 updateLoadingStep(5, 'Sending to AI...');
                 updateProgress(50);
                 
-                // Update status message
+                const loadingMessage = document.getElementById('loadingMessage');
+                if (loadingMessage) {
+                    loadingMessage.textContent = 'Generating... please wait ~30 seconds';
+                }
+                
                 const statusTextEl = document.getElementById('statusText');
                 if (statusTextEl) {
                     statusTextEl.textContent = 'Designing your transformation... This may take 30-45 seconds...';
                 }
                 
+                // 5. Call Google Cloud Function DIRECTLY (no redirect, no polling!)
                 console.log('🚀 Calling Google Cloud Function directly...');
                 const GCP_FUNCTION_URL = 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker';
                 
+                updateLoadingStep(5, 'AI is working...');
+                updateProgress(60);
+                
                 const googleResponse = await fetchWithTimeout(GCP_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
                         jobId: jobId,
                         prompt: prompt,
                         imageParts: imageParts,
                         gcsUrl: gcsUrl,
                         gcsFilename: gcsFilename,
-                        templateId: currentTemplate.id,
+                            templateId: currentTemplate.id,
                         isCouple: isCouple
                     })
-                }, 60000); // 60 sekundi timeout (generation takes 30-45s)
+                }, 60000); // 60 seconds timeout (generation takes 30-45s)
                 
                 if (!googleResponse.ok) {
                     const errorText = await googleResponse.text();
                     throw new Error('Google AI generation failed: ' + errorText);
                 }
                 
-                const googleResult = await googleResponse.json();
-                console.log('✅ Google AI result:', googleResult);
+                const data = await googleResponse.json();
+                console.log('✅ Google AI response:', data);
                 
-                if (!googleResult.success || !googleResult.imageUrl) {
-                    throw new Error('Failed to generate image: ' + (googleResult.error || 'Unknown error'));
+                // 6. Handle response
+                if (!data.success || !data.imageUrl) {
+                    throw new Error('Failed to generate image: ' + (data.error || 'Unknown error'));
                 }
                 
-                // 5. Display result immediately (no polling needed!)
+                // 7. Display result immediately (NO REDIRECT, NO POLLING!)
                 updateLoadingStep(6, 'Complete! 🎉');
                 updateProgress(100);
                 
-                // Update status message
-                const statusTextEl2 = document.getElementById('statusText');
-                if (statusTextEl2) {
-                    statusTextEl2.textContent = 'Your transformation is ready!';
+                if (statusTextEl) {
+                    statusTextEl.textContent = 'Your transformation is ready!';
                 }
                 
-                const finalImageUrl = googleResult.imageUrl;
+                const finalImageUrl = data.imageUrl;
                 console.log('✅ Final image URL:', finalImageUrl);
                 
-                // Show result
+                // Show result on the same page (NO REDIRECT!)
                 showResults(finalImageUrl, null);
-                return; // Exit early - result is shown
-
-                // 🔀 Provjeri format odgovora: Google AI (direktna slika) vs Replicate (predictionId)
-                let finalImageUrl;
                 
-                if (generateResult.image) {
-                    // ✅ Google AI - direktna slika (bez pollinga) - fallback za stari format
-                    console.log('✅ Google AI direct response - image ready immediately!');
-                    console.log('Provider:', generateResult.provider);
-                    console.log('Model:', generateResult.model);
-                    finalImageUrl = generateResult.image; // Base64 data URL - QR kod će biti preskočen
-                    updateLoadingStep(5, 'Image generated successfully! 🎉');
-                    updateProgress(100);
-                } else if (generateResult.jobId && generateResult.imageUrl) {
-                    // ✅ Google AI - job pattern (kao Replicate!)
-                    console.log('✅✅✅ Google AI job created - starting async polling pattern...');
-                    console.log('📋 Job details:', {
-                        jobId: generateResult.jobId,
-                        imageUrl: generateResult.imageUrl,
-                        status: generateResult.status,
-                        provider: generateResult.provider
-                    });
-                    const imageUrl = generateResult.imageUrl;
-                    const jobId = generateResult.jobId;
-                    
-                    updateLoadingStep(3, 'Processing your photos...');
-                    
-                    // Poll image URL dok ne postoji (optimizirano za GCS)
-                    let maxAttempts = 200; // Max ~6.5 minuta (200 * 2 sekunde)
-                    let attempt = 0;
-                    const startTime = Date.now();
-                    let lastStatus = null;
-                    
-                    console.log(`🔄 Starting polling loop: max ${maxAttempts} attempts (${maxAttempts * 2}s total)`);
-                    
-                    while (attempt < maxAttempts) {
-                        await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
-                        attempt++;
-                        
-                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-                        const progressPercent = Math.min(95, 30 + (attempt / maxAttempts) * 60);
-                        updateProgress(progressPercent);
-                        
-                        // Update step based on progress
-                        if (attempt < maxAttempts * 0.3) {
-                            updateLoadingStep(3, 'Processing your photos...');
-                        } else if (attempt < maxAttempts * 0.7) {
-                            updateLoadingStep(4, 'Creating transformation...');
-                        } else {
-                            updateLoadingStep(5, 'Adding final touches...');
-                        }
-                        
-                        try {
-                            // Poll image URL (GCS) - GET with Range header (pouzdanije)
-                            const statusMsg = lastStatus !== headResponse?.status ? `Status: ${headResponse?.status || 'checking'}...` : '';
-                            if (attempt % 10 === 0 || lastStatus !== headResponse?.status) {
-                                console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Polling GCS URL... ${statusMsg}`);
-                            }
-                            
-                            // Use GET with Range header (more reliable than HEAD for GCS)
-                            const headResponse = await fetchWithTimeout(imageUrl, {
-                                method: 'GET',
-                                cache: 'no-cache',
-                                headers: {
-                                    'Range': 'bytes=0-0', // Request only first byte (efficient!)
-                                    'Cache-Control': 'no-cache'
-                                }
-                            }, 8000); // 8 sekundi timeout (smanjeno za brže retry)
-                            
-                            lastStatus = headResponse.status;
-                            
-                            if (headResponse.ok || headResponse.status === 206) {
-                                // 200 OK or 206 Partial Content = image exists!
-                                console.log(`✅✅✅ Image available after ${elapsedSeconds}s (${attempt} attempts)!`);
-                                console.log('✅ Response status:', headResponse.status);
-                                console.log('✅ Image URL:', imageUrl);
-                                finalImageUrl = imageUrl;
-                                updateLoadingStep(6, 'Generation complete! 🎉');
-                                updateProgress(95);
-                                break;
-                            } else if (headResponse.status === 404) {
-                                // Slika još nije uploadana, nastavi poll-ati
-                                if (attempt % 15 === 0) { // Log svakih 30 sekundi
-                                    console.log(`⏳ [${attempt}/${maxAttempts}] [${elapsedSeconds}s] Image not ready yet (404), Google AI still generating...`);
-                                }
-                                continue;
-                            } else if (headResponse.status === 403) {
-                                // Permission denied - možda bucket nije javno dostupan
-                                console.error(`❌ Permission denied (403) - GCS bucket may not be public!`);
-                                console.error('🔧 Check GCS bucket permissions or GCS_CDN_URL configuration');
-                                throw new Error('GCS bucket permission denied (403) - check bucket is public');
-                            } else {
-                                if (attempt % 10 === 0) {
-                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Unexpected status: ${headResponse.status}, retrying...`);
-                                }
-                                continue;
-                            }
-                        } catch (fetchError) {
-                            if (fetchError.message && (fetchError.message.includes('timeout') || fetchError.message.includes('Request timeout'))) {
-                                if (attempt % 10 === 0) {
-                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Request timeout, retrying...`);
-                                }
-                                continue;
-                            } else if (fetchError.message && fetchError.message.includes('404')) {
-                                // 404 je OK - slika još nije gotova
-                                continue;
-                            } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
-                                // Network error - pokušaj ponovno
-                                if (attempt % 10 === 0) {
-                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Network error, retrying...`);
-                                }
-                                continue;
-                            } else if (fetchError.message && fetchError.message.includes('403')) {
-                                // Permission denied - kritična greška
-                                console.error('❌ GCS Permission denied - check bucket permissions!');
-                                throw fetchError;
-                            }
-                            // Druge greške - log i nastavi (možda privremeni problem)
-                            if (attempt % 10 === 0) {
-                                console.warn(`⚠️ [${attempt}/${maxAttempts}] Fetch error: ${fetchError.message}, retrying...`);
-                            }
-                            continue;
-                        }
-                    }
-                    
-                    if (attempt >= maxAttempts) {
-                        const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
-                        throw new Error(`Generation timeout - image took too long to appear (waited ${totalSeconds}s, max 5 minutes). Please check function logs.`);
-                    }
-                    
-                    if (!finalImageUrl) {
-                        throw new Error('No image URL received');
-                    }
-                    
-                    console.log('✅ Final image URL:', finalImageUrl);
-                    
-                } else if (generateResult.predictionId) {
-                    // ✅ Replicate - polling flow
-                    console.log('✅ Replicate response - starting polling...');
-                    const predictionId = generateResult.predictionId;
-                    console.log('Prediction ID:', predictionId);
-                    console.log('Polling for prediction status...');
-
-                    // Poll status dok nije "succeeded" ili "failed"
-                    let statusResult;
-                    let maxAttempts = 150; // Max 5 minuta (150 * 2 sekunde)
-                    let attempt = 0;
-
-                    // Update to processing step
-                    updateLoadingStep(3, 'Processing your photos...');
-
-                while (attempt < maxAttempts) {
-                    await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
-                    attempt++;
-
-                    console.log(`Checking prediction status (attempt ${attempt}/${maxAttempts})...`);
-                    
-                    // Update progress based on attempts (steps 3-5 are for processing)
-                    const progressPercent = Math.min(95, 30 + (attempt / maxAttempts) * 60);
-                    updateProgress(progressPercent);
-                    
-                    // Update step based on progress
-                    if (attempt < maxAttempts * 0.3) {
-                        updateLoadingStep(3, 'Processing your photos...');
-                    } else if (attempt < maxAttempts * 0.7) {
-                        updateLoadingStep(4, 'Creating transformation...');
-                    } else {
-                        updateLoadingStep(5, 'Adding final touches...');
-                    }
-                    
-                    // PRODUCTION FIX: Dodaj timeout i error handling za status check
-                    let statusResponse;
-                    let statusText;
-                    try {
-                        statusResponse = await fetchWithTimeout(`/.netlify/functions/check-prediction-status?predictionId=${predictionId}`, {
-                            method: 'GET'
-                        }, 15000); // 15 sekundi timeout za status check
-                        
-                        if (!statusResponse.ok) {
-                            const errorText = await statusResponse.text();
-                            console.error('❌ Status check failed:', statusResponse.status, errorText);
-                            throw new Error(`Status check failed: ${statusResponse.status} ${statusResponse.statusText}`);
-                        }
-                        
-                        statusText = await statusResponse.text();
-                        
-                        // PRODUCTION FIX: Provjeri da li je response prazan
-                        if (!statusText || statusText.trim().length === 0) {
-                            console.error('❌ Empty status response');
-                            throw new Error('Empty response from status check');
-                        }
-                    } catch (fetchError) {
-                        console.error('❌ Error fetching prediction status:', fetchError);
-                        // Ako je timeout ili network error, pokušaj ponovno (ne bacaj grešku odmah)
-                        if (fetchError.message && (fetchError.message.includes('timeout') || fetchError.message.includes('fetch'))) {
-                            console.warn('⚠️ Status check timeout/error, retrying...');
-                            // Nastavi s poll-om, ali povećaj attempt
-                            attempt++;
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            continue;
-                        }
-                        throw fetchError;
-                    }
-                    
-                    try {
-                        statusResult = JSON.parse(statusText);
-                    } catch (e) {
-                        console.error('❌ Failed to parse status response:', e);
-                        console.error('Status response text:', statusText);
-                        throw new Error('Failed to parse status response: ' + (e.message || 'Invalid JSON'));
-                    }
-
-                if (!statusResult || !statusResult.status) {
-                    console.error('❌ Invalid status result:', statusResult);
-                    throw new Error('Invalid status response from server');
-                }
-
-                console.log(`Prediction status: ${statusResult.status} (attempt ${attempt})`);
-
-                if (statusResult.status === 'succeeded') {
-                    console.log('Generation successful! Image URL:', statusResult.imageUrl);
-                    updateLoadingStep(6, 'Generation complete! Uploading to Bunny.net...');
-                    updateProgress(95);
-                    break;
-                    } else if (statusResult.status === 'failed') {
-                        throw new Error(statusResult.error || 'Generation failed');
-                    } else if (statusResult.status === 'canceled') {
-                        throw new Error('Generation was canceled');
-                    }
-                    // Ako je "starting" ili "processing", nastavi poll-ati
-                }
-
-                if (attempt >= maxAttempts) {
-                    throw new Error('Generation timeout - prediction took too long');
-                }
-
-                    if (!statusResult.imageUrl) {
-                        throw new Error('No image URL in result');
-                    }
-
-                    // Upload na Bunny.net
-                    console.log('Uploading to Bunny.net...');
-                    console.log('Calling upload-to-bunny with:', {
-                        imageUrl: statusResult.imageUrl,
-                        templateId: currentTemplate.id,
-                        userId: generateUserId()
-                    });
-                    const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            imageUrl: statusResult.imageUrl,
-                            templateId: currentTemplate.id,
-                            userId: generateUserId() // Generiraj unique user ID
-                        })
-                    });
-
-                    // Parse response body samo jednom
-                    let uploadResult;
-                    try {
-                        uploadResult = await uploadResponse.json();
-                    } catch (e) {
-                        // Ako json() ne uspije, body je već potrošen - ne pokušavaj čitati text()
-                        console.error('Failed to parse upload JSON response:', e);
-                        throw new Error('Failed to parse upload response: ' + (e.message || 'Invalid JSON'));
-                    }
-
-                    if (!uploadResponse.ok) {
-                        throw new Error(uploadResult.error || uploadResult.details || 'Upload failed');
-                    }
-
-                    console.log('Upload result:', uploadResult);
-
-                    // Set final image URL from Bunny.net CDN
-                    finalImageUrl = uploadResult.cdnUrl;
-                } else {
-                    // ❌ Nepoznat format odgovora
-                    console.error('Unknown response format:', generateResult);
-                    throw new Error('Invalid response format - missing both image and predictionId');
-                }
-
-                // 🎉 Prikaži finalni rezultat (bilo Google AI ili Replicate)
-                console.log('📸 Displaying final image:', finalImageUrl ? finalImageUrl.substring(0, 80) + '...' : 'MISSING');
-                showResults(finalImageUrl, null);
+                // Re-enable button
+                document.getElementById('generateButton').disabled = false;
                 
             } catch (error) {
                 console.error('Generation error:', error);

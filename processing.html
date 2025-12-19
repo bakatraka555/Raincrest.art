@@ -290,9 +290,19 @@
             document.getElementById('loadingSection').classList.add('hidden');
         }
 
-        // Get predictionId from URL
+        // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const predictionId = urlParams.get('predictionId');
+        const userEmail = urlParams.get('email');
+        const templateId = urlParams.get('templateId');
+        const userId = urlParams.get('userId');
+
+        console.log('Processing parameters:', {
+            predictionId,
+            userEmail: userEmail ? userEmail.substring(0, 3) + '***' : 'missing',
+            templateId,
+            userId
+        });
 
         if (!predictionId) {
             showError('Missing prediction ID. Please go back and try again.');
@@ -339,6 +349,38 @@
                 updateStep(4);
                 updateProgress(100);
                 updateStatusText('Complete! 🎉');
+                
+                // Send email if userEmail is available
+                if (userEmail && imageUrl) {
+                    sendEmailNotification(userEmail, imageUrl, templateId, userId);
+                }
+            }
+
+            // Email notification function
+            async function sendEmailNotification(userEmail, imageUrl, templateId, userId) {
+                try {
+                    console.log('Sending email to:', userEmail);
+                    const emailResponse = await fetch('/.netlify/functions/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userEmail: userEmail,
+                            imageUrl: imageUrl,
+                            templateId: templateId,
+                            userId: userId
+                        })
+                    });
+                    
+                    if (emailResponse.ok) {
+                        console.log('✅ Email sent successfully');
+                        // Možeš dodati poruku korisniku
+                        updateStatusText('Complete! 🎉 Email sent!');
+                    } else {
+                        console.warn('⚠️ Email sending failed');
+                    }
+                } catch (error) {
+                    console.warn('Email error:', error);
+                }
             }
 
             // Polling function

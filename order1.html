@@ -637,6 +637,25 @@
             </div>
         </div>
 
+        <!-- Email Section -->
+        <div class="email-section" style="margin: 30px 0; padding: 25px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px);">
+            <h3 style="color: white; margin-bottom: 15px; display: flex; align-items: center;">
+                <span style="margin-right: 10px;">📧</span>
+                Email for Delivery
+            </h3>
+            <div class="input-group">
+                <input type="email" 
+                       id="userEmail" 
+                       placeholder="your@email.com" 
+                       required
+                       style="width: 100%; padding: 15px 20px; border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 16px; backdrop-filter: blur(5px); box-sizing: border-box;">
+                <small style="color: rgba(255, 255, 255, 0.7); font-size: 14px; display: block; margin-top: 8px;">
+                    We'll send your generated image directly to this email address
+                </small>
+                <div id="emailError" style="color: #ff6b6b; font-size: 14px; margin-top: 5px; display: none; font-weight: 500;"></div>
+            </div>
+        </div>
+
         <!-- Validation Messages -->
         <div id="validationMessage" class="validation-message"></div>
         
@@ -1588,6 +1607,19 @@ ${logsText}
 
         // Generate transformation
         document.getElementById('generateButton').addEventListener('click', async function() {
+            // 1. PROVJERI EMAIL PRIJE SVEGA OSTALOG
+            const userEmail = document.getElementById('userEmail').value;
+            const emailValidation = validateEmail(userEmail);
+            
+            if (!emailValidation.valid) {
+                showEmailError(emailValidation.message);
+                return; // PREKINI IZVRŠAVANJE - ne pokreći generiranje!
+            }
+            
+            // Očisti grešku ako je email valjan
+            clearEmailError();
+            console.log('✅ Email validation passed:', userEmail);
+            
             if (!currentTemplate) {
                 showError('Template not loaded. Please refresh the page.');
                 return;
@@ -1912,8 +1944,8 @@ ${logsText}
                 const finalImageUrl = data.imageUrl;
                 console.log('✅ Final image URL:', finalImageUrl);
                 
-                // Show result on the same page (NO REDIRECT!)
-                showResults(finalImageUrl, null);
+                // Show result on the same page (NO REDIRECT!) with email parameters
+                showResults(finalImageUrl, null, userEmail, currentTemplate.id, userId);
                 
                 // Re-enable button
                 document.getElementById('generateButton').disabled = false;
@@ -2616,7 +2648,7 @@ ${logsText}
             }
         }
 
-        function showResults(imageUrl, videoUrl) {
+        function showResults(imageUrl, videoUrl, userEmail, templateId, userId) {
             const resultsContainer = document.getElementById('resultsContainer');
             resultsContainer.innerHTML = '';
             
@@ -2630,7 +2662,10 @@ ${logsText}
                 `;
                 resultsContainer.appendChild(imageDiv);
                 
-                // QR kod nije potreban za kiosk - preskočeno
+                // Send email if userEmail is provided
+                if (userEmail) {
+                    sendEmailNotification(userEmail, imageUrl, templateId, userId);
+                }
             }
             
             if (videoUrl) {
@@ -2661,10 +2696,150 @@ ${logsText}
         
         // QR code function removed - not needed for kiosk mode
 
+        // Email validation functions
+        function validateEmail(email) {
+            // Provjeri da li je email prazan
+            if (!email || email.trim().length === 0) {
+                return { valid: false, message: 'Email address is required' };
+            }
+            
+            // Ukloni razmake
+            email = email.trim();
+            
+            // Basic email regex pattern
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                return { valid: false, message: 'Please enter a valid email address' };
+            }
+            
+            // Provjeri da li ima točku nakon @
+            if (!email.includes('.')) {
+                return { valid: false, message: 'Email must contain a domain (e.g., @gmail.com)' };
+            }
+            
+            // Provjeri minimalne duljine
+            if (email.length < 5) {
+                return { valid: false, message: 'Email address is too short' };
+            }
+            
+            // Provjeri maksimalne duljine
+            if (email.length > 100) {
+                return { valid: false, message: 'Email address is too long' };
+            }
+            
+            // Provjeri da li ima @ znak
+            const atCount = (email.match(/@/g) || []).length;
+            if (atCount !== 1) {
+                return { valid: false, message: 'Email must contain exactly one @ symbol' };
+            }
+            
+            // Provjeri da li domain dio postoji
+            const parts = email.split('@');
+            if (parts[1].length < 3) {
+                return { valid: false, message: 'Domain part is too short' };
+            }
+            
+            return { valid: true, message: 'Valid email' };
+        }
+
+        function showEmailError(message) {
+            const errorDiv = document.getElementById('emailError');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+            
+            // Dodaj crveni border na input
+            const emailInput = document.getElementById('userEmail');
+            if (emailInput) {
+                emailInput.style.borderColor = '#ff6b6b';
+            }
+        }
+
+        function clearEmailError() {
+            const errorDiv = document.getElementById('emailError');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+            
+            // Vrati normalni border
+            const emailInput = document.getElementById('userEmail');
+            if (emailInput) {
+                emailInput.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }
+        }
+
+        // Email notification function
+        async function sendEmailNotification(userEmail, imageUrl, templateId, userId) {
+            try {
+                console.log('Sending email to:', userEmail);
+                const emailResponse = await fetch('/.netlify/functions/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userEmail: userEmail,
+                        imageUrl: imageUrl,
+                        templateId: templateId,
+                        userId: userId
+                    })
+                });
+                
+                if (emailResponse.ok) {
+                    console.log('✅ Email sent successfully');
+                    showValidationMessage('📧 Image sent to your email!', 'success');
+                } else {
+                    console.warn('⚠️ Email sending failed');
+                    showValidationMessage('⚠️ Email sending failed, but image is ready for download', 'warning');
+                }
+            } catch (error) {
+                console.warn('Email error:', error);
+                showValidationMessage('⚠️ Email sending failed, but image is ready for download', 'warning');
+            }
+        }
+
         // Initialize
         loadTemplateInfo();
         checkGenerateButton();
         loadSavedProgress();
+        
+        // Setup email input event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('userEmail');
+            
+            if (emailInput) {
+                // Real-time validation while typing
+                emailInput.addEventListener('input', function() {
+                    const email = this.value;
+                    
+                    if (email.length > 0) {
+                        const validation = validateEmail(email);
+                        
+                        if (validation.valid) {
+                            clearEmailError();
+                            this.style.borderColor = '#4CAF50';
+                        } else {
+                            this.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                        }
+                    }
+                });
+                
+                // Validate when user finishes typing
+                emailInput.addEventListener('blur', function() {
+                    const email = this.value;
+                    
+                    if (email.length > 0) {
+                        const validation = validateEmail(email);
+                        
+                        if (!validation.valid) {
+                            showEmailError(validation.message);
+                        } else {
+                            clearEmailError();
+                        }
+                    }
+                });
+            }
+        });
         
         // ANDROID FIX: Setup listeners - ALWAYS (buttons use these functions on all platforms)
         debugLog('Setting up file input listeners', 'info');

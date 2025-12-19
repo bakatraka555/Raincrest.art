@@ -342,23 +342,19 @@
                 updateStatusText('Complete! 🎉');
             }
 
-            // Polling function - poll GCS URL directly
+            // Polling function - poll GCS URL using <img> tag (no CORS issues!)
             async function checkStatus() {
                 try {
-                    // Poll GCS URL direktno (GET s Range header - efficient!)
-                    const response = await fetch(imageUrl, {
-                        method: 'GET',
-                        cache: 'no-cache',
-                        headers: {
-                            'Range': 'bytes=0-0', // Request only first byte (efficient!)
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-
-                    console.log('GCS status check:', response.status);
-
-                    if (response.ok || response.status === 206) {
-                        // 200 OK or 206 Partial Content = image exists!
+                    // Use <img> tag to check if image exists (no CORS needed!)
+                    const img = new Image();
+                    let pollCompleted = false; // Flag to prevent multiple callbacks
+                    
+                    img.onload = () => {
+                        if (pollCompleted) return; // Prevent duplicate calls
+                        pollCompleted = true;
+                        
+                        // Image exists and loaded successfully!
+                        console.log('✅ Image available!');
                         updateStep(3);
                         updateProgress(90);
                         updateStatusText('Almost done...');
@@ -367,9 +363,13 @@
                         setTimeout(() => {
                             showResult(imageUrl);
                         }, 500);
-                        return; // Stop polling
-                    } else if (response.status === 404) {
-                        // Image not ready yet, continue polling
+                        // Stop polling - image is ready
+                    };
+                    
+                    img.onerror = () => {
+                        if (pollCompleted) return; // Prevent duplicate calls
+                        
+                        // Image not ready yet (404) or other error
                         const progress = currentStep * 25 + 10;
                         updateProgress(Math.min(progress, 85));
                         
@@ -384,33 +384,20 @@
                             updateStep(3);
                             updateStatusText('Applying magic...');
                         }
-                    } else if (response.status === 403) {
-                        throw new Error('Permission denied - GCS bucket may not be public');
-                    } else {
-                        // Other error, continue polling
-                        console.warn('Unexpected status:', response.status);
-                    }
-
-                    // Continue polling if not done
-                    setTimeout(checkStatus, 2000); // Poll every 2 seconds
-
+                        
+                        // Continue polling
+                        setTimeout(checkStatus, 2000);
+                    };
+                    
+                    // Add timestamp to bypass cache
+                    const cacheBuster = `?t=${Date.now()}`;
+                    img.src = imageUrl + cacheBuster;
+                    
                 } catch (error) {
                     console.error('Error checking status:', error);
                     
-                    // If it's a 404, continue polling (image not ready)
-                    if (error.message && error.message.includes('404')) {
-                        setTimeout(checkStatus, 2000);
-                        return;
-                    }
-                    
-                    // Network errors - continue polling
-                    if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('Network'))) {
-                        console.warn('Network error, retrying...');
-                        setTimeout(checkStatus, 2000);
-                        return;
-                    }
-                    
-                    showError('Error: ' + error.message);
+                    // Continue polling on error
+                    setTimeout(checkStatus, 2000);
                 }
             }
 

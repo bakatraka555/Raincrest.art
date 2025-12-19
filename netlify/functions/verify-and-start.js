@@ -10,7 +10,7 @@
  * - isCouple: boolean
  * 
  * Action:
- * 1. Pokreće Replicate API s modelom: black-forest-labs/flux-schnell
+ * 1. Pokreće Replicate API s modelom: google/nano-banana
  * 2. NE čeka rezultat - vraća prediction_id odmah
  * 
  * Return:
@@ -101,8 +101,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Model: black-forest-labs/flux-schnell (najbrži)
-    const REPLICATE_MODEL = 'black-forest-labs/flux-schnell';
+    // Model: google/nano-banana (može se promijeniti na nano-banana-pro kasnije)
+    const REPLICATE_MODEL = 'google/nano-banana';
     console.log('Using Replicate model:', REPLICATE_MODEL);
 
     // Pripremi image_input array

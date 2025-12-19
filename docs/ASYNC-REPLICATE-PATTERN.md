@@ -46,7 +46,7 @@ Ovaj dokument opisuje implementaciju "Start & Check" async pattern-a s Replicate
 }
 ```
 
-**Model:** `black-forest-labs/flux-schnell` (najbrži Replicate model)
+**Model:** `google/nano-banana` (može se promijeniti na `nano-banana-pro` kasnije)
 
 ---
 
@@ -183,7 +183,7 @@ Display image + Share/Save buttons
 2. **Pouzdan polling** - Frontend kontrolira polling loop
 3. **Dobar UX** - Progress stepper i status poruke
 4. **Mobile-friendly** - Native share API
-5. **Brži model** - `flux-schnell` je najbrži Replicate model
+5. **Pouzdan model** - `nano-banana` je pouzdan i brz model
 
 ---
 
@@ -194,7 +194,7 @@ Display image + Share/Save buttons
 **Rješenje:**
 - Provjeri Netlify Function logs za `verify-and-start`
 - Provjeri da li je `REPLICATE_API_TOKEN` postavljen
-- Provjeri da li je model `black-forest-labs/flux-schnell` dostupan
+- Provjeri da li je model `google/nano-banana` dostupan
 
 ### Problem: Polling se zaustavlja
 
@@ -215,7 +215,7 @@ Display image + Share/Save buttons
 ## 📝 Napomene
 
 - **Stripe integracija:** Za sada nije implementirana. `verify-and-start` ne provjerava payment.
-- **Model:** Koristi se `black-forest-labs/flux-schnell` (najbrži), ali može se promijeniti u environment variable.
+- **Model:** Koristi se `google/nano-banana` (može se promijeniti na `nano-banana-pro` ili kroz environment variable).
 - **Timeout:** Polling loop ima max 150 pokušaja (5 minuta), ali Replicate obično završi za 30-60 sekundi.
 
 ---

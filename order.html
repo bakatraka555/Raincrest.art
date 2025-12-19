@@ -1127,7 +1127,8 @@ ${logsText}
         }
 
         // ANDROID FIX: Separate functions for camera and gallery
-        function triggerAndroidGallery(imageType) {
+        // Make function globally available for onclick handlers
+        window.triggerAndroidGallery = function(imageType) {
             console.log(`Android Gallery trigger for: ${imageType}`);
             const inputId = `${imageType}ImageGallery`;
             const input = document.getElementById(inputId);
@@ -1171,9 +1172,9 @@ ${logsText}
                     }
                 }
             }
-        }
+        };
         
-        function triggerAndroidCamera(imageType) {
+        window.triggerAndroidCamera = function(imageType) {
             console.log(`Android Camera trigger for: ${imageType}`);
             const inputId = `${imageType}ImageCamera`;
             const input = document.getElementById(inputId);
@@ -1197,7 +1198,7 @@ ${logsText}
                     showValidationMessage('❌ Error opening camera', 'error');
                 }
             }, 100);
-        }
+        };
         
         // ANDROID FIX: Event listeners for separate inputs
         function setupAndroidInputListeners() {

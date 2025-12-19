@@ -300,6 +300,15 @@ exports.handler = async (event, context) => {
     });
     
     // Pokreni worker u pozadini (fire-and-forget, ne čekaj response!)
+    console.log('📤 Sending request to Google Cloud Function worker...');
+    console.log('📤 Request size:', JSON.stringify({
+      jobId,
+      promptLength: prompt.length,
+      imagePartsCount: imageParts.length,
+      gcsUrl: imageUrl,
+      gcsFilename: imageFilename
+    }).length, 'bytes');
+    
     fetch(GCP_FUNCTION_URL, {
       method: 'POST',
       headers: { 
@@ -314,9 +323,14 @@ exports.handler = async (event, context) => {
         templateId,
         isCouple
       })
-    }).then(response => {
+    }).then(async response => {
+      const responseText = await response.text().catch(() => '');
+      console.log('📥 Worker response status:', response.status);
+      console.log('📥 Worker response (first 200 chars):', responseText.substring(0, 200));
+      
       if (!response.ok) {
         console.error('⚠️ Worker start returned non-OK status:', response.status);
+        console.error('⚠️ Worker error response:', responseText);
       } else {
         console.log('✅ Worker started successfully (non-blocking)');
       }
@@ -324,6 +338,7 @@ exports.handler = async (event, context) => {
       // Ignoriraj greške - worker će se možda pokrenuti kasnije
       // Ovo je fire-and-forget pattern, frontend će poll-ovati image URL
       console.error('⚠️ Worker start error (non-critical, will poll for result):', err.message);
+      console.error('⚠️ Worker error details:', err);
     });
 
     // 6. Vrati job ID ODMAH (kao Replicate!)

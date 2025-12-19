@@ -1931,6 +1931,92 @@ ${logsText}
                     finalImageUrl = generateResult.image; // Base64 data URL - QR kod će biti preskočen
                     updateLoadingStep(5, 'Image generated successfully! 🎉');
                     updateProgress(100);
+                } else if (generateResult.jobId && generateResult.imageUrl) {
+                    // ✅ Google AI - job pattern (kao Replicate!)
+                    console.log('✅ Google AI job created - polling Bunny CDN URL (like Replicate pattern)...');
+                    const bunnyUrl = generateResult.imageUrl;
+                    const jobId = generateResult.jobId;
+                    console.log('Job ID:', jobId);
+                    console.log('Bunny CDN URL:', bunnyUrl);
+                    
+                    updateLoadingStep(3, 'Processing your photos...');
+                    
+                    // Poll Bunny URL dok ne postoji (kao Replicate polling)
+                    let maxAttempts = 150; // Max 5 minuta (150 * 2 sekunde)
+                    let attempt = 0;
+                    const startTime = Date.now();
+                    
+                    while (attempt < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
+                        attempt++;
+                        
+                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        const progressPercent = Math.min(95, 30 + (attempt / maxAttempts) * 60);
+                        updateProgress(progressPercent);
+                        
+                        // Update step based on progress
+                        if (attempt < maxAttempts * 0.3) {
+                            updateLoadingStep(3, 'Processing your photos...');
+                        } else if (attempt < maxAttempts * 0.7) {
+                            updateLoadingStep(4, 'Creating transformation...');
+                        } else {
+                            updateLoadingStep(5, 'Adding final touches...');
+                        }
+                        
+                        try {
+                            // Poll Bunny CDN URL (HEAD request - brže)
+                            console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Checking Bunny CDN (${bunnyUrl.substring(0, 50)}...)...`);
+                            
+                            const headResponse = await fetchWithTimeout(bunnyUrl, {
+                                method: 'HEAD',
+                                cache: 'no-cache',
+                                headers: {
+                                    'Cache-Control': 'no-cache'
+                                }
+                            }, 10000); // 10 sekundi timeout
+                            
+                            if (headResponse.ok) {
+                                console.log('✅ Image available on Bunny CDN!');
+                                finalImageUrl = bunnyUrl;
+                                updateLoadingStep(6, 'Generation complete!');
+                                updateProgress(95);
+                                break;
+                            } else if (headResponse.status === 404) {
+                                // Slika još nije uploadana, nastavi poll-ati
+                                console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Image not ready yet (404), waiting...`);
+                                continue;
+                            } else {
+                                console.warn(`[${attempt}/${maxAttempts}] Unexpected status: ${headResponse.status}, retrying...`);
+                                continue;
+                            }
+                        } catch (fetchError) {
+                            if (fetchError.message && fetchError.message.includes('timeout')) {
+                                console.warn('⚠️ HEAD request timeout, retrying...');
+                                continue;
+                            } else if (fetchError.message && fetchError.message.includes('404')) {
+                                // 404 je OK - slika još nije gotova
+                                continue;
+                            } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
+                                // Network error - pokušaj ponovno
+                                console.warn('⚠️ Network error, retrying...');
+                                continue;
+                            }
+                            // Druge greške - baci error
+                            throw fetchError;
+                        }
+                    }
+                    
+                    if (attempt >= maxAttempts) {
+                        const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        throw new Error(`Generation timeout - image took too long to appear on CDN (waited ${totalSeconds}s, max 5 minutes). Please check Netlify Function logs.`);
+                    }
+                    
+                    if (!finalImageUrl) {
+                        throw new Error('No image URL received from Bunny CDN');
+                    }
+                    
+                    console.log('✅ Final image URL from Bunny CDN:', finalImageUrl);
+                    
                 } else if (generateResult.predictionId) {
                     // ✅ Replicate - polling flow
                     console.log('✅ Replicate response - starting polling...');

@@ -62,7 +62,10 @@
   timeout = 30  # 30 seconds for AI generation calls
 
 [functions."generate-image-google"]
-  timeout = 120  # 120 seconds for Google AI (image generation can take 30-90 seconds)
+  timeout = 30  # 30 seconds (brzo vraća job ID, kao Replicate)
+
+[functions."generate-image-google-worker"]
+  timeout = 120  # 120 seconds for Google AI generation (može trajati 30-90 seconds)
 
 # Environment variables (set these in Netlify dashboard, not here!)
 # REPLICATE_API_TOKEN = "your-token-here"  # Set in Netlify UI!

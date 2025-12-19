@@ -245,218 +245,107 @@ exports.handler = async (event, context) => {
 
     console.log('All images converted to base64, total:', imageParts.length);
 
-    // 3. Google AI API endpoint - direktno čekanje (Netlify background tasks ne rade)
-    // Koristi gemini-3-pro-image-preview (Nano Banana Pro) za image generation
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    // 3. Kreiraj job ID i Bunny URL (kao Replicate pattern!)
+    const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE;
+    const BUNNY_API_KEY = process.env.BUNNY_API_KEY;
+    const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
+    
+    if (!BUNNY_STORAGE_ZONE || !BUNNY_API_KEY) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Bunny.net not configured',
+          details: 'BUNNY_STORAGE_ZONE and BUNNY_API_KEY required'
+        })
+      };
+    }
 
-    // 4. Pripremi request za Google AI
-    const requestBody = {
-      contents: [{
-        role: "user",
-        parts: [
-          { text: prompt },
-          ...imageParts
-        ]
-      }],
-      generationConfig: {
-        response_modalities: ["IMAGE"],
-        temperature: 0.9,
-        image_config: {
-          aspect_ratio: "1:1"  // 1:1 za selfie format, number_of_images je 1 po defaultu
-        }
-      }
+    const jobId = `google-${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
+    const bunnyFilename = `temp/generated/${jobId}.jpg`;
+    const bunnyCdnUrl = `https://${BUNNY_CDN_DOMAIN}/${bunnyFilename}`;
+
+    console.log('=== JOB PATTERN: Creating job (like Replicate!) ===');
+    console.log('Job ID:', jobId);
+    console.log('Bunny CDN URL:', bunnyCdnUrl);
+    console.log('Bunny filename:', bunnyFilename);
+
+    // 4. Spremi job info u Bunny.net (kao JSON fajl)
+    const jobInfo = {
+      jobId,
+      templateId,
+      isCouple,
+      prompt,
+      imageParts: imageParts.map(part => ({
+        // Spremi samo mime_type, data će biti prevelik za JSON
+        mime_type: part.inline_data?.mime_type || 'image/jpeg',
+        // Ne spremaj base64 data direktno - prevelik je, koristimo imageParts iz requesta
+      })),
+      bunnyUrl: bunnyCdnUrl,
+      bunnyFilename: bunnyFilename,
+      status: 'pending',
+      createdAt: new Date().toISOString()
     };
 
-    console.log('=== CALLING GOOGLE AI API (direct wait) ===');
-    console.log('Model: gemini-3-pro-image-preview (Nano Banana Pro)');
-    console.log('Prompt length:', prompt.length);
-    console.log('Images count:', imageParts.length);
-    console.log('Request parts:', requestBody.contents[0].parts.length);
-    console.log('⚠️ This may take 30-90 seconds...');
+    try {
+      const jobInfoUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/jobs/${jobId}.json`;
+      console.log('Saving job info to Bunny.net:', jobInfoUrl);
+      
+      const saveJobResponse = await fetch(jobInfoUrl, {
+        method: 'PUT',
+        headers: {
+          'AccessKey': BUNNY_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jobInfo)
+      });
+
+      if (!saveJobResponse.ok) {
+        console.error('Failed to save job info:', saveJobResponse.status);
+        // Ne baci error - pokušajmo pokrenuti worker bez job info
+      } else {
+        console.log('✅ Job info saved to Bunny.net');
+      }
+    } catch (saveError) {
+      console.error('Error saving job info:', saveError);
+      // Ne baci error - pokušajmo pokrenuti worker bez job info
+    }
+
+    // 5. Pokreni worker funkciju (ne čekaj!)
+    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://raincrest-art.netlify.app';
+    const workerUrl = `${siteUrl}/.netlify/functions/generate-image-google-worker`;
     
-    const googleResponse = await fetch(apiUrl, {
+    console.log('Starting worker function:', workerUrl);
+    
+    // Pokreni worker u pozadini (ne čekaj response!)
+    fetch(workerUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jobId,
+        prompt,
+        imageParts, // Pošalji imageParts direktno (base64 data)
+        bunnyUrl: bunnyCdnUrl,
+        bunnyFilename: bunnyFilename,
+        templateId,
+        isCouple
+      })
+    }).catch(err => {
+      // Ignoriraj greške - worker će se možda pokrenuti kasnije
+      console.error('Worker start error (non-critical):', err.message);
     });
 
-    const responseText = await googleResponse.text();
-    console.log('Google AI response status:', googleResponse.status);
-    console.log('Google AI response length:', responseText.length);
-
-    if (!googleResponse.ok) {
-      console.error('Google AI error response:', responseText.substring(0, 500));
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Google AI API error',
-          status: googleResponse.status,
-          details: responseText.substring(0, 500),
-          hint: googleResponse.status === 400 
-            ? 'Check if API key is valid and model name is correct'
-            : googleResponse.status === 429
-            ? 'Rate limit exceeded - try again later or upgrade quota'
-            : 'Check Google AI Studio dashboard for more details'
-        })
-      };
-    }
-
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Failed to parse Google AI response:', parseError);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Invalid response from Google AI',
-          details: 'Failed to parse JSON response',
-          preview: responseText.substring(0, 200)
-        })
-      };
-    }
-
-    console.log('Response parsed successfully');
-    console.log('Full response structure:', JSON.stringify(result).substring(0, 1000));
-
-    // 5. Pronađi generiranu sliku - provjeri različite moguće strukture
-    const candidate = result.candidates?.[0];
-    if (!candidate) {
-      console.error('No candidates in response');
-      console.log('Full result:', JSON.stringify(result, null, 2).substring(0, 1000));
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'No candidates in response',
-          result: JSON.stringify(result).substring(0, 500)
-        })
-      };
-    }
-
-    console.log('Candidate found:', JSON.stringify(candidate).substring(0, 500));
-    console.log('Candidate content:', candidate.content);
-    console.log('Candidate parts:', candidate.content?.parts);
-
-    // Provjeri različite moguće strukture
-    let imagePart = null;
-    let generatedImageBase64 = null;
-
-    // Opcija 1: parts array - provjeri i inlineData (camelCase) i inline_data (snake_case)
-    if (candidate.content?.parts) {
-      // Provjeri camelCase format (inlineData) - što Google API vraća
-      imagePart = candidate.content.parts.find(part => part.inlineData || part.inline_data);
-      
-      if (imagePart) {
-        // Provjeri oba formata
-        if (imagePart.inlineData) {
-          console.log('Found image in parts[].inlineData (camelCase)');
-          generatedImageBase64 = imagePart.inlineData.data;
-        } else if (imagePart.inline_data) {
-          console.log('Found image in parts[].inline_data (snake_case)');
-          generatedImageBase64 = imagePart.inline_data.data;
-        }
-      }
-    }
-
-    // Opcija 2: direktno u candidate (fallback) - provjeri oba formata
-    if (!generatedImageBase64) {
-      if (candidate.inlineData) {
-        console.log('Found image in candidate.inlineData (camelCase)');
-        generatedImageBase64 = candidate.inlineData.data;
-      } else if (candidate.inline_data) {
-        console.log('Found image in candidate.inline_data (snake_case)');
-        generatedImageBase64 = candidate.inline_data.data;
-      }
-    }
-
-    // Opcija 3: Provjeri format i konvertuj ako treba
-    if (generatedImageBase64) {
-      console.log('Image data found, type:', typeof generatedImageBase64);
-      console.log('Image data length:', generatedImageBase64.length || 'N/A');
-      console.log('Image data preview:', typeof generatedImageBase64 === 'string' 
-        ? generatedImageBase64.substring(0, 50) + '...' 
-        : 'Not a string');
-
-      // Ako je Buffer, konvertuj u base64 string
-      if (Buffer.isBuffer(generatedImageBase64)) {
-        console.log('Data is Buffer, converting to base64 string');
-        generatedImageBase64 = generatedImageBase64.toString('base64');
-      } 
-      // Ako je Uint8Array ili ArrayBuffer, konvertuj u Buffer pa u base64
-      else if (generatedImageBase64 instanceof Uint8Array) {
-        console.log('Data is Uint8Array, converting to base64 string');
-        generatedImageBase64 = Buffer.from(generatedImageBase64).toString('base64');
-      }
-      else if (generatedImageBase64 instanceof ArrayBuffer) {
-        console.log('Data is ArrayBuffer, converting to base64 string');
-        generatedImageBase64 = Buffer.from(generatedImageBase64).toString('base64');
-      }
-      // Ako je string, provjeri da li je već base64
-      else if (typeof generatedImageBase64 === 'string') {
-        // Ako već počinje sa /9j/ (JPEG magic bytes u base64), već je base64
-        if (generatedImageBase64.startsWith('/9j/') || generatedImageBase64.startsWith('iVBORw0KG')) {
-          console.log('✅ Data is already base64 string (starts with /9j/ or iVBORw0KG) - using directly!');
-          // Već je base64, nema potrebe za konverziju - koristi direktno!
-        } else {
-          console.log('Data is string but format unclear, assuming it is base64');
-        }
-      }
-      else {
-        console.log('Unknown data type, attempting to convert to string');
-        generatedImageBase64 = String(generatedImageBase64);
-      }
-    }
-
-    if (!generatedImageBase64) {
-      console.error('❌ No image data found in any expected location');
-      
-      // Detaljno logiranje strukture za debugging
-      if (candidate.content?.parts) {
-        console.log('Parts array structure:');
-        candidate.content.parts.forEach((part, index) => {
-          console.log(`Part ${index}:`, Object.keys(part));
-          if (part.inlineData) {
-            console.log(`  Part ${index} has inlineData (camelCase):`, typeof part.inlineData.data, part.inlineData.data?.substring(0, 50));
-          }
-          if (part.inline_data) {
-            console.log(`  Part ${index} has inline_data (snake_case):`, typeof part.inline_data.data, part.inline_data.data?.substring(0, 50));
-          }
-        });
-      }
-      
-      console.log('Full candidate structure:', JSON.stringify(candidate, null, 2).substring(0, 2000));
-      
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'No image generated',
-          details: 'Response has candidate but no image data found in expected format',
-          candidate: JSON.stringify(candidate).substring(0, 1000),
-          hint: 'Check Netlify Function logs for detailed structure analysis'
-        })
-      };
-    }
-
-    console.log('=== ✅ SUCCESS ===');
-    console.log('Image generated via Google AI Studio!');
-    console.log('Image size:', Math.round(generatedImageBase64.length / 1024), 'KB (base64)');
-    console.log('Template:', templateId);
-    console.log('Provider: Google AI Studio (direct)');
-
+    // 6. Vrati job ID ODMAH (kao Replicate!)
+    console.log('✅ Returning job ID immediately (like Replicate pattern)');
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        image: `data:image/jpeg;base64,${generatedImageBase64}`,
-        model: 'gemini-3-pro-image-preview',
-        provider: 'Google AI Studio (direct - Nano Banana Pro)',
+        jobId: jobId,
+        imageUrl: bunnyCdnUrl, // Frontend će poll-ovati ovaj URL
+        status: 'processing',
+        provider: 'Google AI Studio (async - Nano Banana Pro)',
         templateId: templateId,
         isCouple: isCouple,
         timestamp: new Date().toISOString()

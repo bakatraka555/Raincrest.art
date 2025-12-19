@@ -46,8 +46,8 @@ functions.http('generateImageWorker', async (req, res) => {
   }
   
   try {
-    // NEW FORMAT: Accept { prompt, image: URL }
-    const { prompt, image } = req.body;
+    // NEW FORMAT: Accept { prompt, image: URL, aspect_ratio, output_format }
+    const { prompt, image, aspect_ratio, output_format, templateId, isCouple } = req.body;
     
     // Legacy format support (for backward compatibility)
     const { jobId: legacyJobId, imageParts: legacyImageParts, gcsUrl, gcsFilename, bunnyUrl, bunnyFilename } = req.body;

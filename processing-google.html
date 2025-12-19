@@ -342,18 +342,28 @@
                 updateStatusText('Complete! 🎉');
             }
 
-            // Polling function - poll GCS URL using <img> tag (no CORS issues!)
+            // Polling function - use Netlify function as proxy (no CORS issues!)
             async function checkStatus() {
                 try {
-                    // Use <img> tag to check if image exists (no CORS needed!)
-                    const img = new Image();
-                    let pollCompleted = false; // Flag to prevent multiple callbacks
-                    
-                    img.onload = () => {
-                        if (pollCompleted) return; // Prevent duplicate calls
-                        pollCompleted = true;
-                        
-                        // Image exists and loaded successfully!
+                    // Use Netlify function to check if image exists (no CORS!)
+                    const response = await fetch(`/.netlify/functions/check-gcs-image?jobId=${jobId}&imageUrl=${encodeURIComponent(imageUrl)}`, {
+                        method: 'GET',
+                        cache: 'no-cache'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to check image status: ' + response.status);
+                    }
+
+                    const result = await response.json();
+                    console.log('GCS status check:', result);
+
+                    if (!result.success) {
+                        throw new Error(result.error || 'Status check failed');
+                    }
+
+                    if (result.exists) {
+                        // Image exists and is ready!
                         console.log('✅ Image available!');
                         updateStep(3);
                         updateProgress(90);
@@ -361,15 +371,11 @@
                         
                         // Wait a moment for dramatic effect
                         setTimeout(() => {
-                            showResult(imageUrl);
+                            showResult(result.imageUrl);
                         }, 500);
-                        // Stop polling - image is ready
-                    };
-                    
-                    img.onerror = () => {
-                        if (pollCompleted) return; // Prevent duplicate calls
-                        
-                        // Image not ready yet (404) or other error
+                        return; // Stop polling
+                    } else {
+                        // Image not ready yet, continue polling
                         const progress = currentStep * 25 + 10;
                         updateProgress(Math.min(progress, 85));
                         
@@ -387,16 +393,12 @@
                         
                         // Continue polling
                         setTimeout(checkStatus, 2000);
-                    };
-                    
-                    // Add timestamp to bypass cache
-                    const cacheBuster = `?t=${Date.now()}`;
-                    img.src = imageUrl + cacheBuster;
-                    
+                    }
+
                 } catch (error) {
                     console.error('Error checking status:', error);
                     
-                    // Continue polling on error
+                    // Continue polling on error (might be temporary network issue)
                     setTimeout(checkStatus, 2000);
                 }
             }

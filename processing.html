@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Your Image - Raincrest Art</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        /* Progress Stepper */
+        .progress-stepper {
+            margin: 40px 0;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        .step.active {
+            opacity: 1;
+        }
+
+        .step.completed {
+            opacity: 0.6;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .step.completed .step-icon {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-text {
+            flex: 1;
+            text-align: left;
+            font-size: 16px;
+            color: #333;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 30px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+
+        /* Result Image */
+        .result-image {
+            display: none;
+            margin: 30px 0;
+        }
+
+        .result-image.show {
+            display: block;
+        }
+
+        .result-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: none;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-buttons.show {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Error Message */
+        .error-message {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Loading States */
+        .loading-section {
+            display: block;
+        }
+
+        .loading-section.hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .step-text {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Processing Your Image</h1>
+        <p class="subtitle">Please wait while we create your transformation...</p>
+
+        <!-- Progress Stepper -->
+        <div class="progress-stepper">
+            <div class="step" id="step1">
+                <div class="step-icon">1</div>
+                <div class="step-text">Verifying payment...</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-icon">2</div>
+                <div class="step-text">Sending to AI...</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-icon">3</div>
+                <div class="step-text">Applying magic...</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-icon">4</div>
+                <div class="step-text">Finalizing...</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-section" id="loadingSection">
+            <div class="spinner"></div>
+            <p id="statusText" style="color: #666; margin-top: 20px;">Starting generation...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- Result Image -->
+        <div class="result-image" id="resultImage">
+            <img id="generatedImage" alt="Generated image">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons" id="actionButtons">
+            <button class="btn btn-primary" id="shareButton">📱 Share / Save</button>
+            <a href="order.html" class="btn btn-secondary">🔄 Generate Another</a>
+        </div>
+    </div>
+
+    <script>
+        // Get predictionId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const predictionId = urlParams.get('predictionId');
+
+        if (!predictionId) {
+            showError('Missing prediction ID. Please go back and try again.');
+            return;
+        }
+
+        console.log('Prediction ID:', predictionId);
+
+        // Step management
+        let currentStep = 0;
+        const steps = [
+            { id: 'step1', text: 'Verifying payment...' },
+            { id: 'step2', text: 'Sending to AI...' },
+            { id: 'step3', text: 'Applying magic...' },
+            { id: 'step4', text: 'Finalizing...' }
+        ];
+
+        function updateStep(stepIndex) {
+            // Mark previous steps as completed
+            for (let i = 0; i < stepIndex; i++) {
+                const step = document.getElementById(steps[i].id);
+                step.classList.remove('active');
+                step.classList.add('completed');
+            }
+
+            // Mark current step as active
+            if (stepIndex < steps.length) {
+                const step = document.getElementById(steps[stepIndex].id);
+                step.classList.remove('completed');
+                step.classList.add('active');
+                currentStep = stepIndex;
+            }
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+
+        function updateStatusText(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').classList.add('show');
+            document.getElementById('loadingSection').classList.add('hidden');
+        }
+
+        function showResult(imageUrl) {
+            document.getElementById('generatedImage').src = imageUrl;
+            document.getElementById('resultImage').classList.add('show');
+            document.getElementById('actionButtons').classList.add('show');
+            document.getElementById('loadingSection').classList.add('hidden');
+            updateStep(4);
+            updateProgress(100);
+            updateStatusText('Complete! 🎉');
+        }
+
+        // Polling function
+        async function checkStatus() {
+            try {
+                const response = await fetch(`/.netlify/functions/check-status?predictionId=${predictionId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to check status: ' + response.status);
+                }
+
+                const result = await response.json();
+                console.log('Status check result:', result);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Status check failed');
+                }
+
+                // Update UI based on status
+                const status = result.status;
+
+                if (status === 'starting') {
+                    updateStep(1);
+                    updateProgress(20);
+                    updateStatusText('Starting generation...');
+                } else if (status === 'processing') {
+                    updateStep(2);
+                    updateProgress(50);
+                    updateStatusText('AI is working on your image...');
+                } else if (status === 'succeeded' && result.imageUrl) {
+                    updateStep(3);
+                    updateProgress(90);
+                    updateStatusText('Almost done...');
+                    
+                    // Wait a moment for dramatic effect
+                    setTimeout(() => {
+                        showResult(result.imageUrl);
+                    }, 500);
+                    return; // Stop polling
+                } else if (status === 'failed') {
+                    throw new Error(result.error || 'Generation failed');
+                } else {
+                    // Still processing
+                    const progress = currentStep * 25 + 10;
+                    updateProgress(Math.min(progress, 85));
+                }
+
+                // Continue polling if not done
+                if (status !== 'succeeded' && status !== 'failed') {
+                    setTimeout(checkStatus, 2000); // Poll every 2 seconds
+                }
+
+            } catch (error) {
+                console.error('Error checking status:', error);
+                showError('Error: ' + error.message);
+            }
+        }
+
+        // Share/Save functionality
+        document.getElementById('shareButton').addEventListener('click', async function() {
+            const imageUrl = document.getElementById('generatedImage').src;
+            
+            // Try native share API first (mobile)
+            if (navigator.share) {
+                try {
+                    // Fetch image as blob for sharing
+                    const response = await fetch(imageUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], 'raincrest-art.jpg', { type: 'image/jpeg' });
+
+                    await navigator.share({
+                        title: 'My Raincrest Art Transformation',
+                        text: 'Check out my transformation!',
+                        files: [file]
+                    });
+                    return;
+                } catch (error) {
+                    console.log('Share failed, falling back to download:', error);
+                }
+            }
+
+            // Fallback: Download
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = 'raincrest-art.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Start polling immediately
+        updateStep(0);
+        updateProgress(10);
+        setTimeout(checkStatus, 1000); // Start after 1 second
+    </script>
+</body>
+</html>
+

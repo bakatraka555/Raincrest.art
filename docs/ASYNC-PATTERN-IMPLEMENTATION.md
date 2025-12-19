@@ -222,3 +222,4 @@ GCS_CDN_URL=https://storage.googleapis.com/raincrest-art-images
 **Datum:** 2024-12-19  
 **Google Cloud Function URL:** `https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker`
 
+

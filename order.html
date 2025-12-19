@@ -1720,206 +1720,55 @@ ${logsText}
                     }
                 }
                 
-                // SADA: Pozovi Netlify Function za generiranje s URL-ovima (mali request!)
+                // SADA: Pozovi verify-and-start za Replicate generaciju (async pattern)
                 updateLoadingStep(2, 'Starting AI generation...');
                 
-                // ⚙️ TOGGLE: Izaberi AI provider
-                // true = Google AI Studio (gemini-3-pro-image-preview - Nano Banana Pro, podržava image generation!)
-                // false = Replicate (original, pouzdano, $0.039/slika)
-                const USE_GOOGLE_AI = true; // ✅ Koristi Google AI Studio (Nano Banana Pro)
-                
-                console.log('🤖 AI Provider:', USE_GOOGLE_AI ? 'Google AI Studio (TEST)' : 'Replicate (ORIGINAL)');
-                console.log('Calling generate-image function with URLs...');
+                console.log('🚀 Using new async pattern: verify-and-start → processing.html');
+                console.log('Calling verify-and-start function with URLs...');
                 
                 // Validacija URL-ova prije slanja
-                console.log('🔍🔍🔍 PRE-GENERATE VALIDATION:');
-                console.log('🔍 image1Url:', image1Url);
-                console.log('🔍 image1Url type:', typeof image1Url);
-                console.log('🔍 image1Url starts with http:', image1Url ? image1Url.startsWith('http') : 'N/A');
-                console.log('🔍 image2Url:', image2Url);
-                
                 if (!image1Url || !image1Url.startsWith('http')) {
-                    console.error('❌❌❌ Invalid image1Url:', image1Url);
                     throw new Error('Invalid image1 URL. Please try uploading the image again.');
                 }
                 if (image2Url && !image2Url.startsWith('http')) {
-                    console.error('❌❌❌ Invalid image2Url:', image2Url);
                     throw new Error('Invalid image2 URL. Please try uploading the image again.');
                 }
                 
-                console.log('✅✅✅ URL validation passed, proceeding to generate-image...');
+                console.log('✅ URL validation passed');
                 
-                console.log('🚀🚀🚀 CALLING generate-image function...');
-                console.log('🚀 Request payload:', {
-                    templateId: currentTemplate.id,
-                    image1Url: image1Url ? image1Url.substring(0, 50) + '...' : 'MISSING',
-                    image2Url: image2Url ? image2Url.substring(0, 50) + '...' : null,
-                    isCouple: isCouple
-                });
+                // Pozovi verify-and-start (on će generirati prompt interno)
+                console.log('📡 Calling verify-and-start...');
+                const verifyResponse = await fetchWithTimeout('/.netlify/functions/verify-and-start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageUrl: image1Url,
+                        image2Url: image2Url,
+                        templateId: currentTemplate.id,
+                        isCouple: isCouple,
+                        prompt: prompt // Opcionalno, verify-and-start može generirati svoj
+                    })
+                }, 30000); // 30 sekundi timeout
                 
-                let generateResponse;
-                
-                // Auto retry za timeout greške
-                const maxRetries = 2; // Max 2 retry-a (ukupno 3 pokušaja)
-                let retryAttempt = 0;
-                let lastError = null;
-                
-                // Izaberi endpoint prema toggle-u
-                const endpoint = USE_GOOGLE_AI 
-                    ? '/.netlify/functions/generate-image-google'  // 🧪 Google AI (test)
-                    : '/.netlify/functions/generate-image';         // ✅ Replicate (original)
-                
-                console.log('📡 Endpoint:', endpoint);
-                
-                // Retry loop
-                while (retryAttempt <= maxRetries) {
-                    try {
-                        if (retryAttempt > 0) {
-                            const delay = Math.min(2000 * retryAttempt, 5000); // Exponential backoff: 2s, 4s, max 5s
-                            console.log(`⏱️ Timeout occurred - auto retry ${retryAttempt}/${maxRetries} (waiting ${delay}ms)...`);
-                            updateLoadingStep(2, `Retrying... (${retryAttempt}/${maxRetries})`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                        }
-                        
-                        generateResponse = await fetchWithTimeout(endpoint, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                templateId: currentTemplate.id,
-                                image1Url: image1Url,  // URL umjesto base64!
-                                image2Url: image2Url,  // URL umjesto base64!
-                                isCouple: isCouple
-                            })
-                        }, 60000); // 60 sekundi timeout (povećano za Google AI)
-                        
-                        console.log('✅✅✅ generate-image response received');
-                        console.log('✅ Response status:', generateResponse.status);
-                        console.log('✅ Response headers:', Object.fromEntries(generateResponse.headers.entries()));
-                        
-                        // Uspješno - izađi iz retry loop-a
-                        break;
-                        
-                    } catch (fetchError) {
-                        lastError = fetchError;
-                        
-                        // Provjeri da li je timeout greška i imamo još retry-a
-                        if (fetchError.message === 'Request timeout' && retryAttempt < maxRetries) {
-                            retryAttempt++;
-                            console.warn(`⚠️ Request timeout (attempt ${retryAttempt}/${maxRetries + 1})`);
-                            continue; // Pokušaj ponovno
-                        }
-                        
-                        // Ako nije timeout ili smo iscrpili retry-e, baci grešku
-                        if (fetchError.message === 'Request timeout') {
-                            throw new Error(`Request timeout - the server took too long to respond after ${maxRetries + 1} attempts. Please try again.`);
-                        } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
-                            throw new Error('Network error - please check your internet connection and try again.');
-                        } else {
-                            throw new Error('Failed to connect to server: ' + fetchError.message);
-                        }
-                    }
+                if (!verifyResponse.ok) {
+                    const errorText = await verifyResponse.text();
+                    throw new Error('Failed to start generation: ' + errorText);
                 }
                 
-                // Provjeri da li imamo response nakon retry-a
-                if (!generateResponse) {
-                    throw new Error('Failed to get response after retries: ' + (lastError?.message || 'Unknown error'));
-                }
-
-                // Provjeri status kod prije svega
-                if (generateResponse.status === 0 || !generateResponse.status) {
-                    throw new Error('Network error - no response from server. Please check your internet connection.');
+                const verifyResult = await verifyResponse.json();
+                console.log('✅ verify-and-start result:', verifyResult);
+                
+                if (!verifyResult.success || !verifyResult.predictionId) {
+                    throw new Error('Failed to get prediction ID: ' + (verifyResult.error || 'Unknown error'));
                 }
                 
-                // Provjeri Content-Type header
-                const contentType = generateResponse.headers.get('content-type') || '';
-                const isJson = contentType.includes('application/json');
-                
-                console.log('Response status:', generateResponse.status);
-                console.log('Response statusText:', generateResponse.statusText);
-                console.log('Content-Type:', contentType);
-                console.log('Is JSON:', isJson);
-                
-                // Prvo pročitaj kao text da vidimo što se vraća
-                let responseText;
-                try {
-                    responseText = await generateResponse.text();
-                    console.log('Response text length:', responseText ? responseText.length : 0);
-                    console.log('Response text (first 500 chars):', responseText ? responseText.substring(0, 500) : 'EMPTY');
-                } catch (textError) {
-                    console.error('Failed to read response text:', textError);
-                    throw new Error('Failed to read response from server. Please try again.');
-                }
-                
-                // Provjeri da li je response prazan
-                if (!responseText || responseText.trim().length === 0) {
-                    console.error('Empty response received. Status:', generateResponse.status);
-                    
-                    // Različite poruke ovisno o status kodu
-                    if (generateResponse.status === 504) {
-                        throw new Error('Gateway timeout - the server took too long to respond. Please try again.');
-                    } else if (generateResponse.status === 503) {
-                        throw new Error('Service unavailable - the server is temporarily overloaded. Please try again in a few moments.');
-                    } else if (generateResponse.status === 502) {
-                        throw new Error('Bad gateway - there was an error communicating with the server. Please try again.');
-                    } else if (generateResponse.status === 500) {
-                        throw new Error('Server error - internal server error occurred. Please try again in a few moments.');
-                    } else {
-                        throw new Error('Empty response from server (Status: ' + generateResponse.status + '). This might be a timeout or server error. Please try again.');
-                    }
-                }
-                
-                // Parse response body samo jednom
-                let generateResult;
-                try {
-                    // Provjeri da li je response valjan JSON prije parsiranja
-                    const trimmedText = responseText.trim();
-                    if (trimmedText.length === 0) {
-                        throw new Error('Response is empty');
-                    }
-                    
-                    if (!trimmedText.startsWith('{') && !trimmedText.startsWith('[')) {
-                        // Ako nije JSON, možda je HTML error page
-                        if (trimmedText && (trimmedText.toLowerCase().includes('<html') || trimmedText.toLowerCase().includes('<!doctype'))) {
-                            throw new Error('Server returned HTML error page instead of JSON. This usually means the function crashed or timed out.');
-                        }
-                        throw new Error('Response is not valid JSON. Received: ' + trimmedText.substring(0, 100));
-                    }
-                    
-                    generateResult = JSON.parse(trimmedText);
-                } catch (parseError) {
-                    // Ako JSON parsing ne uspije, pokaži što se stvarno vratilo
-                    console.error('Failed to parse JSON response:', parseError);
-                    console.error('Response status:', generateResponse.status);
-                    console.error('Response statusText:', generateResponse.statusText);
-                    console.error('Response text (first 1000 chars):', responseText ? responseText.substring(0, 1000) : 'EMPTY');
-                    
-                    // Ako je status error, pokušaj objasniti
-                    if (generateResponse.status >= 500) {
-                        throw new Error('Server error (' + generateResponse.status + '). The server encountered an error. Please try again in a few moments. If the problem persists, contact support.');
-                    } else if (generateResponse.status === 504 || generateResponse.status === 408) {
-                        throw new Error('Request timeout. The generation might take too long. Please try again with smaller images.');
-                    } else if (generateResponse.status === 413) {
-                        throw new Error('Request too large. Please try with smaller images (max 10MB).');
-                    } else if (parseError?.message && parseError.message.includes('Unexpected end')) {
-                        throw new Error('Incomplete response from server. The server response was cut off, likely due to a timeout. Please try again.');
-                    } else {
-                        // Human-friendly error message
-                        let friendlyMessage = 'Failed to parse server response. ';
-                        if (parseError.message) {
-                            friendlyMessage += parseError.message + '. ';
-                        }
-                        friendlyMessage += 'Please try again or contact support if the problem persists.';
-                        throw new Error(friendlyMessage);
-                    }
-                }
-
-                if (!generateResponse.ok) {
-                    throw new Error(generateResult.error || generateResult.details || 'Generation failed');
-                }
-
-                console.log('Generation result:', generateResult);
+                // Redirect na processing.html s predictionId
+                const predictionId = verifyResult.predictionId;
+                console.log('✅ Prediction started, redirecting to processing.html...');
+                window.location.href = `processing.html?predictionId=${predictionId}`;
+                return; // Exit early - redirect će se dogoditi
 
                 // 🔀 Provjeri format odgovora: Google AI (direktna slika) vs Replicate (predictionId)
                 let finalImageUrl;

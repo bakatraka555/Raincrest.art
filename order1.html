@@ -648,7 +648,20 @@
                        id="userEmail" 
                        placeholder="your@email.com" 
                        required
-                       style="width: 100%; padding: 15px 20px; border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 16px; backdrop-filter: blur(5px); box-sizing: border-box;">
+                       style="width: 100%; padding: 15px 20px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 10px; background: rgba(255, 255, 255, 0.15); color: white; font-size: 16px; backdrop-filter: blur(5px); box-sizing: border-box; outline: none; transition: all 0.3s ease;">
+                <style>
+                    #userEmail::placeholder {
+                        color: rgba(255, 255, 255, 0.6);
+                    }
+                    #userEmail:focus {
+                        background: rgba(255, 255, 255, 0.25);
+                        border-color: rgba(255, 255, 255, 0.5);
+                        color: white;
+                    }
+                    #userEmail:hover {
+                        background: rgba(255, 255, 255, 0.2);
+                    }
+                </style>
                 <small style="color: rgba(255, 255, 255, 0.7); font-size: 14px; display: block; margin-top: 8px;">
                     We'll send your generated image directly to this email address
                 </small>

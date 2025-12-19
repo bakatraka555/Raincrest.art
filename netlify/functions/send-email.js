@@ -98,7 +98,7 @@ exports.handler = async (event, context) => {
     console.log('Creating Gmail SMTP transporter...');
 
     // Gmail SMTP konfiguracija
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: EMAIL_USER,

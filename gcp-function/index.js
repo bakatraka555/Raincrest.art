@@ -46,30 +46,28 @@ functions.http('generateImageWorker', async (req, res) => {
   }
   
   try {
-    const { jobId, prompt, imageParts, gcsUrl, gcsFilename, bunnyUrl, bunnyFilename, templateId, isCouple } = req.body;
+    // NEW FORMAT: Accept { prompt, image: URL }
+    const { prompt, image } = req.body;
     
-    if (!jobId || !prompt || !imageParts) {
-      res.status(400).json({ error: 'Missing required parameters' });
+    // Legacy format support (for backward compatibility)
+    const { jobId: legacyJobId, imageParts: legacyImageParts, gcsUrl, gcsFilename, bunnyUrl, bunnyFilename } = req.body;
+    
+    if (!prompt) {
+      res.status(400).json({ success: false, error: 'Missing required parameter: prompt' });
       return;
     }
+    
+    // Generate job ID if not provided
+    const jobId = legacyJobId || `google-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
     
     console.log(`[Job ${jobId}] Starting Google AI generation in Google Cloud Function...`);
+    console.log(`[Job ${jobId}] Prompt length:`, prompt.length);
+    console.log(`[Job ${jobId}] Image URL:`, image || 'Not provided (legacy format)');
     
-    // Determine storage type (GCS or Bunny.net fallback)
-    const useGCS = !!(gcsUrl || gcsFilename);
-    const useBunny = !!(bunnyUrl || bunnyFilename);
-    
-    if (!useGCS && !useBunny) {
-      res.status(400).json({ error: 'Missing storage URL (gcsUrl or bunnyUrl required)' });
-      return;
-    }
-    
-    // Initialize GCS bucket if using GCS
-    if (useGCS) {
-      const bucketName = process.env.GCS_BUCKET_NAME || 'raincrest-art-images';
-      if (!bucket) {
-        bucket = storage.bucket(bucketName);
-      }
+    // Initialize GCS bucket
+    const bucketName = process.env.GCS_BUCKET_NAME || 'raincrest-art-images';
+    if (!bucket) {
+      bucket = storage.bucket(bucketName);
     }
     
     const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
@@ -77,7 +75,75 @@ functions.http('generateImageWorker', async (req, res) => {
       throw new Error('GOOGLE_AI_API_KEY not configured');
     }
     
-    // 1. Google AI API poziv
+    // 1. Prepare imageParts array
+    let imageParts = [];
+    
+    if (image) {
+      // NEW FORMAT: Download image from URL and convert to base64
+      console.log(`[Job ${jobId}] Downloading image from URL: ${image}`);
+      
+      try {
+        const imageResponse = await fetch(image);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to download image: ${imageResponse.status} ${imageResponse.statusText}`);
+        }
+        
+        const imageBuffer = await imageResponse.buffer();
+        const base64Image = imageBuffer.toString('base64');
+        
+        imageParts.push({
+          inline_data: {
+            mime_type: 'image/jpeg',
+            data: base64Image
+          }
+        });
+        
+        console.log(`[Job ${jobId}] ✅ Image downloaded and converted (${Math.round(base64Image.length / 1024)} KB base64)`);
+      } catch (downloadError) {
+        console.error(`[Job ${jobId}] Error downloading image:`, downloadError);
+        res.status(400).json({
+          success: false,
+          error: `Failed to download image: ${downloadError.message}`
+        });
+        return;
+      }
+      
+      // Add logo URL (always add logo)
+      const logoUrl = 'https://examples.b-cdn.net/logo.jpg';
+      console.log(`[Job ${jobId}] Downloading logo from: ${logoUrl}`);
+      
+      try {
+        const logoResponse = await fetch(logoUrl);
+        if (logoResponse.ok) {
+          const logoBuffer = await logoResponse.buffer();
+          const base64Logo = logoBuffer.toString('base64');
+          
+          imageParts.push({
+            inline_data: {
+              mime_type: 'image/jpeg',
+              data: base64Logo
+            }
+          });
+          
+          console.log(`[Job ${jobId}] ✅ Logo downloaded and converted (${Math.round(base64Logo.length / 1024)} KB base64)`);
+        }
+      } catch (logoError) {
+        console.warn(`[Job ${jobId}] Logo download failed (non-critical):`, logoError.message);
+      }
+      
+    } else if (legacyImageParts && Array.isArray(legacyImageParts) && legacyImageParts.length > 0) {
+      // LEGACY FORMAT: Use provided imageParts
+      imageParts = legacyImageParts;
+      console.log(`[Job ${jobId}] Using legacy imageParts format (${imageParts.length} images)`);
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: image (URL) or imageParts (legacy)'
+      });
+      return;
+    }
+    
+    // 2. Google AI API poziv
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GOOGLE_AI_API_KEY}`;
     
     const requestBody = {
@@ -153,9 +219,13 @@ functions.http('generateImageWorker', async (req, res) => {
       }
     }
     
-    // 4. Upload na storage (GCS ili Bunny.net)
+    // 4. Upload na storage (GCS - default, Bunny.net fallback)
     const imageBuffer = Buffer.from(generatedImageBase64, 'base64');
     let finalImageUrl;
+    
+    // Determine storage type (prefer GCS, fallback to Bunny.net)
+    const useGCS = !!(gcsUrl || gcsFilename || !bunnyUrl);
+    const useBunny = !!bunnyUrl && !useGCS;
     
     if (useGCS) {
       // Upload na Google Cloud Storage
@@ -175,7 +245,6 @@ functions.http('generateImageWorker', async (req, res) => {
       await file.makePublic();
       
       // Get public URL
-      const bucketName = process.env.GCS_BUCKET_NAME || 'raincrest-art-images';
       const publicUrl = `https://storage.googleapis.com/${bucketName}/${filename}`;
       const cdnUrl = process.env.GCS_CDN_URL 
         ? `${process.env.GCS_CDN_URL}/${filename}`
@@ -230,7 +299,17 @@ functions.http('generateImageWorker', async (req, res) => {
     console.error('Error:', error.message);
     console.error('Stack:', error.stack);
     
+    // Check if error is from Google AI API (safety blocking, etc.)
+    if (error.message && error.message.includes('mask image bytes')) {
+      res.status(400).json({
+        success: false,
+        error: 'Google AI je odbio zahtjev: Image editing failed with the following error: Failed to get mask image bytes: No uri or raw bytes are provided in media content.'
+      });
+      return;
+    }
+    
     res.status(500).json({
+      success: false,
       error: 'Worker error',
       details: error.message,
       timestamp: new Date().toISOString()

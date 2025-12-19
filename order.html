@@ -1796,6 +1796,7 @@ ${logsText}
                         
                         console.log('✅✅✅ generate-image response received');
                         console.log('✅ Response status:', generateResponse.status);
+                        console.log('✅ Response headers:', Object.fromEntries(generateResponse.headers.entries()));
                         
                         // Uspješno - izađi iz retry loop-a
                         break;
@@ -1933,18 +1934,25 @@ ${logsText}
                     updateProgress(100);
                 } else if (generateResult.jobId && generateResult.imageUrl) {
                     // ✅ Google AI - job pattern (kao Replicate!)
-                    console.log('✅ Google AI job created - polling image URL (like Replicate pattern)...');
+                    console.log('✅✅✅ Google AI job created - starting async polling pattern...');
+                    console.log('📋 Job details:', {
+                        jobId: generateResult.jobId,
+                        imageUrl: generateResult.imageUrl,
+                        status: generateResult.status,
+                        provider: generateResult.provider
+                    });
                     const imageUrl = generateResult.imageUrl;
                     const jobId = generateResult.jobId;
-                    console.log('Job ID:', jobId);
-                    console.log('Image URL (GCS or Bunny):', imageUrl);
                     
                     updateLoadingStep(3, 'Processing your photos...');
                     
-                    // Poll Bunny URL dok ne postoji (kao Replicate polling)
-                    let maxAttempts = 150; // Max 5 minuta (150 * 2 sekunde)
+                    // Poll image URL dok ne postoji (optimizirano za GCS)
+                    let maxAttempts = 200; // Max ~6.5 minuta (200 * 2 sekunde)
                     let attempt = 0;
                     const startTime = Date.now();
+                    let lastStatus = null;
+                    
+                    console.log(`🔄 Starting polling loop: max ${maxAttempts} attempts (${maxAttempts * 2}s total)`);
                     
                     while (attempt < maxAttempts) {
                         await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
@@ -1964,8 +1972,11 @@ ${logsText}
                         }
                         
                         try {
-                            // Poll image URL (GCS or Bunny) - HEAD request (brže)
-                            console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Checking image URL (${imageUrl.substring(0, 50)}...)...`);
+                            // Poll image URL (GCS) - GET with Range header (pouzdanije)
+                            const statusMsg = lastStatus !== headResponse?.status ? `Status: ${headResponse?.status || 'checking'}...` : '';
+                            if (attempt % 10 === 0 || lastStatus !== headResponse?.status) {
+                                console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Polling GCS URL... ${statusMsg}`);
+                            }
                             
                             // Use GET with Range header (more reliable than HEAD for GCS)
                             const headResponse = await fetchWithTimeout(imageUrl, {
@@ -1975,37 +1986,61 @@ ${logsText}
                                     'Range': 'bytes=0-0', // Request only first byte (efficient!)
                                     'Cache-Control': 'no-cache'
                                 }
-                            }, 10000); // 10 sekundi timeout
+                            }, 8000); // 8 sekundi timeout (smanjeno za brže retry)
+                            
+                            lastStatus = headResponse.status;
                             
                             if (headResponse.ok || headResponse.status === 206) {
                                 // 200 OK or 206 Partial Content = image exists!
-                                console.log('✅ Image available!');
+                                console.log(`✅✅✅ Image available after ${elapsedSeconds}s (${attempt} attempts)!`);
+                                console.log('✅ Response status:', headResponse.status);
+                                console.log('✅ Image URL:', imageUrl);
                                 finalImageUrl = imageUrl;
                                 updateLoadingStep(6, 'Generation complete! 🎉');
                                 updateProgress(95);
                                 break;
                             } else if (headResponse.status === 404) {
                                 // Slika još nije uploadana, nastavi poll-ati
-                                console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Image not ready yet (404), waiting...`);
+                                if (attempt % 15 === 0) { // Log svakih 30 sekundi
+                                    console.log(`⏳ [${attempt}/${maxAttempts}] [${elapsedSeconds}s] Image not ready yet (404), Google AI still generating...`);
+                                }
                                 continue;
+                            } else if (headResponse.status === 403) {
+                                // Permission denied - možda bucket nije javno dostupan
+                                console.error(`❌ Permission denied (403) - GCS bucket may not be public!`);
+                                console.error('🔧 Check GCS bucket permissions or GCS_CDN_URL configuration');
+                                throw new Error('GCS bucket permission denied (403) - check bucket is public');
                             } else {
-                                console.warn(`[${attempt}/${maxAttempts}] Unexpected status: ${headResponse.status}, retrying...`);
+                                if (attempt % 10 === 0) {
+                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Unexpected status: ${headResponse.status}, retrying...`);
+                                }
                                 continue;
                             }
                         } catch (fetchError) {
-                            if (fetchError.message && fetchError.message.includes('timeout')) {
-                                console.warn('⚠️ HEAD request timeout, retrying...');
+                            if (fetchError.message && (fetchError.message.includes('timeout') || fetchError.message.includes('Request timeout'))) {
+                                if (attempt % 10 === 0) {
+                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Request timeout, retrying...`);
+                                }
                                 continue;
                             } else if (fetchError.message && fetchError.message.includes('404')) {
                                 // 404 je OK - slika još nije gotova
                                 continue;
                             } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
                                 // Network error - pokušaj ponovno
-                                console.warn('⚠️ Network error, retrying...');
+                                if (attempt % 10 === 0) {
+                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Network error, retrying...`);
+                                }
                                 continue;
+                            } else if (fetchError.message && fetchError.message.includes('403')) {
+                                // Permission denied - kritična greška
+                                console.error('❌ GCS Permission denied - check bucket permissions!');
+                                throw fetchError;
                             }
-                            // Druge greške - baci error
-                            throw fetchError;
+                            // Druge greške - log i nastavi (možda privremeni problem)
+                            if (attempt % 10 === 0) {
+                                console.warn(`⚠️ [${attempt}/${maxAttempts}] Fetch error: ${fetchError.message}, retrying...`);
+                            }
+                            continue;
                         }
                     }
                     

@@ -1810,11 +1810,11 @@ ${logsText}
                     }
                 }
                 
-                // SADA: Pozovi generate-image-google za Google AI generaciju (async pattern)
-                updateLoadingStep(2, 'Starting AI generation...');
+                // DIRECT GOOGLE CLOUD FUNCTION CALL (no Netlify timeout!)
+                updateLoadingStep(2, 'Preparing images...');
+                updateProgress(20);
                 
-                console.log('🚀 Using Google AI async pattern: generate-image-google → processing-google.html');
-                console.log('Calling generate-image-google function with URLs...');
+                console.log('🚀 Direct Google Cloud Function call (bypassing Netlify timeout)');
                 
                 // Validacija URL-ova prije slanja
                 if (!image1Url || !image1Url.startsWith('http')) {
@@ -1826,39 +1826,130 @@ ${logsText}
                 
                 console.log('✅ URL validation passed');
                 
-                // Pozovi generate-image-google (on će generirati prompt interno)
-                console.log('📡 Calling generate-image-google...');
-                const googleResponse = await fetchWithTimeout('/.netlify/functions/generate-image-google', {
+                // 1. Get prompt from Netlify function
+                updateLoadingStep(3, 'Generating prompt...');
+                updateProgress(30);
+                
+                console.log('📝 Getting prompt from Netlify function...');
+                const promptResponse = await fetchWithTimeout('/.netlify/functions/generate-image-google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        templateId: currentTemplate.id,
+                        isCouple: isCouple,
+                        getPromptOnly: true // Flag to only return prompt
+                    })
+                }, 10000); // 10 sekundi timeout za prompt
+                
+                if (!promptResponse.ok) {
+                    throw new Error('Failed to get prompt: ' + await promptResponse.text());
+                }
+                
+                const promptData = await promptResponse.json();
+                const prompt = promptData.prompt;
+                console.log('✅ Prompt received (length):', prompt.length);
+                
+                // 2. Download images and convert to base64
+                updateLoadingStep(4, 'Preparing images for AI...');
+                updateProgress(40);
+                
+                console.log('📥 Downloading images and converting to base64...');
+                const imageUrls = [image1Url];
+                if (!isCouple && image2Url) {
+                    imageUrls.push(image2Url);
+                }
+                // Add logo
+                imageUrls.push('https://examples.b-cdn.net/logo.jpg');
+                
+                const imageParts = [];
+                for (let i = 0; i < imageUrls.length; i++) {
+                    const url = imageUrls[i];
+                    console.log(`Downloading image ${i + 1}/${imageUrls.length}...`);
+                    
+                    const imgResponse = await fetch(url);
+                    if (!imgResponse.ok) {
+                        throw new Error(`Failed to download image ${i + 1}: ${imgResponse.status}`);
+                    }
+                    
+                    const blob = await imgResponse.blob();
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+                    
+                    imageParts.push({
+                        inline_data: {
+                            mime_type: 'image/jpeg',
+                            data: base64
+                        }
+                    });
+                    
+                    console.log(`✅ Image ${i + 1} converted (${Math.round(base64.length / 1024)} KB base64)`);
+                }
+                
+                // 3. Generate job ID and GCS URL
+                const jobId = `google-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+                const bucketName = 'raincrest-art-images'; // Default, can be from env
+                const gcsFilename = `temp/generated/${jobId}.jpg`;
+                const gcsUrl = `https://storage.googleapis.com/${bucketName}/${gcsFilename}`;
+                
+                console.log('📋 Job details:', { jobId, gcsUrl, gcsFilename });
+                
+                // 4. Call Google Cloud Function DIRECTLY (no Netlify timeout!)
+                updateLoadingStep(5, 'Sending to AI...');
+                updateProgress(50);
+                
+                // Update status message
+                const statusTextEl = document.getElementById('statusText');
+                if (statusTextEl) {
+                    statusTextEl.textContent = 'Designing your transformation... This may take 30-45 seconds...';
+                }
+                
+                console.log('🚀 Calling Google Cloud Function directly...');
+                const GCP_FUNCTION_URL = 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker';
+                
+                const googleResponse = await fetchWithTimeout(GCP_FUNCTION_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        image1Url: image1Url,
-                        image2Url: image2Url,
+                        jobId: jobId,
+                        prompt: prompt,
+                        imageParts: imageParts,
+                        gcsUrl: gcsUrl,
+                        gcsFilename: gcsFilename,
                         templateId: currentTemplate.id,
                         isCouple: isCouple
                     })
-                }, 30000); // 30 sekundi timeout
+                }, 60000); // 60 sekundi timeout (generation takes 30-45s)
                 
                 if (!googleResponse.ok) {
                     const errorText = await googleResponse.text();
-                    throw new Error('Failed to start generation: ' + errorText);
+                    throw new Error('Google AI generation failed: ' + errorText);
                 }
                 
                 const googleResult = await googleResponse.json();
-                console.log('✅ generate-image-google result:', googleResult);
+                console.log('✅ Google AI result:', googleResult);
                 
-                if (!googleResult.success || !googleResult.jobId || !googleResult.imageUrl) {
-                    throw new Error('Failed to get job ID: ' + (googleResult.error || 'Unknown error'));
+                if (!googleResult.success || !googleResult.imageUrl) {
+                    throw new Error('Failed to generate image: ' + (googleResult.error || 'Unknown error'));
                 }
                 
-                // Redirect na processing-google.html s jobId i imageUrl
-                const jobId = googleResult.jobId;
-                const imageUrl = googleResult.imageUrl;
-                console.log('✅ Google AI job started, redirecting to processing-google.html...');
-                window.location.href = `processing-google.html?jobId=${jobId}&imageUrl=${encodeURIComponent(imageUrl)}`;
-                return; // Exit early - redirect će se dogoditi
+                // 5. Display result immediately (no polling needed!)
+                updateLoadingStep(6, 'Complete! 🎉');
+                updateProgress(100);
+                
+                // Update status message
+                const statusTextEl2 = document.getElementById('statusText');
+                if (statusTextEl2) {
+                    statusTextEl2.textContent = 'Your transformation is ready!';
+                }
+                
+                const finalImageUrl = googleResult.imageUrl;
+                console.log('✅ Final image URL:', finalImageUrl);
+                
+                // Show result
+                showResults(finalImageUrl, null);
+                return; // Exit early - result is shown
 
                 // 🔀 Provjeri format odgovora: Google AI (direktna slika) vs Replicate (predictionId)
                 let finalImageUrl;

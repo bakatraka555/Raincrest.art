@@ -1839,7 +1839,7 @@ ${logsText}
                         isCouple: isCouple,
                         getPromptOnly: true // Flag to only return prompt
                     })
-                }, 10000); // 10 sekundi timeout za prompt
+                }, 10000); // 10 seconds timeout for prompt
                 
                 if (!promptResponse.ok) {
                     throw new Error('Failed to get prompt: ' + await promptResponse.text());
@@ -1849,53 +1849,9 @@ ${logsText}
                 const prompt = promptData.prompt;
                 console.log('✅ Prompt received (length):', prompt.length);
                 
-                // 2. Download images and convert to base64
-                updateLoadingStep(4, 'Preparing images for AI...');
+                // 2. Show loading UI - "Generating... please wait ~30 seconds"
+                updateLoadingStep(4, 'Sending to AI...');
                 updateProgress(40);
-                
-                console.log('📥 Downloading images and converting to base64...');
-                const imageUrls = [image1Url];
-                if (!isCouple && image2Url) {
-                    imageUrls.push(image2Url);
-                }
-                // Add logo
-                imageUrls.push('https://examples.b-cdn.net/logo.jpg');
-                
-                const imageParts = [];
-                for (let i = 0; i < imageUrls.length; i++) {
-                    const url = imageUrls[i];
-                    console.log(`Downloading image ${i + 1}/${imageUrls.length}...`);
-                    
-                    const imgResponse = await fetch(url);
-                    if (!imgResponse.ok) {
-                        throw new Error(`Failed to download image ${i + 1}: ${imgResponse.status}`);
-                    }
-                    
-                    const blob = await imgResponse.blob();
-                    const arrayBuffer = await blob.arrayBuffer();
-                    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-                    
-                    imageParts.push({
-                        inline_data: {
-                            mime_type: 'image/jpeg',
-                            data: base64
-                        }
-                    });
-                    
-                    console.log(`✅ Image ${i + 1} converted (${Math.round(base64.length / 1024)} KB base64)`);
-                }
-                
-                // 3. Generate job ID and GCS URL
-                const jobId = `google-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-                const bucketName = 'raincrest-art-images'; // Default, can be from env
-                const gcsFilename = `temp/generated/${jobId}.jpg`;
-                const gcsUrl = `https://storage.googleapis.com/${bucketName}/${gcsFilename}`;
-                
-                console.log('📋 Job details:', { jobId, gcsUrl, gcsFilename });
-                
-                // 4. Show loading UI - "Generating... please wait ~30 seconds"
-                updateLoadingStep(5, 'Sending to AI...');
-                updateProgress(50);
                 
                 const loadingMessage = document.getElementById('loadingMessage');
                 if (loadingMessage) {
@@ -1907,26 +1863,21 @@ ${logsText}
                     statusTextEl.textContent = 'Designing your transformation... This may take 30-45 seconds...';
                 }
                 
-                // 5. Call Google Cloud Function DIRECTLY (no redirect, no polling!)
+                // 3. Call Google Cloud Function DIRECTLY (simple test with just prompt)
                 console.log('🚀 Calling Google Cloud Function directly...');
                 const GCP_FUNCTION_URL = 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker';
                 
                 updateLoadingStep(5, 'AI is working...');
-                updateProgress(60);
+                updateProgress(50);
                 
+                // For testing: Send only prompt (backend will handle the rest)
                 const googleResponse = await fetchWithTimeout(GCP_FUNCTION_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                        jobId: jobId,
-                        prompt: prompt,
-                        imageParts: imageParts,
-                        gcsUrl: gcsUrl,
-                        gcsFilename: gcsFilename,
-                            templateId: currentTemplate.id,
-                        isCouple: isCouple
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt
                     })
                 }, 60000); // 60 seconds timeout (generation takes 30-45s)
                 
@@ -1935,15 +1886,16 @@ ${logsText}
                     throw new Error('Google AI generation failed: ' + errorText);
                 }
                 
+                // 4. Wait for response and parse JSON
                 const data = await googleResponse.json();
                 console.log('✅ Google AI response:', data);
                 
-                // 6. Handle response
+                // 5. Handle response
                 if (!data.success || !data.imageUrl) {
                     throw new Error('Failed to generate image: ' + (data.error || 'Unknown error'));
                 }
                 
-                // 7. Display result immediately (NO REDIRECT, NO POLLING!)
+                // 6. Display result immediately (NO REDIRECT, NO POLLING!)
                 updateLoadingStep(6, 'Complete! 🎉');
                 updateProgress(100);
                 

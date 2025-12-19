@@ -379,7 +379,20 @@
                     }, 500);
                     return; // Stop polling
                 } else if (status === 'failed') {
-                    throw new Error(result.error || 'Generation failed');
+                    // Better error message for Replicate API errors
+                    const errorMsg = result.error || 'Generation failed';
+                    let userFriendlyError = errorMsg;
+                    
+                    // Make Replicate errors more user-friendly
+                    if (errorMsg.includes('Director:') || errorMsg.includes('E6716')) {
+                        userFriendlyError = 'The AI service encountered an unexpected error. Please try again in a moment.';
+                    } else if (errorMsg.includes('timeout') || errorMsg.includes('time out')) {
+                        userFriendlyError = 'The generation took too long. Please try again with a smaller image.';
+                    } else if (errorMsg.includes('invalid') || errorMsg.includes('Invalid')) {
+                        userFriendlyError = 'Invalid input. Please try uploading a different image.';
+                    }
+                    
+                    throw new Error(userFriendlyError);
                 } else {
                     // Still processing
                     const progress = currentStep * 25 + 10;

@@ -94,6 +94,29 @@ exports.handler = async (event, context) => {
 
     const result = await statusResponse.json();
     console.log('Prediction status:', result.status);
+    console.log('Prediction result:', JSON.stringify(result, null, 2));
+
+    // Parse output correctly (Replicate can return array or string)
+    let imageUrl = null;
+    if (result.output) {
+      if (Array.isArray(result.output)) {
+        imageUrl = result.output[0] || null;
+      } else if (typeof result.output === 'string') {
+        imageUrl = result.output;
+      }
+    }
+
+    // Extract error message (can be in error field or logs)
+    let errorMessage = null;
+    if (result.error) {
+      errorMessage = result.error;
+    } else if (result.logs && Array.isArray(result.logs)) {
+      // Sometimes errors are in logs
+      const errorLog = result.logs.find(log => log && log.toLowerCase().includes('error'));
+      if (errorLog) {
+        errorMessage = errorLog;
+      }
+    }
 
     return {
       statusCode: 200,
@@ -101,9 +124,10 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         status: result.status,
-        imageUrl: result.output || null,
-        error: result.error || null,
-        predictionId: result.id
+        imageUrl: imageUrl,
+        error: errorMessage,
+        predictionId: result.id,
+        logs: result.logs || null
       })
     };
 

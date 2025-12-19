@@ -83,13 +83,21 @@ functions.http('generateImageWorker', async (req, res) => {
       console.log(`[Job ${jobId}] Downloading image from URL: ${image}`);
       
       try {
+        console.log(`[Job ${jobId}] Downloading image from URL: ${image}`);
         const imageResponse = await fetch(image);
+        
         if (!imageResponse.ok) {
           throw new Error(`Failed to download image: ${imageResponse.status} ${imageResponse.statusText}`);
         }
         
+        // Get image as buffer (node-fetch v2 uses .buffer())
         const imageBuffer = await imageResponse.buffer();
         const base64Image = imageBuffer.toString('base64');
+        
+        // Validate base64
+        if (!base64Image || base64Image.length < 100) {
+          throw new Error('Invalid base64 image data (too short)');
+        }
         
         imageParts.push({
           inline_data: {
@@ -101,6 +109,7 @@ functions.http('generateImageWorker', async (req, res) => {
         console.log(`[Job ${jobId}] ✅ Image downloaded and converted (${Math.round(base64Image.length / 1024)} KB base64)`);
       } catch (downloadError) {
         console.error(`[Job ${jobId}] Error downloading image:`, downloadError);
+        console.error(`[Job ${jobId}] Error stack:`, downloadError.stack);
         res.status(400).json({
           success: false,
           error: `Failed to download image: ${downloadError.message}`
@@ -113,19 +122,28 @@ functions.http('generateImageWorker', async (req, res) => {
       console.log(`[Job ${jobId}] Downloading logo from: ${logoUrl}`);
       
       try {
+        console.log(`[Job ${jobId}] Downloading logo from: ${logoUrl}`);
         const logoResponse = await fetch(logoUrl);
+        
         if (logoResponse.ok) {
           const logoBuffer = await logoResponse.buffer();
           const base64Logo = logoBuffer.toString('base64');
           
-          imageParts.push({
-            inline_data: {
-              mime_type: 'image/jpeg',
-              data: base64Logo
-            }
-          });
-          
-          console.log(`[Job ${jobId}] ✅ Logo downloaded and converted (${Math.round(base64Logo.length / 1024)} KB base64)`);
+          // Validate base64
+          if (base64Logo && base64Logo.length > 100) {
+            imageParts.push({
+              inline_data: {
+                mime_type: 'image/jpeg',
+                data: base64Logo
+              }
+            });
+            
+            console.log(`[Job ${jobId}] ✅ Logo downloaded and converted (${Math.round(base64Logo.length / 1024)} KB base64)`);
+          } else {
+            console.warn(`[Job ${jobId}] Logo base64 data invalid (too short)`);
+          }
+        } else {
+          console.warn(`[Job ${jobId}] Logo download failed: ${logoResponse.status} ${logoResponse.statusText}`);
         }
       } catch (logoError) {
         console.warn(`[Job ${jobId}] Logo download failed (non-critical):`, logoError.message);
@@ -146,17 +164,56 @@ functions.http('generateImageWorker', async (req, res) => {
     // 2. Google AI API poziv
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GOOGLE_AI_API_KEY}`;
     
+    // Validate imageParts before sending
+    if (!imageParts || imageParts.length === 0) {
+      res.status(400).json({
+        success: false,
+        error: 'No images provided (imageParts is empty)'
+      });
+      return;
+    }
+    
+    // Validate each image part
+    for (let i = 0; i < imageParts.length; i++) {
+      const part = imageParts[i];
+      const data = part.inline_data?.data || part.inlineData?.data;
+      if (!data || typeof data !== 'string' || data.length < 100) {
+        console.error(`[Job ${jobId}] Invalid image part ${i + 1}:`, {
+          hasInlineData: !!part.inline_data,
+          hasInlineDataData: !!part.inline_data?.data,
+          dataLength: data ? data.length : 0,
+          dataType: typeof data
+        });
+        res.status(400).json({
+          success: false,
+          error: `Invalid image part ${i + 1}: missing or invalid base64 data`
+        });
+        return;
+      }
+    }
+    
     const requestBody = {
       contents: [{
         role: "user",
         parts: [
           { text: prompt },
-          ...imageParts.map(part => ({
-            inline_data: {
-              mime_type: part.inline_data?.mime_type || part.inlineData?.mime_type || 'image/jpeg',
-              data: part.inline_data?.data || part.inlineData?.data
-            }
-          }))
+          ...imageParts.map((part, index) => {
+            const data = part.inline_data?.data || part.inlineData?.data;
+            const mimeType = part.inline_data?.mime_type || part.inlineData?.mime_type || 'image/jpeg';
+            
+            console.log(`[Job ${jobId}] Image part ${index + 1}:`, {
+              mimeType: mimeType,
+              dataLength: data ? data.length : 0,
+              dataPreview: data ? data.substring(0, 50) + '...' : 'MISSING'
+            });
+            
+            return {
+              inline_data: {
+                mime_type: mimeType,
+                data: data
+              }
+            };
+          })
         ]
       }],
       generationConfig: {
@@ -171,6 +228,7 @@ functions.http('generateImageWorker', async (req, res) => {
     console.log(`[Job ${jobId}] Calling Google AI API...`);
     console.log(`[Job ${jobId}] Prompt length:`, prompt.length);
     console.log(`[Job ${jobId}] Images count:`, imageParts.length);
+    console.log(`[Job ${jobId}] Request body parts count:`, requestBody.contents[0].parts.length);
     
     const googleResponse = await fetch(apiUrl, {
       method: 'POST',

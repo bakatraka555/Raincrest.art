@@ -59,7 +59,30 @@ exports.handler = async (event, context) => {
     const body = JSON.parse(event.body);
     console.log('Request body parsed. Keys:', Object.keys(body));
     
-    const { templateId, image1Url, image2Url, image1, image2, isCouple } = body;
+    const { templateId, image1Url, image2Url, image1, image2, isCouple, getPromptOnly } = body;
+
+    // If getPromptOnly flag is set, just return the prompt
+    if (getPromptOnly) {
+      if (!templateId) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Missing templateId' })
+        };
+      }
+      
+      const prompt = getPrompt(templateId, !!isCouple);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          prompt: prompt,
+          templateId: templateId,
+          isCouple: !!isCouple
+        })
+      };
+    }
 
     // Provjeri da li imamo novi format (URL-ovi) ili stari format (base64)
     const hasNewFormat = image1Url && image1Url.startsWith('http');

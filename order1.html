@@ -1846,8 +1846,8 @@ ${logsText}
                 }
                 
                 const promptData = await promptResponse.json();
-                const prompt = promptData.prompt;
-                console.log('✅ Prompt received (length):', prompt.length);
+                const userPrompt = promptData.prompt;
+                console.log('✅ Prompt received (length):', userPrompt.length);
                 
                 // 2. Show loading UI - "Generating... please wait ~30 seconds"
                 updateLoadingStep(4, 'Sending to AI...');
@@ -1863,31 +1863,27 @@ ${logsText}
                     statusTextEl.textContent = 'Designing your transformation... This may take 30-45 seconds...';
                 }
                 
-                // 3. Call Google Cloud Function DIRECTLY
+                // 3. Call Google Cloud Function DIRECTLY with simple payload
                 console.log('🚀 Calling Google Cloud Function directly...');
                 const GCP_FUNCTION_URL = 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker';
                 
                 updateLoadingStep(5, 'AI is working...');
                 updateProgress(50);
                 
-                // Generate minimal required fields for backend
-                const jobId = `google-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-                const bucketName = 'raincrest-art-images';
-                const gcsFilename = `temp/generated/${jobId}.jpg`;
-                const gcsUrl = `https://storage.googleapis.com/${bucketName}/${gcsFilename}`;
+                console.log('📤 Sending payload:', {
+                    prompt: userPrompt.substring(0, 100) + '...',
+                    image: image1Url
+                });
                 
-                // Send payload with prompt (for testing, backend may need imageParts later)
+                // Send simple payload: { prompt, image: URL }
                 const googleResponse = await fetchWithTimeout(GCP_FUNCTION_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        prompt: prompt,
-                        jobId: jobId,
-                        imageParts: [], // Empty for now - backend will handle images if needed
-                        gcsUrl: gcsUrl,
-                        gcsFilename: gcsFilename
+                        prompt: userPrompt,
+                        image: image1Url  // Send the URL string, NOT base64
                     })
                 }, 60000); // 60 seconds timeout (generation takes 30-45s)
                 

@@ -1143,14 +1143,34 @@ ${logsText}
             input.removeAttribute('capture');
             input.setAttribute('accept', 'image/*');
             
-            setTimeout(() => {
+            // Try multiple methods to trigger file picker
+            try {
+                // Method 1: Direct click (works in most browsers)
+                input.click();
+            } catch (error1) {
+                console.warn('Method 1 failed, trying method 2:', error1);
                 try {
-                    input.click();
-                } catch (error) {
-                    console.error('Android Gallery click error:', error);
-                    showValidationMessage('❌ Error opening gallery', 'error');
+                    // Method 2: Create new event and dispatch
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    input.dispatchEvent(clickEvent);
+                } catch (error2) {
+                    console.warn('Method 2 failed, trying method 3:', error2);
+                    try {
+                        // Method 3: Use setTimeout with focus
+                        setTimeout(() => {
+                            input.focus();
+                            input.click();
+                        }, 50);
+                    } catch (error3) {
+                        console.error('All methods failed to open gallery:', error3);
+                        showValidationMessage('❌ Error opening gallery. Please try again.', 'error');
+                    }
                 }
-            }, 100);
+            }
         }
         
         function triggerAndroidCamera(imageType) {

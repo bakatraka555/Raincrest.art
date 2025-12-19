@@ -192,29 +192,39 @@ functions.http('generateImageWorker', async (req, res) => {
       }
     }
     
+    // Build parts array - text first, then images
+    const parts = [{ text: prompt }];
+    
+    // Add images using inline_data format (base64)
+    for (let i = 0; i < imageParts.length; i++) {
+      const part = imageParts[i];
+      const data = part.inline_data?.data || part.inlineData?.data;
+      const mimeType = part.inline_data?.mime_type || part.inlineData?.mime_type || 'image/jpeg';
+      
+      console.log(`[Job ${jobId}] Image part ${i + 1}:`, {
+        mimeType: mimeType,
+        dataLength: data ? data.length : 0,
+        dataPreview: data ? data.substring(0, 50) + '...' : 'MISSING',
+        startsWithJpeg: data ? data.startsWith('/9j/') : false
+      });
+      
+      if (!data || typeof data !== 'string' || data.length < 100) {
+        console.error(`[Job ${jobId}] Skipping invalid image part ${i + 1}`);
+        continue;
+      }
+      
+      parts.push({
+        inline_data: {
+          mime_type: mimeType,
+          data: data
+        }
+      });
+    }
+    
     const requestBody = {
       contents: [{
         role: "user",
-        parts: [
-          { text: prompt },
-          ...imageParts.map((part, index) => {
-            const data = part.inline_data?.data || part.inlineData?.data;
-            const mimeType = part.inline_data?.mime_type || part.inlineData?.mime_type || 'image/jpeg';
-            
-            console.log(`[Job ${jobId}] Image part ${index + 1}:`, {
-              mimeType: mimeType,
-              dataLength: data ? data.length : 0,
-              dataPreview: data ? data.substring(0, 50) + '...' : 'MISSING'
-            });
-            
-            return {
-              inline_data: {
-                mime_type: mimeType,
-                data: data
-              }
-            };
-          })
-        ]
+        parts: parts
       }],
       generationConfig: {
         response_modalities: ["IMAGE"],
@@ -224,6 +234,13 @@ functions.http('generateImageWorker', async (req, res) => {
         }
       }
     };
+    
+    console.log(`[Job ${jobId}] Request body structure:`, {
+      contentsCount: requestBody.contents.length,
+      partsCount: requestBody.contents[0].parts.length,
+      hasText: requestBody.contents[0].parts.some(p => p.text),
+      imagePartsCount: requestBody.contents[0].parts.filter(p => p.inline_data).length
+    });
     
     console.log(`[Job ${jobId}] Calling Google AI API...`);
     console.log(`[Job ${jobId}] Prompt length:`, prompt.length);

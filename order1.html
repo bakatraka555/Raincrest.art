@@ -1,0 +1,2838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Your Transformation - Raincrest Art (Google AI)</title>
+    <!-- QR code library removed - not needed for kiosk mode -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .template-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .template-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .template-info p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .upload-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .upload-option {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-option:hover {
+            background: #e9ecef;
+            border-color: #764ba2;
+        }
+
+        .upload-option input[type="file"] {
+            display: none;
+        }
+
+        .upload-option label {
+            cursor: pointer;
+            display: block;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .upload-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .upload-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ANDROID FIX: Hidden file inputs for separate camera/gallery */
+        .android-fix-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .preview-section {
+            margin-bottom: 30px;
+        }
+
+        .preview-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: #f8f9fa;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .generate-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .generate-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Progress Bar Styles */
+        .progress-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            width: 0%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin: 10px 0 5px 0;
+        }
+
+        .time-estimate {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Step Indicators */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .step.completed {
+            background: #28a745;
+            color: white;
+        }
+
+        .step-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .loading-message-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        /* Error Recovery */
+        .error-recovery {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .error-recovery h4 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .error-recovery-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .retry-button, .save-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .retry-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .save-button {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #667eea;
+        }
+
+        .save-button:hover {
+            background: #e9ecef;
+        }
+
+        /* Validation Messages */
+        .validation-message {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+            display: none;
+        }
+
+        .validation-message.show {
+            display: block;
+        }
+
+        .validation-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .validation-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .validation-message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .result-item h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .result-item img,
+        .result-item video {
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .download-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-button:hover {
+            background: #764ba2;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0066cc;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .upload-options {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+
+        /* ANDROID DEBUG PANEL */
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+            max-height: 200px;
+            overflow: auto;
+            display: none;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .debug-log {
+            margin: 2px 0;
+            padding: 2px;
+            border-bottom: 1px solid #444;
+            font-family: monospace;
+        }
+
+        .debug-log.error {
+            color: #ff6b6b;
+        }
+
+        .debug-log.success {
+            color: #51cf66;
+        }
+
+        .debug-log.info {
+            color: #339af0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Create Your Art</h1>
+        <p class="subtitle">Transform your photos into stunning AI-powered artwork</p>
+
+        <div class="template-info" id="templateInfo">
+            <h2>Loading template...</h2>
+            <p>Please wait</p>
+        </div>
+
+        <div class="upload-section">
+            <h3>📸 Select Photos</h3>
+            <div class="info-box">
+                💡 You can upload <strong>1 photo with both of you</strong> or <strong>2 separate photos</strong> (one per person)<br>
+                📱 On mobile you can choose a photo from <strong>gallery</strong> or <strong>take a new one with camera</strong>
+            </div>
+            
+            <div class="upload-options">
+                <div class="upload-option">
+                    <!-- ANDROID FIX: Separate inputs for camera and gallery -->
+                    <input type="file" id="coupleImageGallery" class="android-fix-input" accept="image/*" />
+                    <input type="file" id="coupleImageCamera" class="android-fix-input" accept="image/*" capture="user" />
+                    <div class="upload-icon">👫</div>
+                    <div class="upload-text">Couple in one photo</div>
+                    <div class="upload-buttons">
+                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('couple')">📁 Gallery</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('couple')">📷 Camera</button>
+                    </div>
+                </div>
+                <div class="upload-option">
+                    <!-- ANDROID FIX: Separate inputs for camera and gallery -->
+                    <input type="file" id="person1ImageGallery" class="android-fix-input" accept="image/*" />
+                    <input type="file" id="person1ImageCamera" class="android-fix-input" accept="image/*" capture="user" />
+                    <div class="upload-icon">👤</div>
+                    <div class="upload-text">Person 1</div>
+                    <div class="upload-buttons">
+                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('person1')">📁 Gallery</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('person1')">📷 Camera</button>
+                    </div>
+                </div>
+            </div>
+            <div class="upload-options">
+                <div class="upload-option" style="grid-column: 1 / -1;">
+                    <!-- ANDROID FIX: Separate inputs for camera and gallery -->
+                    <input type="file" id="person2ImageGallery" class="android-fix-input" accept="image/*" />
+                    <input type="file" id="person2ImageCamera" class="android-fix-input" accept="image/*" capture="user" />
+                    <div class="upload-icon">👤</div>
+                    <div class="upload-text">Person 2 (optional)</div>
+                    <div class="upload-buttons">
+                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('person2')">📁 Gallery</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('person2')">📷 Camera</button>
+                    </div>
+                    <div class="upload-hint" style="margin-top: 10px; font-size: 12px; color: #666;">Only if using separate photos</div>
+                </div>
+            </div>
+
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <h3>👀 Preview</h3>
+                <div class="preview-images" id="previewImages"></div>
+            </div>
+        </div>
+
+        <!-- Validation Messages -->
+        <div id="validationMessage" class="validation-message"></div>
+        
+        <!-- Error Message with Recovery -->
+        <div id="errorMessage" class="error" style="display: none;">
+            <div id="errorContent"></div>
+            <div class="error-recovery" id="errorRecovery" style="display: none;">
+                <h4>What would you like to do?</h4>
+                <div class="error-recovery-buttons">
+                    <button class="retry-button" onclick="retryGeneration()">🔄 Try Again</button>
+                    <button class="save-button" onclick="saveProgress()">💾 Save Progress</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="generate-button" id="generateButton" disabled>
+            ✨ Generate with Google AI
+        </button>
+
+        <div class="loading" id="loadingSection" style="display: none;">
+            <div class="loading-spinner"></div>
+            
+            <!-- Step Indicators -->
+            <div class="step-indicator" id="stepIndicator">
+                <div class="step" id="step1" data-step="1">📤</div>
+                <div class="step" id="step2" data-step="2">🤖</div>
+                <div class="step" id="step3" data-step="3">✨</div>
+                <div class="step" id="step4" data-step="4">🎨</div>
+                <div class="step" id="step5" data-step="5">🎭</div>
+                <div class="step" id="step6" data-step="6">✅</div>
+            </div>
+            
+            <!-- Loading Message -->
+            <div class="loading-message-container">
+                <span class="step-icon" id="stepIcon">📤</span>
+                <p id="loadingMessage">AI is generating your transformation...</p>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+                <div class="time-estimate" id="timeEstimate">Estimated time: ~2 minutes</div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <h3>🎉 Your Transformation is Ready!</h3>
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <!-- ANDROID DEBUG PANEL -->
+    <button class="debug-toggle" onclick="toggleDebugPanel()">🐛 Debug</button>
+    <div class="debug-panel" id="debugPanel">
+        <div style="margin-bottom: 5px; font-weight: bold;">Android Debug Logs:</div>
+        <div id="debugLogs"></div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONSOLE LOG INTERCEPTOR - Prikuplja sve F12 logove
+        // ============================================
+        const consoleLogs = [];
+        const originalConsole = {
+            log: console.log.bind(console),
+            error: console.error.bind(console),
+            warn: console.warn.bind(console),
+            info: console.info.bind(console),
+            debug: console.debug.bind(console)
+        };
+
+        // Interceptiraj sve console metode
+        ['log', 'error', 'warn', 'info', 'debug'].forEach(method => {
+            console[method] = function(...args) {
+                // Pozovi originalnu metodu
+                originalConsole[method].apply(console, args);
+                
+                // Spremi u naš array
+                const timestamp = new Date().toISOString();
+                const message = args.map(arg => {
+                    if (typeof arg === 'object' && arg !== null) {
+                        try {
+                            // Pokušaj formatirati kao JSON
+                            if (arg instanceof Error) {
+                                return `${arg.name}: ${arg.message}\n${arg.stack || ''}`;
+                            }
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                consoleLogs.push({
+                    timestamp,
+                    method,
+                    message,
+                    raw: args
+                });
+                
+                // Limit na 1000 logova (da ne zauzme previše memorije)
+                if (consoleLogs.length > 1000) {
+                    consoleLogs.shift();
+                }
+            };
+        });
+        
+        // Get template from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const templateId = urlParams.get('template');
+        
+        // ANDROID DEBUGGING SYSTEM
+        const debugLogs = [];
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isChrome = /Chrome/i.test(navigator.userAgent);
+        const isMobile = /Mobi/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        // NETWORK MONITORING FOR ANDROID
+        let networkStatus = {
+            online: navigator.onLine,
+            lastCheck: new Date(),
+            retryCount: 0,
+            lastError: null
+        };
+        
+        function checkNetworkStatus() {
+            const wasOnline = networkStatus.online;
+            networkStatus.online = navigator.onLine;
+            networkStatus.lastCheck = new Date();
+            
+            if (wasOnline !== networkStatus.online) {
+                const status = networkStatus.online ? 'online' : 'offline';
+                debugLog(`🌐 Network status changed: ${status}`, networkStatus.online ? 'success' : 'error');
+                
+                if (!networkStatus.online) {
+                    showValidationMessage('⚠️ You are offline. Please check your internet connection.', 'warning');
+                } else {
+                    showValidationMessage('✅ Back online! You can continue.', 'success');
+                }
+            }
+            
+            return networkStatus.online;
+        }
+        
+        // Monitor network changes
+        window.addEventListener('online', () => {
+            networkStatus.online = true;
+            networkStatus.lastCheck = new Date();
+            debugLog('🌐 Device is back online', 'success');
+            showValidationMessage('✅ Internet connection restored', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            networkStatus.online = false;
+            networkStatus.lastCheck = new Date();
+            debugLog('🌐 Device went offline', 'error');
+            showError('⚠️ You lost internet connection. Please reconnect and try again.', false);
+        });
+        
+        // Enhanced console.log that also logs to debug panel
+        function debugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            // Log to console
+            console.log(`[DEBUG] ${logEntry}`);
+            
+            // Add to debug logs array
+            debugLogs.push({ message: logEntry, type, timestamp });
+            
+            // Update debug panel if visible
+            updateDebugPanel();
+            
+            // Also log to our custom debug function
+            logToDebugPanel(logEntry, type);
+        }
+        
+        // ANDROID FIX: Network-aware fetch with better error handling
+        async function networkAwareFetch(url, options, maxRetries = 2) {
+            // Check network before attempting
+            if (!checkNetworkStatus()) {
+                throw new Error('No internet connection. Please connect to WiFi or mobile data.');
+            }
+            
+            debugLog(`🌐 Fetching: ${url}`, 'info');
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    debugLog(`Attempt ${attempt}/${maxRetries}`, 'info');
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    
+                    const fetchOptions = {
+                        ...options,
+                        signal: controller.signal
+                    };
+                    
+                    const response = await fetch(url, fetchOptions);
+                    clearTimeout(timeoutId);
+                    
+                    // ANDROID FIX: Validate response is not a ProgressEvent
+                    if (response.constructor && response.constructor.name === 'ProgressEvent') {
+                        debugLog(`Attempt ${attempt}: Got ProgressEvent instead of Response`, 'error');
+                        throw new Error('Network error - connection failed');
+                    }
+                    
+                    debugLog(`Attempt ${attempt}: Success (Status: ${response.status})`, 'success');
+                    return response;
+                    
+                } catch (error) {
+                    debugLog(`Attempt ${attempt} failed: ${error.message}`, 'error');
+                    
+                    if (attempt === maxRetries) {
+                        // Last attempt failed
+                        if (error.name === 'AbortError') {
+                            throw new Error('Request timeout - server took too long to respond');
+                        } else if (error.constructor && error.constructor.name === 'ProgressEvent') {
+                            // Provjeri da li je uređaj stvarno offline
+                            if (!navigator.onLine) {
+                                throw new Error('Network connection failed. Please check your internet.');
+                            } else {
+                                throw new Error('Upload failed - please try again. If the problem persists, check your connection.');
+                            }
+                        } else if (error.message && error.message.includes('Failed to fetch')) {
+                            // Provjeri da li je uređaj stvarno offline
+                            if (!navigator.onLine) {
+                                throw new Error('Could not connect to server. Please check your internet connection.');
+                            } else {
+                                throw new Error('Server connection failed - please try again.');
+                            }
+                        }
+                        throw error;
+                    }
+                    
+                    // Wait before retry (exponential backoff)
+                    const delay = 1000 * attempt;
+                    debugLog(`Waiting ${delay}ms before retry...`, 'info');
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        function logToDebugPanel(message, type = 'info') {
+            const debugLogsDiv = document.getElementById('debugLogs');
+            if (!debugLogsDiv) return;
+            
+            const logElement = document.createElement('div');
+            logElement.className = `debug-log ${type}`;
+            logElement.textContent = message;
+            
+            debugLogsDiv.appendChild(logElement);
+            
+            // Keep only last 20 logs
+            const logs = debugLogsDiv.querySelectorAll('.debug-log');
+            if (logs.length > 20) {
+                logs[0].remove();
+            }
+            
+            // Auto-scroll to bottom
+            debugLogsDiv.scrollTop = debugLogsDiv.scrollHeight;
+        }
+        
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+                updateDebugPanel();
+            }
+        }
+        
+        // ============================================
+        // SHOW ALL LOGS IN DEBUG PANEL (F12 equivalent)
+        // ============================================
+        function showAllLogsInDebugPanel() {
+            const debugLogsDiv = document.getElementById('debugLogs');
+            if (!debugLogsDiv) return;
+            
+            // Dodaj header sa copy button
+            const header = document.createElement('div');
+            header.style.cssText = 'margin-bottom: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;';
+            header.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <strong>📋 Full Console Logs (F12 equivalent)</strong>
+                    <button onclick="copyAllLogsToClipboard()" style="padding: 8px 15px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                        📋 Copy All Logs
+                    </button>
+                </div>
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    Total console logs: ${consoleLogs.length} | Debug logs: ${debugLogs.length}
+                </div>
+            `;
+            
+            // Clear i dodaj header
+            debugLogsDiv.innerHTML = '';
+            debugLogsDiv.appendChild(header);
+            
+            // Dodaj sve console logove
+            const logsContainer = document.createElement('div');
+            logsContainer.id = 'allConsoleLogs';
+            logsContainer.style.cssText = 'max-height: 400px; overflow-y: auto; font-family: "Courier New", monospace; font-size: 11px; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px; margin-top: 10px; line-height: 1.4;';
+            
+            // Kombiniraj console logove i debug logove
+            const allLogs = [
+                ...consoleLogs.map(log => ({
+                    timestamp: log.timestamp,
+                    method: log.method,
+                    message: log.message,
+                    type: log.method === 'error' ? 'error' : log.method === 'warn' ? 'warning' : 'info'
+                })),
+                ...debugLogs.map(log => ({
+                    timestamp: log.timestamp,
+                    method: 'debug',
+                    message: log.message,
+                    type: log.type
+                }))
+            ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Sortiraj po vremenu
+            
+            if (allLogs.length === 0) {
+                logsContainer.textContent = 'No logs available yet.';
+            } else {
+                allLogs.forEach(log => {
+                    const logElement = document.createElement('div');
+                    logElement.style.cssText = `margin-bottom: 3px; padding: 4px 8px; border-left: 3px solid ${
+                        log.type === 'error' ? '#f44336' : 
+                        log.type === 'warning' ? '#ff9800' : 
+                        log.type === 'success' ? '#4caf50' : 
+                        '#2196f3'
+                    }; word-wrap: break-word; white-space: pre-wrap;`;
+                    
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    const method = log.method.toUpperCase().padEnd(6);
+                    logElement.textContent = `[${time}] ${method} ${log.message}`;
+                    
+                    logsContainer.appendChild(logElement);
+                });
+            }
+            
+            debugLogsDiv.appendChild(logsContainer);
+            
+            // Auto-scroll to bottom
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            
+            // Auto-otvori debug panel ako je zatvoren
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugPanel && debugPanel.style.display === 'none') {
+                debugPanel.style.display = 'block';
+            }
+        }
+        
+        // ============================================
+        // COPY ALL LOGS TO CLIPBOARD
+        // ============================================
+        function copyAllLogsToClipboard() {
+            // Kombiniraj sve logove
+            const allLogs = [
+                ...consoleLogs.map(log => {
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    return `[${time}] ${log.method.toUpperCase()} ${log.message}`;
+                }),
+                ...debugLogs.map(log => {
+                    const time = new Date(log.timestamp).toLocaleTimeString();
+                    return `[${time}] DEBUG ${log.message}`;
+                })
+            ].sort((a, b) => {
+                const timeA = a.match(/\[(.*?)\]/)?.[1];
+                const timeB = b.match(/\[(.*?)\]/)?.[1];
+                return timeA && timeB ? timeA.localeCompare(timeB) : 0;
+            });
+            
+            const logsText = allLogs.join('\n');
+            
+            // Dodaj header sa informacijama
+            const fullText = `=== RAINCREST.ART ERROR LOGS ===
+Timestamp: ${new Date().toISOString()}
+User Agent: ${navigator.userAgent}
+URL: ${window.location.href}
+Template: ${currentTemplate?.id || 'N/A'}
+Is Couple: ${!!uploadedImages.couple}
+Network: ${navigator.onLine ? 'online' : 'offline'}
+Platform: ${isAndroid ? 'Android' : isIOS ? 'iOS' : 'Desktop'}
+Browser: ${isChrome ? 'Chrome' : 'Other'}
+
+=== CONSOLE LOGS ===
+${logsText}
+
+=== END LOGS ===`;
+            
+            // Kopiraj u clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullText).then(() => {
+                    alert('✅ All logs copied to clipboard! You can now paste and send them for analysis.');
+                }).catch(err => {
+                    console.error('Clipboard copy failed:', err);
+                    fallbackCopyToClipboard(fullText);
+                });
+            } else {
+                fallbackCopyToClipboard(fullText);
+            }
+        }
+        
+        // Fallback za starije browsere
+        function fallbackCopyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('✅ All logs copied to clipboard!');
+            } catch (e) {
+                alert('❌ Could not copy automatically. Please manually select and copy the logs from debug panel.');
+                // Prikaži tekst u alert-u kao fallback
+                console.log('=== LOGS TO COPY ===\n' + text);
+            }
+            document.body.removeChild(textarea);
+        }
+        
+        function updateDebugPanel() {
+            const debugLogsDiv = document.getElementById('debugLogs');
+            if (!debugLogsDiv) return;
+            
+            // Clear and rebuild
+            debugLogsDiv.innerHTML = '';
+            
+            // Add device info
+            logToDebugPanel(`📱 Device: ${navigator.userAgent.substring(0, 50)}...`, 'info');
+            logToDebugPanel(`🤖 Android: ${isAndroid} | Chrome: ${isChrome} | Mobile: ${isMobile}`, 'info');
+            logToDebugPanel(`🌐 Platform: ${navigator.platform}`, 'info');
+            logToDebugPanel(`📏 Screen: ${window.innerWidth}x${window.innerHeight}`, 'info');
+            logToDebugPanel(`🔗 URL: ${window.location.href}`, 'info');
+            logToDebugPanel('---', 'info');
+            
+            // Add recent logs
+            debugLogs.slice(-10).forEach(log => {
+                logToDebugPanel(log.message, log.type);
+            });
+        }
+        
+        // Initialize debug logging
+        debugLog('=== ANDROID DEBUG INITIALIZED ===', 'success');
+        debugLog(`User Agent: ${navigator.userAgent}`, 'info');
+        debugLog(`Is Android: ${isAndroid}`, isAndroid ? 'success' : 'info');
+        debugLog(`Is Chrome: ${isChrome}`, isChrome ? 'success' : 'info');
+        debugLog(`Is Mobile: ${isMobile}`, isMobile ? 'success' : 'info');
+        
+        // ANDROID FIX: Use separate approach for Android
+        const useAndroidFix = isAndroid && isMobile;
+        
+        let currentTemplate = null;
+        let uploadedImages = {
+            couple: null,
+            person1: null,
+            person2: null
+        };
+
+        // Load template info
+        async function loadTemplateInfo() {
+            try {
+                const response = await fetch('docs/couples-templates-database.json');
+                const data = await response.json();
+                currentTemplate = data.templates.find(t => t.id === templateId);
+                
+                if (currentTemplate) {
+                    document.getElementById('templateInfo').innerHTML = `
+                        <h2>${currentTemplate.number}. ${currentTemplate.name}</h2>
+                        <p>${currentTemplate.description}</p>
+                    `;
+                    // Provjeri button status nakon učitavanja template-a
+                    checkGenerateButton();
+                } else {
+                    document.getElementById('templateInfo').innerHTML = `
+                        <h2>Template not found</h2>
+                        <p>Please go back and select a template again</p>
+                    `;
+                    checkGenerateButton();
+                }
+            } catch (error) {
+                console.error('Error loading template:', error);
+                document.getElementById('templateInfo').innerHTML = `
+                    <h2>Error loading</h2>
+                    <p>Please refresh the page</p>
+                `;
+            }
+        }
+
+        // ANDROID FIX: Separate functions for camera and gallery
+        function triggerAndroidGallery(imageType) {
+            console.log(`Android Gallery trigger for: ${imageType}`);
+            const inputId = `${imageType}ImageGallery`;
+            const input = document.getElementById(inputId);
+            
+            if (!input) {
+                console.error(`Input not found: ${inputId}`);
+                showValidationMessage('❌ Error: Input element not found', 'error');
+                return;
+            }
+            
+            // Reset and trigger
+            input.value = '';
+            input.removeAttribute('capture');
+            input.setAttribute('accept', 'image/*');
+            
+            setTimeout(() => {
+                try {
+                    input.click();
+                } catch (error) {
+                    console.error('Android Gallery click error:', error);
+                    showValidationMessage('❌ Error opening gallery', 'error');
+                }
+            }, 100);
+        }
+        
+        function triggerAndroidCamera(imageType) {
+            console.log(`Android Camera trigger for: ${imageType}`);
+            const inputId = `${imageType}ImageCamera`;
+            const input = document.getElementById(inputId);
+            
+            if (!input) {
+                console.error(`Input not found: ${inputId}`);
+                showValidationMessage('❌ Error: Input element not found', 'error');
+                return;
+            }
+            
+            // Reset and trigger
+            input.value = '';
+            input.setAttribute('capture', 'user');
+            input.setAttribute('accept', 'image/*');
+            
+            setTimeout(() => {
+                try {
+                    input.click();
+                } catch (error) {
+                    console.error('Android Camera click error:', error);
+                    showValidationMessage('❌ Error opening camera', 'error');
+                }
+            }, 100);
+        }
+        
+        // ANDROID FIX: Event listeners for separate inputs
+        function setupAndroidInputListeners() {
+            // Couple image listeners
+            document.getElementById('coupleImageGallery').addEventListener('change', function(e) {
+                handleFileSelect(e, 'couple', false);
+            });
+            document.getElementById('coupleImageCamera').addEventListener('change', function(e) {
+                handleFileSelect(e, 'couple', true);
+            });
+            
+            // Person1 image listeners
+            document.getElementById('person1ImageGallery').addEventListener('change', function(e) {
+                handleFileSelect(e, 'person1', false);
+            });
+            document.getElementById('person1ImageCamera').addEventListener('change', function(e) {
+                handleFileSelect(e, 'person1', true);
+            });
+            
+            // Person2 image listeners
+            document.getElementById('person2ImageGallery').addEventListener('change', function(e) {
+                handleFileSelect(e, 'person2', false);
+            });
+            document.getElementById('person2ImageCamera').addEventListener('change', function(e) {
+                handleFileSelect(e, 'person2', true);
+            });
+        }
+        
+        function handleFileSelect(event, imageType, fromCamera) {
+            console.log(`=== ANDROID FILE SELECT: ${imageType} (fromCamera: ${fromCamera}) ===`);
+            console.log('Event:', event);
+            console.log('Files:', event.target.files);
+            
+            if (!event.target.files || event.target.files.length === 0) {
+                console.log('User cancelled file selection');
+                showValidationMessage('❌ File selection cancelled', 'warning');
+                return;
+            }
+            
+            const file = event.target.files[0];
+            
+            // DETALJNO LOGIRANJE: Provjeri File objekt iz galerije vs camera
+            console.log('=== FILE OBJECT ANALYSIS ===');
+            console.log('Source:', fromCamera ? 'CAMERA' : 'GALLERY');
+            console.log('File name:', file.name);
+            console.log('File type:', file.type);
+            console.log('File size:', file.size);
+            console.log('File lastModified:', file.lastModified);
+            console.log('File has name?', file.name !== undefined && file.name !== null && file.name !== '');
+            console.log('File has type?', file.type !== undefined && file.type !== null && file.type !== '');
+            console.log('File keys:', Object.keys(file));
+            console.log('File constructor:', file.constructor?.name);
+            
+            // NORMALIZACIJA: Ako galerija vraća File bez name ili type, kreiraj novi File objekt
+            let normalizedFile = file;
+            if (!fromCamera && (!file.name || !file.type)) {
+                console.warn('⚠️ GALLERY FILE MISSING METADATA - Creating normalized File object...');
+                
+                // Odredi type
+                let fileType = file.type;
+                if (!fileType) {
+                    if (file.name) {
+                        const ext = file.name.toLowerCase().split('.').pop();
+                        const typeMap = {
+                            'jpg': 'image/jpeg',
+                            'jpeg': 'image/jpeg',
+                            'png': 'image/png',
+                            'webp': 'image/webp',
+                            'heic': 'image/heic',
+                            'heif': 'image/heif'
+                        };
+                        fileType = typeMap[ext] || 'image/jpeg';
+                        console.log('🔧 Inferred type from extension:', fileType);
+                    } else {
+                        fileType = 'image/jpeg'; // Default fallback
+                        console.log('🔧 Using default type: image/jpeg');
+                    }
+                }
+                
+                // Odredi name
+                let fileName = file.name;
+                if (!fileName) {
+                    const timestamp = Date.now();
+                    const ext = fileType.includes('png') ? 'png' : 
+                               fileType.includes('webp') ? 'webp' : 'jpg';
+                    fileName = `gallery-image-${timestamp}.${ext}`;
+                    console.log('🔧 Generated filename:', fileName);
+                }
+                
+                // Kreiraj novi File objekt iz Blob-a (File je subklasa Blob-a)
+                try {
+                    normalizedFile = new File([file], fileName, {
+                        type: fileType,
+                        lastModified: file.lastModified || Date.now()
+                    });
+                    console.log('✅ Created normalized File object:', {
+                        name: normalizedFile.name,
+                        type: normalizedFile.type,
+                        size: normalizedFile.size
+                    });
+                } catch (fileError) {
+                    console.error('❌ Failed to create File object, using original:', fileError);
+                    // Fallback: pokušaj koristiti original, ali dodaj type ako je moguće
+                    if (!file.type && fileType) {
+                        // Ako File konstruktor ne radi, koristimo Blob i onda FileReader
+                        console.warn('⚠️ File constructor not supported, using Blob approach');
+                        normalizedFile = file; // Koristimo original, ali ćemo provjeriti u processSelectedFile
+                    } else {
+                        normalizedFile = file;
+                    }
+                }
+            }
+            
+            processSelectedFile(normalizedFile, imageType, fromCamera);
+        }
+
+        // Common file processing function
+        async function processSelectedFile(file, imageType, fromCamera = false) {
+            console.log(`=== PROCESSING FILE: ${imageType} (fromCamera: ${fromCamera}) ===`);
+            console.log('File details:', {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                lastModified: file.lastModified,
+                isAndroid: isAndroid,
+                source: fromCamera ? 'CAMERA' : 'GALLERY'
+            });
+            
+            try {
+                // Provjeri je li HEIC (sa provjerom da file.type i file.name postoje)
+                const isHeic = (file.type && (file.type === 'image/heic' || file.type === 'image/heif')) || 
+                               (file.name && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
+                
+                console.log('Is HEIC file:', isHeic);
+                
+                let processedFile = file;
+                
+                // Ako je HEIC, konvertuj
+                if (isHeic) {
+                    showValidationMessage('🔄 Converting Samsung HEIC to JPEG...', 'warning');
+                    processedFile = await convertHeicToJpegInBrowser(file);
+                    showValidationMessage('✅ Converted successfully!', 'success');
+                }
+                
+                await validateImage(processedFile);
+                
+                // KRITIČNO: Odmah pretvori File u Blob preko Canvas-a
+                // Razlog: File objekt može postati "consumed" nakon što se koristi za preview
+                // Blob je siguran i može se koristiti više puta (preview + upload)
+                console.log('🎨 Converting to clean Blob immediately after validation...');
+                const quality = processedFile.size > (5 * 1024 * 1024) ? 0.8 : 0.9;
+                const cleanBlob = await convertFileToCleanBlob(processedFile, quality);
+                console.log('✅ Clean Blob created:', (cleanBlob.size / 1024 / 1024).toFixed(2) + ' MB');
+                
+                // Set the BLOB (not File) based on type
+                if (imageType === 'couple') {
+                    uploadedImages.couple = cleanBlob;
+                    uploadedImages.person1 = null;
+                    uploadedImages.person2 = null;
+                    
+                    // ANDROID FIX: Clear other inputs safely
+                    clearAllInputsForType('person1');
+                    clearAllInputsForType('person2');
+                    
+                } else if (imageType === 'person1') {
+                    uploadedImages.person1 = cleanBlob;
+                    uploadedImages.couple = null;
+                    
+                    // ANDROID FIX: Clear other inputs safely
+                    clearAllInputsForType('couple');
+                    
+                } else if (imageType === 'person2') {
+                    uploadedImages.person2 = cleanBlob;
+                }
+                
+                if (!isHeic) {
+                    showValidationMessage(`✅ Image validated! (${(cleanBlob.size / 1024 / 1024).toFixed(1)}MB)`, 'success');
+                }
+                
+                checkGenerateButton();
+                updatePreview();
+                
+                console.log('✅ File processing completed successfully for', imageType);
+            } catch (error) {
+                const errorMsg = error?.message || error?.toString() || 'Invalid image file';
+                console.error('❌❌❌ Error processing image:', error);
+                console.error('❌❌❌ Error type:', typeof error);
+                console.error('❌❌❌ Error constructor:', error?.constructor?.name);
+                console.error('❌❌❌ Error stack:', error?.stack);
+                console.error('❌❌❌ File that caused error:', {
+                    name: file?.name,
+                    type: file?.type,
+                    size: file?.size,
+                    source: fromCamera ? 'CAMERA' : 'GALLERY'
+                });
+                showValidationMessage(`❌ ${errorMsg}`, 'error');
+                // Clear the specific input
+                if (imageType === 'couple') {
+                    uploadedImages.couple = null;
+                } else if (imageType === 'person1') {
+                    uploadedImages.person1 = null;
+                } else if (imageType === 'person2') {
+                    uploadedImages.person2 = null;
+                }
+                // Pokušaj clearati preview
+                try {
+                    updatePreview();
+                    checkGenerateButton();
+                } catch (previewError) {
+                    console.error('Error clearing preview:', previewError);
+                }
+            }
+        }
+
+        // Update preview
+        function updatePreview() {
+            const previewSection = document.getElementById('previewSection');
+            const previewImages = document.getElementById('previewImages');
+            previewImages.innerHTML = '';
+
+            if (uploadedImages.couple) {
+                console.log('📸 Updating preview for couple image...');
+                try {
+                    // Koristi URL.createObjectURL umjesto FileReader (brže i pouzdanije)
+                    const blobUrl = URL.createObjectURL(uploadedImages.couple);
+                    console.log('✅ Preview URL created for couple image');
+                    previewImages.innerHTML = `
+                        <div class="preview-item">
+                            <img src="${blobUrl}" alt="Par">
+                            <button class="remove" onclick="removeImage('couple')">×</button>
+                        </div>
+                    `;
+                    previewSection.style.display = 'block';
+                    checkGenerateButton();
+                } catch (error) {
+                    console.error('❌ Error creating preview for couple image:', error);
+                    showValidationMessage('❌ Error loading preview: ' + (error.message || 'Unknown error'), 'error');
+                }
+            } else if (uploadedImages.person1) {
+                console.log('📸 Updating preview for person1 and/or person2 images...');
+                const images = [];
+                
+                try {
+                    if (uploadedImages.person1) {
+                        const blobUrl1 = URL.createObjectURL(uploadedImages.person1);
+                        console.log('✅ Preview URL created for person1 image');
+                        images.push({src: blobUrl1, type: 'person1'});
+                    }
+                    
+                    if (uploadedImages.person2) {
+                        const blobUrl2 = URL.createObjectURL(uploadedImages.person2);
+                        console.log('✅ Preview URL created for person2 image');
+                        images.push({src: blobUrl2, type: 'person2'});
+                    }
+                    
+                    if (images.length > 0) {
+                        displayPreview(images);
+                    }
+                } catch (error) {
+                    console.error('❌ Error creating preview:', error);
+                    showValidationMessage('❌ Error loading preview: ' + (error.message || 'Unknown error'), 'error');
+                }
+            }
+        }
+
+        function displayPreview(images) {
+            const previewImages = document.getElementById('previewImages');
+            previewImages.innerHTML = images.map((img, index) => `
+                <div class="preview-item">
+                    <img src="${img.src}" alt="Person ${index + 1}">
+                    <button class="remove" onclick="removeImage('${img.type}')">×</button>
+                </div>
+            `).join('');
+            document.getElementById('previewSection').style.display = 'block';
+            checkGenerateButton();
+        }
+
+        function removeImage(type) {
+            if (type === 'couple') {
+                uploadedImages.couple = null;
+                // ANDROID FIX: Use safe helper function
+                clearAllInputsForType('couple');
+                
+            } else if (type === 'person1') {
+                uploadedImages.person1 = null;
+                // ANDROID FIX: Use safe helper function
+                clearAllInputsForType('person1');
+                
+            } else if (type === 'person2') {
+                uploadedImages.person2 = null;
+                // ANDROID FIX: Use safe helper function
+                clearAllInputsForType('person2');
+            }
+            
+            if (!uploadedImages.couple && !uploadedImages.person1) {
+                document.getElementById('previewSection').style.display = 'none';
+            } else {
+                updatePreview();
+            }
+            checkGenerateButton();
+        }
+
+        function checkGenerateButton() {
+            const hasImages = uploadedImages.couple || uploadedImages.person1;
+            const button = document.getElementById('generateButton');
+            const shouldEnable = hasImages && currentTemplate;
+            
+            console.log('checkGenerateButton:', {
+                hasImages: hasImages,
+                hasCouple: !!uploadedImages.couple,
+                hasPerson1: !!uploadedImages.person1,
+                hasPerson2: !!uploadedImages.person2,
+                currentTemplate: !!currentTemplate,
+                shouldEnable: shouldEnable,
+                currentDisabled: button.disabled
+            });
+            
+            button.disabled = !shouldEnable;
+            
+            // Dodatna provjera - ako je button još uvijek disabled, pokušaj ponovno
+            if (!shouldEnable && button.disabled === false) {
+                console.warn('Button state mismatch - forcing disabled');
+                button.disabled = true;
+            } else if (shouldEnable && button.disabled === true) {
+                console.warn('Button should be enabled but is disabled - forcing enabled');
+                button.disabled = false;
+            }
+        }
+
+        // Generate transformation
+        document.getElementById('generateButton').addEventListener('click', async function() {
+            if (!currentTemplate) {
+                showError('Template not loaded. Please refresh the page.');
+                return;
+            }
+
+            const hasImages = uploadedImages.couple || uploadedImages.person1;
+            if (!hasImages) {
+                showError('Please select at least one photo.');
+                return;
+            }
+
+            // Check network connection before starting
+            if (!navigator.onLine) {
+                showError('No internet connection. Please connect to WiFi or mobile data and try again.', false);
+                return;
+            }
+
+            // Hide error, show loading
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('resultsSection').classList.remove('show');
+            document.getElementById('generateButton').disabled = true;
+            
+            // Start progress tracking
+            startProgressTracking();
+            
+            // Save generation data for retry
+            saveGenerationData({
+                templateId: currentTemplate.id,
+                uploadedImages: uploadedImages,
+                isCouple: !!uploadedImages.couple
+            });
+
+            try {
+                const isCouple = !!uploadedImages.couple;
+                
+                // NOVO: Uploadaj slike na Bunny.net PRVO (smanjuje request size za 90%+)
+                const userId = generateUserId();
+                updateLoadingStep(1, 'Uploading images...');
+                
+                // Upload kroz Netlify function (Bunny.net ne podržava CORS za direktan upload)
+                const image1File = uploadedImages.couple || uploadedImages.person1;
+                
+                if (!image1File) {
+                    throw new Error('No image selected. Please select an image first.');
+                }
+                
+                const image1Filename = `${userId}-image1.jpg`;
+                
+                console.log('📤 Uploading image1 through Netlify function...');
+                console.log('Image1 file size:', image1File.size ? (image1File.size / 1024 / 1024).toFixed(2) + ' MB' : 'unknown');
+                console.log('Image1 filename:', image1Filename);
+                
+                // Timeout wrapper za fetch (definirano jednom za sve uploade)
+                const fetchWithTimeout = (url, options, timeout = 60000) => {
+                    return Promise.race([
+                        fetch(url, options),
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Request timeout - upload took too long')), timeout)
+                        )
+                    ]);
+                };
+                
+                // SIGNED TOKEN UPLOAD: Direktan upload na Bunny.net sa privremenim tokenom
+                console.log('🔍 Preparing Blob for direct upload...');
+                console.log('Blob type:', image1File.type);
+                console.log('Blob size:', (image1File.size / 1024 / 1024).toFixed(2), 'MB');
+                
+                let image1Url;
+                try {
+                    // Korak 1: Zatraži signed token od Netlify funkcije (brzo - mali JSON)
+                    console.log('🔐 Requesting upload token...');
+                    const tokenResponse = await fetchWithTimeout('/.netlify/functions/create-upload-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            filename: image1Filename
+                        })
+                    }, 10000); // 10s za token request
+                    
+                    if (!tokenResponse.ok) {
+                        throw new Error('Failed to get upload token');
+                    }
+                    
+                    const tokenData = await tokenResponse.json();
+                    if (!tokenData.success) {
+                        throw new Error(tokenData.error || 'Failed to get upload token');
+                    }
+                    
+                    console.log('✅ Token received, expires at:', new Date(tokenData.expiresAt).toLocaleTimeString());
+                    
+                    // Korak 2: Upload Blob direktno na Bunny.net sa tokenom (BRZO - direktan upload!)
+                    console.log('📤 Uploading directly to Bunny.net...');
+                    const bunnyResponse = await fetchWithTimeout(tokenData.uploadUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'AccessKey': tokenData.apiKey,
+                            'Content-Type': 'image/jpeg'
+                        },
+                        body: image1File // Blob direktno, ne base64!
+                    }, 60000); // 60s za upload
+                    
+                    if (!bunnyResponse.ok && bunnyResponse.status !== 201) {
+                        throw new Error(`Bunny.net upload failed: ${bunnyResponse.status} ${bunnyResponse.statusText}`);
+                    }
+                    
+                    // Uspješan upload!
+                    image1Url = tokenData.cdnUrl;
+                    console.log('✅ Image1 uploaded directly to Bunny.net:', image1Url);
+                    
+                    // FINALNA PROVJERA: Da li imamo image1Url?
+                    if (!image1Url) {
+                        throw new Error('Upload completed but no URL returned');
+                    }
+                    console.log('✅✅✅ FINAL CHECK: image1Url is valid:', image1Url);
+                    
+                } catch (uploadError) {
+                    console.error('❌❌❌ Upload error:', uploadError);
+                    console.error('❌❌❌ Upload error type:', uploadError.constructor?.name);
+                    console.error('❌❌❌ Upload error message:', uploadError.message);
+                    console.error('❌❌❌ Upload error stack:', uploadError.stack);
+                    
+                    if (uploadError.message && uploadError.message.includes('timeout')) {
+                        throw new Error('Upload timeout - please check your internet connection and try again.');
+                    } else if (uploadError.message && (uploadError.message.includes('Failed to fetch') || uploadError.message.includes('CORS'))) {
+                        // Provjeri da li je uređaj stvarno offline
+                        if (!navigator.onLine) {
+                            throw new Error('Network error - could not connect to server. Please check your internet connection.');
+                        } else {
+                            throw new Error('Server connection failed - please try again. If the problem persists, check your connection.');
+                        }
+                    } else if (uploadError.constructor && uploadError.constructor.name === 'ProgressEvent') {
+                        // Provjeri da li je uređaj stvarno offline
+                        if (!navigator.onLine) {
+                            throw new Error('Network connection failed. Please check your internet and try again.');
+                        } else {
+                            throw new Error('Upload failed - please try again. If the problem persists, check your connection.');
+                        }
+                    } else {
+                        throw new Error('Failed to upload image1: ' + (uploadError.message || 'Upload error'));
+                    }
+                }
+                
+                // Uploadaj image2 ako postoji - kroz Netlify funkciju
+                let image2Url = null;
+                if (!isCouple && uploadedImages.person2) {
+                    updateLoadingStep(1, 'Uploading second image...');
+                    
+                    const image2Filename = `${userId}-image2.jpg`;
+                    let image2File = uploadedImages.person2;
+                    
+                    console.log('📤 Uploading image2 directly to Bunny.net...');
+                    console.log('Image2 Blob size:', (image2File.size / 1024 / 1024).toFixed(2), 'MB');
+                    
+                    try {
+                        // Korak 1: Zatraži token
+                        console.log('🔐 Requesting upload token for image2...');
+                        const token2Response = await fetchWithTimeout('/.netlify/functions/create-upload-token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                filename: image2Filename
+                            })
+                        }, 10000);
+                        
+                        if (!token2Response.ok) {
+                            throw new Error('Failed to get upload token for image2');
+                        }
+                        
+                        const token2Data = await token2Response.json();
+                        if (!token2Data.success) {
+                            throw new Error(token2Data.error || 'Failed to get upload token for image2');
+                        }
+                        
+                        console.log('✅ Token2 received');
+                        
+                        // Korak 2: Upload direktno na Bunny.net
+                        const bunny2Response = await fetchWithTimeout(token2Data.uploadUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'AccessKey': token2Data.apiKey,
+                                'Content-Type': 'image/jpeg'
+                            },
+                            body: image2File
+                        }, 60000);
+                        
+                        if (!bunny2Response.ok && bunny2Response.status !== 201) {
+                            throw new Error(`Bunny.net upload failed for image2: ${bunny2Response.status}`);
+                        }
+                        
+                        image2Url = token2Data.cdnUrl;
+                        console.log('✅ Image2 uploaded directly to Bunny.net:', image2Url);
+                        
+                    } catch (upload2Error) {
+                        console.error('Upload error for image2:', upload2Error);
+                        
+                        if (upload2Error.message && upload2Error.message.includes('timeout')) {
+                            throw new Error('Upload timeout - please check your internet connection and try again.');
+                        } else if (upload2Error.message && upload2Error.message.includes('Failed to fetch')) {
+                            // Provjeri da li je uređaj stvarno offline
+                            if (!navigator.onLine) {
+                                throw new Error('Network error - could not connect to server. Please check your internet connection.');
+                            } else {
+                                throw new Error('Server connection failed - please try again. If the problem persists, check your connection.');
+                            }
+                        } else if (upload2Error.constructor && upload2Error.constructor.name === 'ProgressEvent') {
+                            // Provjeri da li je uređaj stvarno offline
+                            if (!navigator.onLine) {
+                                throw new Error('Network connection failed. Please check your internet and try again.');
+                            } else {
+                                throw new Error('Upload failed - please try again. If the problem persists, check your connection.');
+                            }
+                        } else {
+                            throw new Error('Failed to upload image2: ' + (upload2Error.message || 'Upload error'));
+                        }
+                    }
+                }
+                
+                // SADA: Pozovi generate-image-google za Google AI generaciju (async pattern)
+                updateLoadingStep(2, 'Starting AI generation...');
+                
+                console.log('🚀 Using Google AI async pattern: generate-image-google → processing-google.html');
+                console.log('Calling generate-image-google function with URLs...');
+                
+                // Validacija URL-ova prije slanja
+                if (!image1Url || !image1Url.startsWith('http')) {
+                    throw new Error('Invalid image1 URL. Please try uploading the image again.');
+                }
+                if (image2Url && !image2Url.startsWith('http')) {
+                    throw new Error('Invalid image2 URL. Please try uploading the image again.');
+                }
+                
+                console.log('✅ URL validation passed');
+                
+                // Pozovi generate-image-google (on će generirati prompt interno)
+                console.log('📡 Calling generate-image-google...');
+                const googleResponse = await fetchWithTimeout('/.netlify/functions/generate-image-google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image1Url: image1Url,
+                        image2Url: image2Url,
+                        templateId: currentTemplate.id,
+                        isCouple: isCouple
+                    })
+                }, 30000); // 30 sekundi timeout
+                
+                if (!googleResponse.ok) {
+                    const errorText = await googleResponse.text();
+                    throw new Error('Failed to start generation: ' + errorText);
+                }
+                
+                const googleResult = await googleResponse.json();
+                console.log('✅ generate-image-google result:', googleResult);
+                
+                if (!googleResult.success || !googleResult.jobId || !googleResult.imageUrl) {
+                    throw new Error('Failed to get job ID: ' + (googleResult.error || 'Unknown error'));
+                }
+                
+                // Redirect na processing-google.html s jobId i imageUrl
+                const jobId = googleResult.jobId;
+                const imageUrl = googleResult.imageUrl;
+                console.log('✅ Google AI job started, redirecting to processing-google.html...');
+                window.location.href = `processing-google.html?jobId=${jobId}&imageUrl=${encodeURIComponent(imageUrl)}`;
+                return; // Exit early - redirect će se dogoditi
+
+                // 🔀 Provjeri format odgovora: Google AI (direktna slika) vs Replicate (predictionId)
+                let finalImageUrl;
+                
+                if (generateResult.image) {
+                    // ✅ Google AI - direktna slika (bez pollinga) - fallback za stari format
+                    console.log('✅ Google AI direct response - image ready immediately!');
+                    console.log('Provider:', generateResult.provider);
+                    console.log('Model:', generateResult.model);
+                    finalImageUrl = generateResult.image; // Base64 data URL - QR kod će biti preskočen
+                    updateLoadingStep(5, 'Image generated successfully! 🎉');
+                    updateProgress(100);
+                } else if (generateResult.jobId && generateResult.imageUrl) {
+                    // ✅ Google AI - job pattern (kao Replicate!)
+                    console.log('✅✅✅ Google AI job created - starting async polling pattern...');
+                    console.log('📋 Job details:', {
+                        jobId: generateResult.jobId,
+                        imageUrl: generateResult.imageUrl,
+                        status: generateResult.status,
+                        provider: generateResult.provider
+                    });
+                    const imageUrl = generateResult.imageUrl;
+                    const jobId = generateResult.jobId;
+                    
+                    updateLoadingStep(3, 'Processing your photos...');
+                    
+                    // Poll image URL dok ne postoji (optimizirano za GCS)
+                    let maxAttempts = 200; // Max ~6.5 minuta (200 * 2 sekunde)
+                    let attempt = 0;
+                    const startTime = Date.now();
+                    let lastStatus = null;
+                    
+                    console.log(`🔄 Starting polling loop: max ${maxAttempts} attempts (${maxAttempts * 2}s total)`);
+                    
+                    while (attempt < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
+                        attempt++;
+                        
+                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        const progressPercent = Math.min(95, 30 + (attempt / maxAttempts) * 60);
+                        updateProgress(progressPercent);
+                        
+                        // Update step based on progress
+                        if (attempt < maxAttempts * 0.3) {
+                            updateLoadingStep(3, 'Processing your photos...');
+                        } else if (attempt < maxAttempts * 0.7) {
+                            updateLoadingStep(4, 'Creating transformation...');
+                        } else {
+                            updateLoadingStep(5, 'Adding final touches...');
+                        }
+                        
+                        try {
+                            // Poll image URL (GCS) - GET with Range header (pouzdanije)
+                            const statusMsg = lastStatus !== headResponse?.status ? `Status: ${headResponse?.status || 'checking'}...` : '';
+                            if (attempt % 10 === 0 || lastStatus !== headResponse?.status) {
+                                console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Polling GCS URL... ${statusMsg}`);
+                            }
+                            
+                            // Use GET with Range header (more reliable than HEAD for GCS)
+                            const headResponse = await fetchWithTimeout(imageUrl, {
+                                method: 'GET',
+                                cache: 'no-cache',
+                                headers: {
+                                    'Range': 'bytes=0-0', // Request only first byte (efficient!)
+                                    'Cache-Control': 'no-cache'
+                                }
+                            }, 8000); // 8 sekundi timeout (smanjeno za brže retry)
+                            
+                            lastStatus = headResponse.status;
+                            
+                            if (headResponse.ok || headResponse.status === 206) {
+                                // 200 OK or 206 Partial Content = image exists!
+                                console.log(`✅✅✅ Image available after ${elapsedSeconds}s (${attempt} attempts)!`);
+                                console.log('✅ Response status:', headResponse.status);
+                                console.log('✅ Image URL:', imageUrl);
+                                finalImageUrl = imageUrl;
+                                updateLoadingStep(6, 'Generation complete! 🎉');
+                                updateProgress(95);
+                                break;
+                            } else if (headResponse.status === 404) {
+                                // Slika još nije uploadana, nastavi poll-ati
+                                if (attempt % 15 === 0) { // Log svakih 30 sekundi
+                                    console.log(`⏳ [${attempt}/${maxAttempts}] [${elapsedSeconds}s] Image not ready yet (404), Google AI still generating...`);
+                                }
+                                continue;
+                            } else if (headResponse.status === 403) {
+                                // Permission denied - možda bucket nije javno dostupan
+                                console.error(`❌ Permission denied (403) - GCS bucket may not be public!`);
+                                console.error('🔧 Check GCS bucket permissions or GCS_CDN_URL configuration');
+                                throw new Error('GCS bucket permission denied (403) - check bucket is public');
+                            } else {
+                                if (attempt % 10 === 0) {
+                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Unexpected status: ${headResponse.status}, retrying...`);
+                                }
+                                continue;
+                            }
+                        } catch (fetchError) {
+                            if (fetchError.message && (fetchError.message.includes('timeout') || fetchError.message.includes('Request timeout'))) {
+                                if (attempt % 10 === 0) {
+                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Request timeout, retrying...`);
+                                }
+                                continue;
+                            } else if (fetchError.message && fetchError.message.includes('404')) {
+                                // 404 je OK - slika još nije gotova
+                                continue;
+                            } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
+                                // Network error - pokušaj ponovno
+                                if (attempt % 10 === 0) {
+                                    console.warn(`⚠️ [${attempt}/${maxAttempts}] Network error, retrying...`);
+                                }
+                                continue;
+                            } else if (fetchError.message && fetchError.message.includes('403')) {
+                                // Permission denied - kritična greška
+                                console.error('❌ GCS Permission denied - check bucket permissions!');
+                                throw fetchError;
+                            }
+                            // Druge greške - log i nastavi (možda privremeni problem)
+                            if (attempt % 10 === 0) {
+                                console.warn(`⚠️ [${attempt}/${maxAttempts}] Fetch error: ${fetchError.message}, retrying...`);
+                            }
+                            continue;
+                        }
+                    }
+                    
+                    if (attempt >= maxAttempts) {
+                        const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        throw new Error(`Generation timeout - image took too long to appear (waited ${totalSeconds}s, max 5 minutes). Please check function logs.`);
+                    }
+                    
+                    if (!finalImageUrl) {
+                        throw new Error('No image URL received');
+                    }
+                    
+                    console.log('✅ Final image URL:', finalImageUrl);
+                    
+                } else if (generateResult.predictionId) {
+                    // ✅ Replicate - polling flow
+                    console.log('✅ Replicate response - starting polling...');
+                    const predictionId = generateResult.predictionId;
+                    console.log('Prediction ID:', predictionId);
+                    console.log('Polling for prediction status...');
+
+                    // Poll status dok nije "succeeded" ili "failed"
+                    let statusResult;
+                    let maxAttempts = 150; // Max 5 minuta (150 * 2 sekunde)
+                    let attempt = 0;
+
+                    // Update to processing step
+                    updateLoadingStep(3, 'Processing your photos...');
+
+                while (attempt < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // Čekaj 2 sekunde
+                    attempt++;
+
+                    console.log(`Checking prediction status (attempt ${attempt}/${maxAttempts})...`);
+                    
+                    // Update progress based on attempts (steps 3-5 are for processing)
+                    const progressPercent = Math.min(95, 30 + (attempt / maxAttempts) * 60);
+                    updateProgress(progressPercent);
+                    
+                    // Update step based on progress
+                    if (attempt < maxAttempts * 0.3) {
+                        updateLoadingStep(3, 'Processing your photos...');
+                    } else if (attempt < maxAttempts * 0.7) {
+                        updateLoadingStep(4, 'Creating transformation...');
+                    } else {
+                        updateLoadingStep(5, 'Adding final touches...');
+                    }
+                    
+                    // PRODUCTION FIX: Dodaj timeout i error handling za status check
+                    let statusResponse;
+                    let statusText;
+                    try {
+                        statusResponse = await fetchWithTimeout(`/.netlify/functions/check-prediction-status?predictionId=${predictionId}`, {
+                            method: 'GET'
+                        }, 15000); // 15 sekundi timeout za status check
+                        
+                        if (!statusResponse.ok) {
+                            const errorText = await statusResponse.text();
+                            console.error('❌ Status check failed:', statusResponse.status, errorText);
+                            throw new Error(`Status check failed: ${statusResponse.status} ${statusResponse.statusText}`);
+                        }
+                        
+                        statusText = await statusResponse.text();
+                        
+                        // PRODUCTION FIX: Provjeri da li je response prazan
+                        if (!statusText || statusText.trim().length === 0) {
+                            console.error('❌ Empty status response');
+                            throw new Error('Empty response from status check');
+                        }
+                    } catch (fetchError) {
+                        console.error('❌ Error fetching prediction status:', fetchError);
+                        // Ako je timeout ili network error, pokušaj ponovno (ne bacaj grešku odmah)
+                        if (fetchError.message && (fetchError.message.includes('timeout') || fetchError.message.includes('fetch'))) {
+                            console.warn('⚠️ Status check timeout/error, retrying...');
+                            // Nastavi s poll-om, ali povećaj attempt
+                            attempt++;
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            continue;
+                        }
+                        throw fetchError;
+                    }
+                    
+                    try {
+                        statusResult = JSON.parse(statusText);
+                    } catch (e) {
+                        console.error('❌ Failed to parse status response:', e);
+                        console.error('Status response text:', statusText);
+                        throw new Error('Failed to parse status response: ' + (e.message || 'Invalid JSON'));
+                    }
+
+                if (!statusResult || !statusResult.status) {
+                    console.error('❌ Invalid status result:', statusResult);
+                    throw new Error('Invalid status response from server');
+                }
+
+                console.log(`Prediction status: ${statusResult.status} (attempt ${attempt})`);
+
+                if (statusResult.status === 'succeeded') {
+                    console.log('Generation successful! Image URL:', statusResult.imageUrl);
+                    updateLoadingStep(6, 'Generation complete! Uploading to Bunny.net...');
+                    updateProgress(95);
+                    break;
+                    } else if (statusResult.status === 'failed') {
+                        throw new Error(statusResult.error || 'Generation failed');
+                    } else if (statusResult.status === 'canceled') {
+                        throw new Error('Generation was canceled');
+                    }
+                    // Ako je "starting" ili "processing", nastavi poll-ati
+                }
+
+                if (attempt >= maxAttempts) {
+                    throw new Error('Generation timeout - prediction took too long');
+                }
+
+                    if (!statusResult.imageUrl) {
+                        throw new Error('No image URL in result');
+                    }
+
+                    // Upload na Bunny.net
+                    console.log('Uploading to Bunny.net...');
+                    console.log('Calling upload-to-bunny with:', {
+                        imageUrl: statusResult.imageUrl,
+                        templateId: currentTemplate.id,
+                        userId: generateUserId()
+                    });
+                    const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            imageUrl: statusResult.imageUrl,
+                            templateId: currentTemplate.id,
+                            userId: generateUserId() // Generiraj unique user ID
+                        })
+                    });
+
+                    // Parse response body samo jednom
+                    let uploadResult;
+                    try {
+                        uploadResult = await uploadResponse.json();
+                    } catch (e) {
+                        // Ako json() ne uspije, body je već potrošen - ne pokušavaj čitati text()
+                        console.error('Failed to parse upload JSON response:', e);
+                        throw new Error('Failed to parse upload response: ' + (e.message || 'Invalid JSON'));
+                    }
+
+                    if (!uploadResponse.ok) {
+                        throw new Error(uploadResult.error || uploadResult.details || 'Upload failed');
+                    }
+
+                    console.log('Upload result:', uploadResult);
+
+                    // Set final image URL from Bunny.net CDN
+                    finalImageUrl = uploadResult.cdnUrl;
+                } else {
+                    // ❌ Nepoznat format odgovora
+                    console.error('Unknown response format:', generateResult);
+                    throw new Error('Invalid response format - missing both image and predictionId');
+                }
+
+                // 🎉 Prikaži finalni rezultat (bilo Google AI ili Replicate)
+                console.log('📸 Displaying final image:', finalImageUrl ? finalImageUrl.substring(0, 80) + '...' : 'MISSING');
+                showResults(finalImageUrl, null);
+                
+            } catch (error) {
+                console.error('Generation error:', error);
+                console.error('Error type:', typeof error);
+                console.error('Error details:', {
+                    message: error?.message,
+                    name: error?.name,
+                    stack: error?.stack,
+                    toString: error?.toString()
+                });
+                
+                // ANDROID FIX: Better handling for ProgressEvent errors
+                let errorMessage = 'An error occurred while generating your transformation.';
+                
+                // Detaljno logiranje za debugging (posebno važno za Android)
+                console.error('=== ERROR DETAILS ===');
+                console.error('Error object:', error);
+                console.error('Error type:', typeof error);
+                console.error('Error constructor:', error?.constructor?.name);
+                console.error('Error keys:', error ? Object.keys(error) : 'N/A');
+                
+                // ANDROID FIX: Specific handling for ProgressEvent
+                if (error?.constructor?.name === 'ProgressEvent') {
+                    errorMessage = 'Network error - connection failed. Please check your internet connection and try again.';
+                    console.error('ProgressEvent detected - network failure');
+                    console.error('ProgressEvent type:', error.type);
+                    console.error('ProgressEvent loaded:', error.loaded);
+                    console.error('ProgressEvent total:', error.total);
+                } else if (error) {
+                    // Provjeri različite načine kako error može biti predstavljen
+                    if (error.message && typeof error.message === 'string' && error.message.trim().length > 0) {
+                        errorMessage = error.message;
+                    } else if (typeof error === 'string' && error.trim().length > 0) {
+                        errorMessage = error;
+                    } else if (error.toString && typeof error.toString === 'function') {
+                        const errorString = error.toString();
+                        if (errorString !== '[object Object]' && errorString !== '[object Error]' && errorString !== '[object ProgressEvent]') {
+                            errorMessage = errorString;
+                        } else if (errorString === '[object ProgressEvent]') {
+                            errorMessage = 'Network connection error. Please check your internet and try again.';
+                        }
+                    } else if (error.name && typeof error.name === 'string') {
+                        errorMessage = `Error: ${error.name}`;
+                    } else if (error.error && typeof error.error === 'string') {
+                        errorMessage = error.error;
+                    } else {
+                        // Fallback - pokušaj izvući bilo što korisno
+                        try {
+                            const errorJson = JSON.stringify(error);
+                            if (errorJson && errorJson !== '{}' && errorJson !== 'null') {
+                                errorMessage = `Error: ${errorJson.substring(0, 200)}`;
+                            }
+                        } catch (e) {
+                            // Ako ni JSON.stringify ne radi, koristi default poruku
+                            errorMessage = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
+                        }
+                    }
+                }
+                
+                // Ako je error message još uvijek prazan ili "undefined", koristi default
+                if (!errorMessage || errorMessage.trim().length === 0 || errorMessage === 'undefined') {
+                    errorMessage = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
+                }
+                
+                console.error('Final error message:', errorMessage);
+                
+                // NOVO: Prikaži sve logove u debug panelu za analizu
+                showAllLogsInDebugPanel();
+                
+                showError(errorMessage, true);
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('generateButton').disabled = false;
+                updateProgress(0); // Reset progress
+            }
+        });
+
+        // ============================================
+        // CANVAS → BLOB CONVERSION (Rješava File object probleme)
+        // ============================================
+        async function convertFileToCleanBlob(file, quality = 0.9) {
+            // MAX_DIMENSION: Limit za Android memory optimization (kao u lovestories)
+            const MAX_DIMENSION = 2048;
+            
+            return new Promise((resolve, reject) => {
+                console.log('🎨 Converting File to clean Blob via Canvas...');
+                console.log('Input file:', {
+                    name: file.name,
+                    type: file.type,
+                    size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+                });
+                
+                // Kreiraj nevidljivi canvas u memoriji
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                let retryCount = 0;
+                const MAX_RETRIES = 1; // Jedan retry pokušaj
+                
+                const loadImage = (blobUrl) => {
+                    img.onload = () => {
+                        try {
+                            // Izračunaj nove dimenzije (održavajući aspect ratio)
+                            let newWidth = img.width;
+                            let newHeight = img.height;
+                            
+                            // Ako je slika veća od MAX_DIMENSION, resize-uj je
+                            if (newWidth > MAX_DIMENSION || newHeight > MAX_DIMENSION) {
+                                const aspectRatio = newWidth / newHeight;
+                                
+                                if (newWidth > newHeight) {
+                                    // Landscape: width je veći
+                                    newWidth = MAX_DIMENSION;
+                                    newHeight = Math.round(MAX_DIMENSION / aspectRatio);
+                                } else {
+                                    // Portrait ili square: height je veći ili jednaki
+                                    newHeight = MAX_DIMENSION;
+                                    newWidth = Math.round(MAX_DIMENSION * aspectRatio);
+                                }
+                                
+                                console.log(`📐 Resizing image: ${img.width}x${img.height} → ${newWidth}x${newHeight} (max ${MAX_DIMENSION}px)`);
+                            } else {
+                                console.log(`📐 Image dimensions OK: ${img.width}x${img.height} (within ${MAX_DIMENSION}px limit)`);
+                            }
+                            
+                            // Postavi dimenzije canvas-a
+                            canvas.width = newWidth;
+                            canvas.height = newHeight;
+                            
+                            console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+                            
+                            // Nacrtaj sliku na canvas (s resize-om ako je potrebno)
+                            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                            
+                            // Pretvori canvas u čisti Blob
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    URL.revokeObjectURL(blobUrl);
+                                    reject(new Error('Failed to create Blob from canvas'));
+                                    return;
+                                }
+                                
+                                console.log('✅ Clean Blob created:', {
+                                    size: (blob.size / 1024 / 1024).toFixed(2) + ' MB',
+                                    type: blob.type,
+                                    originalSize: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                                    compression: ((1 - blob.size / file.size) * 100).toFixed(1) + '%'
+                                });
+                                
+                                // Cleanup
+                                URL.revokeObjectURL(blobUrl);
+                                
+                                resolve(blob);
+                            }, 'image/jpeg', quality);
+                            
+                        } catch (error) {
+                            console.error('❌ Canvas processing error:', error);
+                            URL.revokeObjectURL(blobUrl);
+                            reject(error);
+                        }
+                    };
+                    
+                    img.onerror = (error) => {
+                        console.error(`❌ Image load error (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error);
+                        
+                        // Retry mechanism: Pokušaj ponovno ako još ima pokušaja
+                        if (retryCount < MAX_RETRIES) {
+                            retryCount++;
+                            console.log(`🔄 Retrying image load (attempt ${retryCount + 1}/${MAX_RETRIES + 1})...`);
+                            
+                            // Cleanup stari URL
+                            URL.revokeObjectURL(blobUrl);
+                            
+                            // Kratka pauza prije retry-a (100ms)
+                            setTimeout(() => {
+                                const newBlobUrl = URL.createObjectURL(file);
+                                loadImage(newBlobUrl);
+                                img.src = newBlobUrl;
+                            }, 100);
+                        } else {
+                            // Nema više pokušaja
+                            URL.revokeObjectURL(blobUrl);
+                            reject(new Error('Failed to load image for canvas processing after retries. The image may be corrupted or too large for mobile memory.'));
+                        }
+                    };
+                    
+                    // Postavi src nakon što su event handleri postavljeni
+                    img.src = blobUrl;
+                };
+                
+                // Učitaj sliku iz File objekta (prvi pokušaj)
+                const blobUrl = URL.createObjectURL(file);
+                loadImage(blobUrl);
+            });
+        }
+
+        // ============================================
+        // HEIC CONVERSION
+        // ============================================
+        async function convertHeicToJpegInBrowser(file) {
+            const isHeic = (file.type && (file.type === 'image/heic' || file.type === 'image/heif')) || 
+                           (file.name && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
+            
+            if (!isHeic) {
+                return file; // Nije HEIC, vrati original
+            }
+            
+            console.log('Converting HEIC to JPEG:', file.name);
+            
+            try {
+                // Provjeri je li biblioteka učitana
+                if (typeof heic2any === 'undefined') {
+                    throw new Error('HEIC converter library not loaded');
+                }
+                
+                // Konvertuj HEIC u JPEG
+                const jpegBlob = await heic2any({
+                    blob: file,
+                    toType: 'image/jpeg',
+                    quality: 0.85 // 85% kvalitete
+                });
+                
+                // heic2any vraća array ako je više slika, uzmi prvu
+                const blob = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
+                
+                // Kreiraj novi File objekt
+                const jpegFile = new File([blob], 
+                    (file.name ? file.name.replace(/\.(heic|heif)$/i, '.jpg') : 'converted.jpg'), {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                
+                console.log('HEIC conversion successful:', {
+                    original: `${(file.size / 1024 / 1024).toFixed(2)}MB (${file.type})`,
+                    converted: `${(blob.size / 1024 / 1024).toFixed(2)}MB (image/jpeg)`
+                });
+                
+                return jpegFile;
+                
+            } catch (error) {
+                console.error('HEIC conversion failed:', error);
+                throw new Error(`Cannot convert HEIC image: ${error.message}. Please save as JPEG first.`);
+            }
+        }
+
+        // ============================================
+        // IMAGE VALIDATION
+        // ============================================
+        function validateImage(file) {
+            return new Promise((resolve, reject) => {
+                console.log('🔍 Validating image:', {
+                    name: file?.name,
+                    type: file?.type,
+                    size: file?.size,
+                    constructor: file?.constructor?.name
+                });
+                
+                // Provjeri da li File objekt postoji i je li validan
+                if (!file) {
+                    reject(new Error('No file provided'));
+                    return;
+                }
+                
+                // Provjeri da li je File objekt ili Blob
+                if (!(file instanceof File) && !(file instanceof Blob)) {
+                    reject(new Error('Invalid file object - not a File or Blob'));
+                    return;
+                }
+                
+                const minWidth = 400;
+                const minHeight = 400;
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+                
+                // Provjeri ekstenziju za Samsung HEIC (sa provjerom da file.name i file.type postoje)
+                const fileName = file.name ? file.name.toLowerCase() : '';
+                const isHeic = fileName && (fileName.endsWith('.heic') || fileName.endsWith('.heif'));
+                const isAllowedType = (file.type && allowedTypes.includes(file.type)) || isHeic;
+                
+                // Check file type
+                if (!isAllowedType) {
+                    reject(new Error(`Invalid file type (${file.type || 'unknown'}). Samsung users: Please save as JPEG or disable Motion Photo.`));
+                    return;
+                }
+                
+                // Check file size (provjeri da li size postoji)
+                if (file.size !== undefined && file.size !== null) {
+                    if (file.size === 0) {
+                        reject(new Error('File is empty'));
+                        return;
+                    }
+                    if (file.size > maxSize) {
+                        reject(new Error(`Image too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size: 10MB`));
+                        return;
+                    }
+                } else {
+                    console.warn('⚠️ File size is undefined, skipping size check');
+                }
+                
+                // Check image dimensions
+                let objectURL;
+                try {
+                    objectURL = URL.createObjectURL(file);
+                    if (!objectURL) {
+                        reject(new Error('Failed to create object URL from file'));
+                        return;
+                    }
+                } catch (urlError) {
+                    console.error('❌ Error creating object URL:', urlError);
+                    reject(new Error('Invalid file - cannot create preview URL'));
+                    return;
+                }
+                
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        if (img.width < minWidth || img.height < minHeight) {
+                            reject(new Error(`Image too small (${img.width}x${img.height}px). Minimum: ${minWidth}x${minHeight}px`));
+                        } else {
+                            console.log('✅ Image validation successful:', {
+                                width: img.width,
+                                height: img.height,
+                                size: file.size,
+                                type: file.type
+                            });
+                            resolve({ 
+                                width: img.width, 
+                                height: img.height,
+                                size: file.size,
+                                type: file.type
+                            });
+                        }
+                    } finally {
+                        if (objectURL) {
+                            URL.revokeObjectURL(objectURL);
+                        }
+                    }
+                };
+                img.onerror = (error) => {
+                    console.error('❌ Image load error:', error);
+                    if (objectURL) {
+                        URL.revokeObjectURL(objectURL);
+                    }
+                    reject(new Error('Invalid image file. Please choose a valid image.'));
+                };
+                img.src = objectURL;
+            });
+        }
+        
+        function showValidationMessage(message, type = 'success') {
+            const validationDiv = document.getElementById('validationMessage');
+            validationDiv.textContent = message;
+            validationDiv.className = `validation-message ${type} show`;
+            setTimeout(() => {
+                validationDiv.classList.remove('show');
+            }, 5000);
+        }
+        
+        // ============================================
+        // PROGRESS TRACKING
+        // ============================================
+        const loadingStates = [
+            { step: 1, message: 'Uploading images...', icon: '📤', estimatedTime: 5 },
+            { step: 2, message: 'Starting AI generation...', icon: '🤖', estimatedTime: 5 },
+            { step: 3, message: 'Processing your photos...', icon: '✨', estimatedTime: 30 },
+            { step: 4, message: 'Creating transformation...', icon: '🎨', estimatedTime: 60 },
+            { step: 5, message: 'Adding final touches...', icon: '🎭', estimatedTime: 20 },
+            { step: 6, message: 'Complete! Preparing download...', icon: '✅', estimatedTime: 5 }
+        ];
+        
+        let currentStep = 0;
+        let startTime = null;
+        
+        function updateLoadingStep(step, customMessage = null) {
+            if (step < 1 || step > loadingStates.length) return;
+            
+            currentStep = step;
+            const state = loadingStates[step - 1];
+            
+            // Update step indicators
+            for (let i = 1; i <= loadingStates.length; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                if (stepEl) {
+                    stepEl.classList.remove('active', 'completed');
+                    if (i < step) {
+                        stepEl.classList.add('completed');
+                    } else if (i === step) {
+                        stepEl.classList.add('active');
+                    }
+                }
+            }
+            
+            // Update loading message
+            const loadingMessage = document.getElementById('loadingMessage');
+            const stepIcon = document.getElementById('stepIcon');
+            if (loadingMessage) {
+                loadingMessage.textContent = customMessage || state.message;
+            }
+            if (stepIcon) {
+                stepIcon.textContent = state.icon;
+            }
+            
+            // Update progress bar
+            const progressPercent = ((step - 1) / (loadingStates.length - 1)) * 100;
+            updateProgress(progressPercent);
+        }
+        
+        function updateProgress(percent) {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressFill) {
+                progressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${Math.round(percent)}%`;
+            }
+            
+            // Update time estimate
+            if (startTime && percent > 0 && percent < 100) {
+                const elapsed = (Date.now() - startTime) / 1000;
+                const estimated = elapsed / (percent / 100);
+                const remaining = Math.max(0, estimated - elapsed);
+                updateTimeEstimate(remaining);
+            }
+        }
+        
+        function updateTimeEstimate(remainingSeconds) {
+            const timeEstimate = document.getElementById('timeEstimate');
+            if (timeEstimate && remainingSeconds > 0) {
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = Math.floor(remainingSeconds % 60);
+                if (minutes > 0) {
+                    timeEstimate.textContent = `Estimated time remaining: ~${minutes} minute${minutes > 1 ? 's' : ''}`;
+                } else {
+                    timeEstimate.textContent = `Estimated time remaining: ~${seconds} second${seconds > 1 ? 's' : ''}`;
+                }
+            }
+        }
+        
+        function startProgressTracking() {
+            startTime = Date.now();
+            currentStep = 0;
+            updateLoadingStep(1);
+        }
+        
+        // ============================================
+        // ERROR RECOVERY & RETRY
+        // ============================================
+        let lastGenerationData = null;
+        
+        function saveGenerationData(data) {
+            lastGenerationData = {
+                ...data,
+                timestamp: Date.now()
+            };
+            // Also save to localStorage for persistence
+            try {
+                localStorage.setItem('lastGenerationData', JSON.stringify(lastGenerationData));
+            } catch (e) {
+                console.warn('Could not save to localStorage:', e);
+            }
+        }
+        
+        function retryGeneration() {
+            if (!lastGenerationData) {
+                showError('No previous generation data found. Please upload images again.');
+                return;
+            }
+            
+            // Check network connection before retry
+            if (!navigator.onLine) {
+                showError('No internet connection. Please connect to the internet and try again.', false);
+                return;
+            }
+            
+            // Hide error recovery
+            document.getElementById('errorRecovery').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Show network checking message
+            showValidationMessage('🔍 Checking network connection...', 'warning');
+            
+            // Small delay to show message
+            setTimeout(() => {
+                // Restore images if they exist
+                if (lastGenerationData.uploadedImages) {
+                    uploadedImages = lastGenerationData.uploadedImages;
+                    updatePreview();
+                }
+                
+                // Retry generation
+                document.getElementById('generateButton').click();
+            }, 1000);
+        }
+        
+        function saveProgress() {
+            try {
+                const progressData = {
+                    templateId: currentTemplate?.id,
+                    uploadedImages: uploadedImages,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('raincrestProgress', JSON.stringify(progressData));
+                showValidationMessage('✅ Progress saved! You can continue later.', 'success');
+            } catch (e) {
+                showValidationMessage('❌ Could not save progress: ' + e.message, 'error');
+            }
+        }
+        
+        function loadSavedProgress() {
+            try {
+                const saved = localStorage.getItem('raincrestProgress');
+                if (saved) {
+                    const progressData = JSON.parse(saved);
+                    // Note: File objects can't be stored in localStorage
+                    // This would need to be implemented differently if needed
+                    showValidationMessage('💾 Saved progress found! Upload your images again to continue.', 'warning');
+                }
+            } catch (e) {
+                console.warn('Could not load saved progress:', e);
+            }
+        }
+        
+        // ============================================
+        // IMPROVED ERROR HANDLING
+        // ============================================
+        function showError(message, showRetry = true) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorContent = document.getElementById('errorContent');
+            const errorRecovery = document.getElementById('errorRecovery');
+            
+            if (errorContent) {
+                errorContent.textContent = message;
+            }
+            
+            if (errorDiv) {
+                errorDiv.style.display = 'block';
+            }
+            
+            // ANDROID FIX: Provjeri da li je stvarno network error ili samo upload/server error
+            const isNetworkError = message && (message.includes('Network') || 
+                                  message.includes('connection') || 
+                                  message.includes('internet'));
+            
+            // Provjeri da li je uređaj stvarno offline
+            const isActuallyOffline = !navigator.onLine;
+            
+            // Ako je uređaj online, ali poruka sugerira network error, to je vjerojatno server/upload error
+            const isServerError = isNetworkError && !isActuallyOffline;
+            
+            if (errorRecovery && (showRetry || isNetworkError)) {
+                errorRecovery.style.display = 'block';
+                
+                // Update retry button text ovisno o tipu greške
+                const retryButton = errorRecovery.querySelector('.retry-button');
+                if (retryButton) {
+                    if (isActuallyOffline) {
+                        retryButton.textContent = '🔄 Retry (Network Issue)';
+                    } else if (isServerError) {
+                        retryButton.textContent = '🔄 Retry (Server Issue)';
+                    } else if (isNetworkError) {
+                        retryButton.textContent = '🔄 Retry';
+                    } else {
+                        retryButton.textContent = '🔄 Retry';
+                    }
+                }
+            } else if (errorRecovery) {
+                errorRecovery.style.display = 'none';
+            }
+            
+            // Hide loading section
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('generateButton').disabled = false;
+        }
+        
+        // ============================================
+        // Helper funkcije
+        // ============================================
+        
+        /**
+         * Kompresira sliku u browseru prije uploada
+         * Smanjuje veličinu na max 2MB za mobilne uploads
+         */
+        async function compressImage(file, maxSizeMB = 2) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // Izračunaj optimalne dimenzije (max 2000px širina/visina)
+                        const maxDimension = 2000;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = (height / width) * maxDimension;
+                                width = maxDimension;
+                            } else {
+                                width = (width / height) * maxDimension;
+                                height = maxDimension;
+                            }
+                        }
+                        
+                        // Kreiraj canvas za kompresiju
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Crtaj sliku na canvas
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Kompresiraj s različitim kvalitetama dok ne dobijemo željenu veličinu
+                        const maxSizeBytes = maxSizeMB * 1024 * 1024;
+                        let quality = 0.85; // Počni s 85% kvalitetom
+                        let compressedBlob;
+                        
+                        const tryCompress = () => {
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    reject(new Error('Failed to compress image'));
+                                    return;
+                                }
+                                
+                                console.log(`Compression attempt: ${(blob.size / 1024 / 1024).toFixed(2)}MB (quality: ${(quality * 100).toFixed(0)}%)`);
+                                
+                                if (blob.size <= maxSizeBytes || quality <= 0.3) {
+                                    // Ako je dovoljno mala ili smo na minimumu kvalitete
+                                    compressedBlob = blob;
+                                    const compressedFile = new File([blob], file.name || 'compressed.jpg', {
+                                        type: 'image/jpeg',
+                                        lastModified: Date.now()
+                                    });
+                                    console.log(`✅ Image compressed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                                    resolve(compressedFile);
+                                } else {
+                                    // Smanji kvalitetu i pokušaj ponovo
+                                    quality -= 0.1;
+                                    canvas.toBlob(tryCompress, 'image/jpeg', quality);
+                                }
+                            }, 'image/jpeg', quality);
+                        };
+                        
+                        tryCompress();
+                    };
+                    img.onerror = () => reject(new Error('Failed to load image'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function generateUserId() {
+            return 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // ANDROID FIX: Safe function to clear input values without null errors
+        function safeClearInput(inputId) {
+            const input = document.getElementById(inputId);
+            if (input && input.value !== undefined) {
+                input.value = '';
+                console.log(`Cleared input: ${inputId}`);
+            } else {
+                console.log(`Input not found or not clearable: ${inputId}`);
+            }
+        }
+
+        // ANDROID FIX: Clear all related inputs for an image type
+        function clearAllInputsForType(imageType) {
+            console.log(`Clearing all inputs for: ${imageType}`);
+            
+            if (imageType === 'couple') {
+                safeClearInput('coupleImage');
+                safeClearInput('coupleImageGallery');
+                safeClearInput('coupleImageCamera');
+            } else if (imageType === 'person1') {
+                safeClearInput('person1Image');
+                safeClearInput('person1ImageGallery');
+                safeClearInput('person1ImageCamera');
+            } else if (imageType === 'person2') {
+                safeClearInput('person2Image');
+                safeClearInput('person2ImageGallery');
+                safeClearInput('person2ImageCamera');
+            }
+        }
+
+        function showResults(imageUrl, videoUrl) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = '';
+            
+            if (imageUrl) {
+                const imageDiv = document.createElement('div');
+                imageDiv.className = 'result-item';
+                    imageDiv.innerHTML = `
+                    <h4>📸 Transformed Image</h4>
+                    <img src="${imageUrl}" alt="Result">
+                    <a href="${imageUrl}" download="raincrest-image.jpg" class="download-button">⬇️ Download Image</a>
+                `;
+                resultsContainer.appendChild(imageDiv);
+                
+                // QR kod nije potreban za kiosk - preskočeno
+            }
+            
+            if (videoUrl) {
+                const videoDiv = document.createElement('div');
+                videoDiv.className = 'result-item';
+                videoDiv.innerHTML = `
+                    <h4>🎬 Transformed Video</h4>
+                    <video src="${videoUrl}" controls></video>
+                    <a href="${videoUrl}" download="raincrest-video.mp4" class="download-button">⬇️ Download Video</a>
+                `;
+                resultsContainer.appendChild(videoDiv);
+            }
+            
+            document.getElementById('resultsSection').classList.add('show');
+            document.getElementById('loadingSection').style.display = 'none';
+            
+            // Show 100% progress
+            updateProgress(100);
+            updateLoadingStep(6, 'Complete!');
+            
+            // Clear saved progress
+            try {
+                localStorage.removeItem('raincrestProgress');
+            } catch (e) {
+                console.warn('Could not clear saved progress:', e);
+            }
+        }
+        
+        // QR code function removed - not needed for kiosk mode
+
+        // Initialize
+        loadTemplateInfo();
+        checkGenerateButton();
+        loadSavedProgress();
+        
+        // ANDROID FIX: Setup listeners - ALWAYS (buttons use these functions on all platforms)
+        debugLog('Setting up file input listeners', 'info');
+        setupAndroidInputListeners();
+        
+        if (useAndroidFix) {
+            debugLog('Android fix enabled: Using optimized file selection', 'success');
+            showValidationMessage('📱 Android detected: Using optimized file selection', 'success');
+        } else {
+            debugLog('Using standard file input approach', 'info');
+        }
+        
+        // Auto-show debug panel on Android for testing
+        if (isAndroid) {
+            setTimeout(() => {
+                debugLog('Android device detected - debug panel available', 'success');
+                debugLog(`Network status: ${networkStatus.online ? 'online' : 'offline'}`, 
+                        networkStatus.online ? 'success' : 'error');
+                // Uncomment next line to auto-show debug panel on Android
+                // toggleDebugPanel();
+            }, 1000);
+        }
+        
+        // Periodic network check for Android
+        if (isAndroid) {
+            setInterval(() => {
+                checkNetworkStatus();
+            }, 10000); // Check every 10 seconds
+        }
+    </script>
+</body>
+</html>
+
+

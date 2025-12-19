@@ -283,69 +283,66 @@
     </div>
 
     <script>
-        // Get predictionId from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const predictionId = urlParams.get('predictionId');
-
-        if (!predictionId) {
-            showError('Missing prediction ID. Please go back and try again.');
-            return;
-        }
-
-        console.log('Prediction ID:', predictionId);
-
-        // Step management
-        let currentStep = 0;
-        const steps = [
-            { id: 'step1', text: 'Verifying payment...' },
-            { id: 'step2', text: 'Sending to AI...' },
-            { id: 'step3', text: 'Applying magic...' },
-            { id: 'step4', text: 'Finalizing...' }
-        ];
-
-        function updateStep(stepIndex) {
-            // Mark previous steps as completed
-            for (let i = 0; i < stepIndex; i++) {
-                const step = document.getElementById(steps[i].id);
-                step.classList.remove('active');
-                step.classList.add('completed');
-            }
-
-            // Mark current step as active
-            if (stepIndex < steps.length) {
-                const step = document.getElementById(steps[stepIndex].id);
-                step.classList.remove('completed');
-                step.classList.add('active');
-                currentStep = stepIndex;
-            }
-        }
-
-        function updateProgress(percent) {
-            document.getElementById('progressFill').style.width = percent + '%';
-        }
-
-        function updateStatusText(text) {
-            document.getElementById('statusText').textContent = text;
-        }
-
+        // Helper functions (must be defined first)
         function showError(message) {
             document.getElementById('errorMessage').textContent = message;
             document.getElementById('errorMessage').classList.add('show');
             document.getElementById('loadingSection').classList.add('hidden');
         }
 
-        function showResult(imageUrl) {
-            document.getElementById('generatedImage').src = imageUrl;
-            document.getElementById('resultImage').classList.add('show');
-            document.getElementById('actionButtons').classList.add('show');
-            document.getElementById('loadingSection').classList.add('hidden');
-            updateStep(4);
-            updateProgress(100);
-            updateStatusText('Complete! 🎉');
-        }
+        // Get predictionId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const predictionId = urlParams.get('predictionId');
 
-        // Polling function
-        async function checkStatus() {
+        if (!predictionId) {
+            showError('Missing prediction ID. Please go back and try again.');
+        } else {
+            // Step management
+            let currentStep = 0;
+            const steps = [
+                { id: 'step1', text: 'Verifying payment...' },
+                { id: 'step2', text: 'Sending to AI...' },
+                { id: 'step3', text: 'Applying magic...' },
+                { id: 'step4', text: 'Finalizing...' }
+            ];
+
+            function updateStep(stepIndex) {
+                // Mark previous steps as completed
+                for (let i = 0; i < stepIndex; i++) {
+                    const step = document.getElementById(steps[i].id);
+                    step.classList.remove('active');
+                    step.classList.add('completed');
+                }
+
+                // Mark current step as active
+                if (stepIndex < steps.length) {
+                    const step = document.getElementById(steps[stepIndex].id);
+                    step.classList.remove('completed');
+                    step.classList.add('active');
+                    currentStep = stepIndex;
+                }
+            }
+
+            function updateProgress(percent) {
+                document.getElementById('progressFill').style.width = percent + '%';
+            }
+
+            function updateStatusText(text) {
+                document.getElementById('statusText').textContent = text;
+            }
+
+            function showResult(imageUrl) {
+                document.getElementById('generatedImage').src = imageUrl;
+                document.getElementById('resultImage').classList.add('show');
+                document.getElementById('actionButtons').classList.add('show');
+                document.getElementById('loadingSection').classList.add('hidden');
+                updateStep(4);
+                updateProgress(100);
+                updateStatusText('Complete! 🎉');
+            }
+
+            // Polling function
+            async function checkStatus() {
             try {
                 const response = await fetch(`/.netlify/functions/check-status?predictionId=${predictionId}`);
                 
@@ -398,10 +395,10 @@
                 console.error('Error checking status:', error);
                 showError('Error: ' + error.message);
             }
-        }
+            }
 
-        // Share/Save functionality
-        document.getElementById('shareButton').addEventListener('click', async function() {
+            // Share/Save functionality
+            document.getElementById('shareButton').addEventListener('click', async function() {
             const imageUrl = document.getElementById('generatedImage').src;
             
             // Try native share API first (mobile)
@@ -429,13 +426,15 @@
             link.download = 'raincrest-art.jpg';
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-        });
+                document.body.removeChild(link);
+            });
 
-        // Start polling immediately
-        updateStep(0);
-        updateProgress(10);
-        setTimeout(checkStatus, 1000); // Start after 1 second
+            // Start polling immediately
+            console.log('Prediction ID:', predictionId);
+            updateStep(0);
+            updateProgress(10);
+            setTimeout(checkStatus, 1000); // Start after 1 second
+        }
     </script>
 </body>
 </html>

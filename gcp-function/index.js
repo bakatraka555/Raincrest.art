@@ -162,7 +162,11 @@ functions.http('generateImageWorker', async (req, res) => {
     }
     
     // 2. Google AI API poziv
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    // Using gemini-2.0-flash-exp-image-generation (supports image generation with safety settings)
+    const MODEL_NAME = process.env.GEMINI_MODEL_NAME || 'gemini-2.0-flash-exp-image-generation';
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GOOGLE_AI_API_KEY}`;
+    
+    console.log(`[Job ${jobId}] Using model: ${MODEL_NAME}`);
     
     // Validate imageParts before sending
     if (!imageParts || imageParts.length === 0) {
@@ -253,8 +257,7 @@ functions.http('generateImageWorker', async (req, res) => {
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 8192,
-        responseMimeType: "text/plain",
-        responseModalities: ["IMAGE", "TEXT"]  // Note: "IMAGE" for image generation
+        responseModalities: ["IMAGE"]  // Image generation only
       }
     };
     

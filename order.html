@@ -730,9 +730,9 @@
             };
         });
         
-        // Get template from URL
+        // Get template from URL, or use default
         const urlParams = new URLSearchParams(window.location.search);
-        const templateId = urlParams.get('template');
+        const templateId = urlParams.get('template') || 'template-02'; // Default to template-02 if not specified
         
         // ANDROID DEBUGGING SYSTEM
         const debugLogs = [];
@@ -1090,7 +1090,18 @@ ${logsText}
             try {
                 const response = await fetch('docs/couples-templates-database.json');
                 const data = await response.json();
-                currentTemplate = data.templates.find(t => t.id === templateId);
+                
+                // Filter only enabled templates
+                const enabledTemplates = data.templates.filter(t => t.enabled === true);
+                
+                // Find template (use default if not found)
+                currentTemplate = enabledTemplates.find(t => t.id === templateId);
+                
+                // If template not found, try to use default
+                if (!currentTemplate) {
+                    console.warn(`Template ${templateId} not found, using default template-02`);
+                    currentTemplate = enabledTemplates.find(t => t.id === 'template-02');
+                }
                 
                 if (currentTemplate) {
                     document.getElementById('templateInfo').innerHTML = `
@@ -1101,8 +1112,8 @@ ${logsText}
                     checkGenerateButton();
                 } else {
                     document.getElementById('templateInfo').innerHTML = `
-                        <h2>Template not found</h2>
-                        <p>Please go back and select a template again</p>
+                        <h2>No templates available</h2>
+                        <p>Please contact support</p>
                     `;
                     checkGenerateButton();
                 }

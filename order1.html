@@ -1863,21 +1863,31 @@ ${logsText}
                     statusTextEl.textContent = 'Designing your transformation... This may take 30-45 seconds...';
                 }
                 
-                // 3. Call Google Cloud Function DIRECTLY (simple test with just prompt)
+                // 3. Call Google Cloud Function DIRECTLY
                 console.log('🚀 Calling Google Cloud Function directly...');
                 const GCP_FUNCTION_URL = 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker';
                 
                 updateLoadingStep(5, 'AI is working...');
                 updateProgress(50);
                 
-                // For testing: Send only prompt (backend will handle the rest)
+                // Generate minimal required fields for backend
+                const jobId = `google-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+                const bucketName = 'raincrest-art-images';
+                const gcsFilename = `temp/generated/${jobId}.jpg`;
+                const gcsUrl = `https://storage.googleapis.com/${bucketName}/${gcsFilename}`;
+                
+                // Send payload with prompt (for testing, backend may need imageParts later)
                 const googleResponse = await fetchWithTimeout(GCP_FUNCTION_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        prompt: prompt
+                        prompt: prompt,
+                        jobId: jobId,
+                        imageParts: [], // Empty for now - backend will handle images if needed
+                        gcsUrl: gcsUrl,
+                        gcsFilename: gcsFilename
                     })
                 }, 60000); // 60 seconds timeout (generation takes 30-45s)
                 

@@ -245,94 +245,85 @@ exports.handler = async (event, context) => {
 
     console.log('All images converted to base64, total:', imageParts.length);
 
-    // 3. Kreiraj job ID i Bunny URL (kao Replicate pattern!)
-    const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE;
-    const BUNNY_API_KEY = process.env.BUNNY_API_KEY;
-    const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
+    // 3. Kreiraj job ID i Google Cloud Storage URL
+    const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME || 'raincrest-art-images';
+    const GCS_CDN_URL = process.env.GCS_CDN_URL || `https://storage.googleapis.com/${GCS_BUCKET_NAME}`;
     
-    if (!BUNNY_STORAGE_ZONE || !BUNNY_API_KEY) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Bunny.net not configured',
-          details: 'BUNNY_STORAGE_ZONE and BUNNY_API_KEY required'
-        })
-      };
-    }
-
     const jobId = `google-${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
-    const bunnyFilename = `temp/generated/${jobId}.jpg`;
-    const bunnyCdnUrl = `https://${BUNNY_CDN_DOMAIN}/${bunnyFilename}`;
-
-    console.log('=== JOB PATTERN: Creating job (like Replicate!) ===');
+    const imageFilename = `temp/generated/${jobId}.jpg`;
+    const imageUrl = `${GCS_CDN_URL}/${imageFilename}`;
+    
+    console.log('=== ASYNC JOB PATTERN: Creating job with Google Cloud Storage ===');
     console.log('Job ID:', jobId);
-    console.log('Bunny CDN URL:', bunnyCdnUrl);
-    console.log('Bunny filename:', bunnyFilename);
+    console.log('GCS URL:', imageUrl);
+    console.log('GCS filename:', imageFilename);
+    console.log('GCS Bucket:', GCS_BUCKET_NAME);
 
-    // 4. Spremi job info u Bunny.net (kao JSON fajl)
+    // 4. Spremi job info (opcionalno - za debugging)
     const jobInfo = {
       jobId,
       templateId,
       isCouple,
       prompt,
       imageParts: imageParts.map(part => ({
-        // Spremi samo mime_type, data će biti prevelik za JSON
         mime_type: part.inline_data?.mime_type || 'image/jpeg',
-        // Ne spremaj base64 data direktno - prevelik je, koristimo imageParts iz requesta
       })),
-      bunnyUrl: bunnyCdnUrl,
-      bunnyFilename: bunnyFilename,
+      imageUrl: imageUrl,
+      imageFilename: imageFilename,
       status: 'pending',
       createdAt: new Date().toISOString()
     };
 
-    try {
-      const jobInfoUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/jobs/${jobId}.json`;
-      console.log('Saving job info to Bunny.net:', jobInfoUrl);
-      
-      const saveJobResponse = await fetch(jobInfoUrl, {
-        method: 'PUT',
-        headers: {
-          'AccessKey': BUNNY_API_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jobInfo)
-      });
-
-      if (!saveJobResponse.ok) {
-        console.error('Failed to save job info:', saveJobResponse.status);
-        // Ne baci error - pokušajmo pokrenuti worker bez job info
-      } else {
-        console.log('✅ Job info saved to Bunny.net');
-      }
-    } catch (saveError) {
-      console.error('Error saving job info:', saveError);
-      // Ne baci error - pokušajmo pokrenuti worker bez job info
+    // 5. Pokreni Google Cloud Function worker (ne čekaj!)
+    // Koristi environment variable ili fallback na tvoj deploy-ani URL
+    const GCP_FUNCTION_URL = process.env.GCP_FUNCTION_URL || 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker';
+    
+    if (!GCP_FUNCTION_URL || !GCP_FUNCTION_URL.startsWith('http')) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'GCP_FUNCTION_URL not configured',
+          details: 'Please set GCP_FUNCTION_URL in Netlify Environment Variables',
+          expectedFormat: 'https://us-central1-raincrest-art.cloudfunctions.net/generate-image-worker'
+        })
+      };
     }
-
-    // 5. Pokreni worker funkciju (ne čekaj!)
-    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || 'https://raincrest-art.netlify.app';
-    const workerUrl = `${siteUrl}/.netlify/functions/generate-image-google-worker`;
     
-    console.log('Starting worker function:', workerUrl);
+    console.log('🚀 Starting Google Cloud Function worker:', GCP_FUNCTION_URL);
+    console.log('📦 Sending job:', {
+      jobId,
+      promptLength: prompt.length,
+      imagePartsCount: imageParts.length,
+      gcsUrl: imageUrl,
+      gcsFilename: imageFilename
+    });
     
-    // Pokreni worker u pozadini (ne čekaj response!)
-    fetch(workerUrl, {
+    // Pokreni worker u pozadini (fire-and-forget, ne čekaj response!)
+    fetch(GCP_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         jobId,
         prompt,
         imageParts, // Pošalji imageParts direktno (base64 data)
-        bunnyUrl: bunnyCdnUrl,
-        bunnyFilename: bunnyFilename,
+        gcsUrl: imageUrl,
+        gcsFilename: imageFilename,
         templateId,
         isCouple
       })
+    }).then(response => {
+      if (!response.ok) {
+        console.error('⚠️ Worker start returned non-OK status:', response.status);
+      } else {
+        console.log('✅ Worker started successfully (non-blocking)');
+      }
     }).catch(err => {
       // Ignoriraj greške - worker će se možda pokrenuti kasnije
-      console.error('Worker start error (non-critical):', err.message);
+      // Ovo je fire-and-forget pattern, frontend će poll-ovati image URL
+      console.error('⚠️ Worker start error (non-critical, will poll for result):', err.message);
     });
 
     // 6. Vrati job ID ODMAH (kao Replicate!)
@@ -343,9 +334,9 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         jobId: jobId,
-        imageUrl: bunnyCdnUrl, // Frontend će poll-ovati ovaj URL
+        imageUrl: imageUrl, // Frontend će poll-ovati ovaj URL (GCS ili Bunny)
         status: 'processing',
-        provider: 'Google AI Studio (async - Nano Banana Pro)',
+        provider: 'Google AI Studio + Google Cloud Storage (async - Nano Banana Pro)',
         templateId: templateId,
         isCouple: isCouple,
         timestamp: new Date().toISOString()

@@ -1,0 +1,21 @@
+{
+  "name": "generate-image-worker",
+  "version": "1.0.0",
+  "description": "Google Cloud Function worker for Google AI image generation",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "@google-cloud/storage": "^7.0.0",
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "start": "functions-framework --target=generateImageWorker --port=8080"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+

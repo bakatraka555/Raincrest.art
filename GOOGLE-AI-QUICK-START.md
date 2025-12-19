@@ -85,3 +85,4 @@ Original verzija i dalje radi - ništa nije pokvareno! ✅
 **Commit**: 82a12ea  
 **Akcija**: Idi dobiti Google AI API key! 🎯
 
+

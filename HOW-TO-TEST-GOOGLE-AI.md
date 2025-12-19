@@ -283,3 +283,4 @@ Nakon ~100 testnih slika možeš usporediti:
 
 Good luck! 🚀
 
+

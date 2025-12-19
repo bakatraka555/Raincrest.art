@@ -1933,11 +1933,11 @@ ${logsText}
                     updateProgress(100);
                 } else if (generateResult.jobId && generateResult.imageUrl) {
                     // ✅ Google AI - job pattern (kao Replicate!)
-                    console.log('✅ Google AI job created - polling Bunny CDN URL (like Replicate pattern)...');
-                    const bunnyUrl = generateResult.imageUrl;
+                    console.log('✅ Google AI job created - polling image URL (like Replicate pattern)...');
+                    const imageUrl = generateResult.imageUrl;
                     const jobId = generateResult.jobId;
                     console.log('Job ID:', jobId);
-                    console.log('Bunny CDN URL:', bunnyUrl);
+                    console.log('Image URL (GCS or Bunny):', imageUrl);
                     
                     updateLoadingStep(3, 'Processing your photos...');
                     
@@ -1964,21 +1964,24 @@ ${logsText}
                         }
                         
                         try {
-                            // Poll Bunny CDN URL (HEAD request - brže)
-                            console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Checking Bunny CDN (${bunnyUrl.substring(0, 50)}...)...`);
+                            // Poll image URL (GCS or Bunny) - HEAD request (brže)
+                            console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Checking image URL (${imageUrl.substring(0, 50)}...)...`);
                             
-                            const headResponse = await fetchWithTimeout(bunnyUrl, {
-                                method: 'HEAD',
+                            // Use GET with Range header (more reliable than HEAD for GCS)
+                            const headResponse = await fetchWithTimeout(imageUrl, {
+                                method: 'GET',
                                 cache: 'no-cache',
                                 headers: {
+                                    'Range': 'bytes=0-0', // Request only first byte (efficient!)
                                     'Cache-Control': 'no-cache'
                                 }
                             }, 10000); // 10 sekundi timeout
                             
-                            if (headResponse.ok) {
-                                console.log('✅ Image available on Bunny CDN!');
-                                finalImageUrl = bunnyUrl;
-                                updateLoadingStep(6, 'Generation complete!');
+                            if (headResponse.ok || headResponse.status === 206) {
+                                // 200 OK or 206 Partial Content = image exists!
+                                console.log('✅ Image available!');
+                                finalImageUrl = imageUrl;
+                                updateLoadingStep(6, 'Generation complete! 🎉');
                                 updateProgress(95);
                                 break;
                             } else if (headResponse.status === 404) {
@@ -2008,14 +2011,14 @@ ${logsText}
                     
                     if (attempt >= maxAttempts) {
                         const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
-                        throw new Error(`Generation timeout - image took too long to appear on CDN (waited ${totalSeconds}s, max 5 minutes). Please check Netlify Function logs.`);
+                        throw new Error(`Generation timeout - image took too long to appear (waited ${totalSeconds}s, max 5 minutes). Please check function logs.`);
                     }
                     
                     if (!finalImageUrl) {
-                        throw new Error('No image URL received from Bunny CDN');
+                        throw new Error('No image URL received');
                     }
                     
-                    console.log('✅ Final image URL from Bunny CDN:', finalImageUrl);
+                    console.log('✅ Final image URL:', finalImageUrl);
                     
                 } else if (generateResult.predictionId) {
                     // ✅ Replicate - polling flow

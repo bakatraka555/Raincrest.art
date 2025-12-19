@@ -2285,6 +2285,9 @@ ${logsText}
         // CANVAS → BLOB CONVERSION (Rješava File object probleme)
         // ============================================
         async function convertFileToCleanBlob(file, quality = 0.9) {
+            // MAX_DIMENSION: Limit za Android memory optimization (kao u lovestories)
+            const MAX_DIMENSION = 2048;
+            
             return new Promise((resolve, reject) => {
                 console.log('🎨 Converting File to clean Blob via Canvas...');
                 console.log('Input file:', {
@@ -2298,50 +2301,103 @@ ${logsText}
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
                 
-                img.onload = () => {
-                    try {
-                        // Postavi dimenzije canvas-a
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        
-                        console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
-                        
-                        // Nacrtaj sliku na canvas
-                        ctx.drawImage(img, 0, 0);
-                        
-                        // Pretvori canvas u čisti Blob
-                        canvas.toBlob((blob) => {
-                            if (!blob) {
-                                reject(new Error('Failed to create Blob from canvas'));
-                                return;
+                let retryCount = 0;
+                const MAX_RETRIES = 1; // Jedan retry pokušaj
+                
+                const loadImage = (blobUrl) => {
+                    img.onload = () => {
+                        try {
+                            // Izračunaj nove dimenzije (održavajući aspect ratio)
+                            let newWidth = img.width;
+                            let newHeight = img.height;
+                            
+                            // Ako je slika veća od MAX_DIMENSION, resize-uj je
+                            if (newWidth > MAX_DIMENSION || newHeight > MAX_DIMENSION) {
+                                const aspectRatio = newWidth / newHeight;
+                                
+                                if (newWidth > newHeight) {
+                                    // Landscape: width je veći
+                                    newWidth = MAX_DIMENSION;
+                                    newHeight = Math.round(MAX_DIMENSION / aspectRatio);
+                                } else {
+                                    // Portrait ili square: height je veći ili jednaki
+                                    newHeight = MAX_DIMENSION;
+                                    newWidth = Math.round(MAX_DIMENSION * aspectRatio);
+                                }
+                                
+                                console.log(`📐 Resizing image: ${img.width}x${img.height} → ${newWidth}x${newHeight} (max ${MAX_DIMENSION}px)`);
+                            } else {
+                                console.log(`📐 Image dimensions OK: ${img.width}x${img.height} (within ${MAX_DIMENSION}px limit)`);
                             }
                             
-                            console.log('✅ Clean Blob created:', {
-                                size: (blob.size / 1024 / 1024).toFixed(2) + ' MB',
-                                type: blob.type
-                            });
+                            // Postavi dimenzije canvas-a
+                            canvas.width = newWidth;
+                            canvas.height = newHeight;
                             
-                            // Cleanup
-                            URL.revokeObjectURL(img.src);
+                            console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
                             
-                            resolve(blob);
-                        }, 'image/jpeg', quality);
+                            // Nacrtaj sliku na canvas (s resize-om ako je potrebno)
+                            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                            
+                            // Pretvori canvas u čisti Blob
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    URL.revokeObjectURL(blobUrl);
+                                    reject(new Error('Failed to create Blob from canvas'));
+                                    return;
+                                }
+                                
+                                console.log('✅ Clean Blob created:', {
+                                    size: (blob.size / 1024 / 1024).toFixed(2) + ' MB',
+                                    type: blob.type,
+                                    originalSize: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+                                    compression: ((1 - blob.size / file.size) * 100).toFixed(1) + '%'
+                                });
+                                
+                                // Cleanup
+                                URL.revokeObjectURL(blobUrl);
+                                
+                                resolve(blob);
+                            }, 'image/jpeg', quality);
+                            
+                        } catch (error) {
+                            console.error('❌ Canvas processing error:', error);
+                            URL.revokeObjectURL(blobUrl);
+                            reject(error);
+                        }
+                    };
+                    
+                    img.onerror = (error) => {
+                        console.error(`❌ Image load error (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error);
                         
-                    } catch (error) {
-                        console.error('❌ Canvas processing error:', error);
-                        URL.revokeObjectURL(img.src);
-                        reject(error);
-                    }
+                        // Retry mechanism: Pokušaj ponovno ako još ima pokušaja
+                        if (retryCount < MAX_RETRIES) {
+                            retryCount++;
+                            console.log(`🔄 Retrying image load (attempt ${retryCount + 1}/${MAX_RETRIES + 1})...`);
+                            
+                            // Cleanup stari URL
+                            URL.revokeObjectURL(blobUrl);
+                            
+                            // Kratka pauza prije retry-a (100ms)
+                            setTimeout(() => {
+                                const newBlobUrl = URL.createObjectURL(file);
+                                loadImage(newBlobUrl);
+                                img.src = newBlobUrl;
+                            }, 100);
+                        } else {
+                            // Nema više pokušaja
+                            URL.revokeObjectURL(blobUrl);
+                            reject(new Error('Failed to load image for canvas processing after retries. The image may be corrupted or too large for mobile memory.'));
+                        }
+                    };
+                    
+                    // Postavi src nakon što su event handleri postavljeni
+                    img.src = blobUrl;
                 };
                 
-                img.onerror = (error) => {
-                    console.error('❌ Image load error:', error);
-                    URL.revokeObjectURL(img.src);
-                    reject(new Error('Failed to load image for canvas processing'));
-                };
-                
-                // Učitaj sliku iz File objekta
-                img.src = URL.createObjectURL(file);
+                // Učitaj sliku iz File objekta (prvi pokušaj)
+                const blobUrl = URL.createObjectURL(file);
+                loadImage(blobUrl);
             });
         }
 

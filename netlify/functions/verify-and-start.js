@@ -55,12 +55,17 @@ exports.handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const { imageUrl, prompt, templateId, isCouple, image2Url } = body;
 
+    console.log('=== verify-and-start Request ===');
     console.log('Request body:', {
       hasImageUrl: !!imageUrl,
+      imageUrl: imageUrl ? imageUrl.substring(0, 80) + '...' : null,
       hasPrompt: !!prompt,
+      promptLength: prompt ? prompt.length : 0,
       templateId,
-      isCouple,
-      hasImage2Url: !!image2Url
+      isCouple: isCouple,
+      isCoupleType: typeof isCouple,
+      hasImage2Url: !!image2Url,
+      image2Url: image2Url ? image2Url.substring(0, 80) + '...' : null
     });
 
     // Validation
@@ -71,6 +76,29 @@ exports.handler = async (event, context) => {
         body: JSON.stringify({ 
           error: 'Missing required parameters',
           required: ['imageUrl', 'templateId']
+        })
+      };
+    }
+
+    // Validate URLs
+    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid imageUrl',
+          details: 'imageUrl must be a valid HTTP(S) URL'
+        })
+      };
+    }
+
+    if (image2Url && !image2Url.startsWith('http://') && !image2Url.startsWith('https://')) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid image2Url',
+          details: 'image2Url must be a valid HTTP(S) URL'
         })
       };
     }
@@ -87,9 +115,25 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Normalize isCouple to boolean
+    const isCoupleBool = !!isCouple;
+    console.log('Normalized isCouple:', isCoupleBool);
+
     // Get prompt (ako nije poslan, generiraj ga)
-    const finalPrompt = prompt || getPrompt(templateId, isCouple);
+    const finalPrompt = prompt || getPrompt(templateId, isCoupleBool);
     console.log('Using prompt (length):', finalPrompt.length);
+    console.log('Prompt preview:', finalPrompt.substring(0, 200) + '...');
+
+    if (!finalPrompt || finalPrompt.length < 10) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Failed to generate prompt',
+          details: 'Prompt is empty or too short'
+        })
+      };
+    }
 
     // Replicate API token
     const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
@@ -105,9 +149,9 @@ exports.handler = async (event, context) => {
     const REPLICATE_MODEL = 'google/nano-banana';
     console.log('Using Replicate model:', REPLICATE_MODEL);
 
-    // Pripremi image_input array
+    // Pripremi image_input array (ISTA LOGIKA KAO U generate-image.js)
     const imageInput = [imageUrl];
-    if (!isCouple && image2Url) {
+    if (!isCoupleBool && image2Url) {
       imageInput.push(image2Url);
     }
     // Logo URL (ako je potreban)
@@ -116,16 +160,25 @@ exports.handler = async (event, context) => {
       : 'https://examples.b-cdn.net/logo.jpg';
     imageInput.push(logoUrl);
 
-    console.log('Image input array:', imageInput);
+    console.log('=== Image Input Array ===');
+    console.log('Image count:', imageInput.length);
+    console.log('Image URLs:', imageInput.map(url => url.substring(0, 80) + '...'));
+    console.log('isCouple:', isCoupleBool);
+    console.log('Has image2:', !isCoupleBool && !!image2Url);
 
-    // Replicate API input
+    // Replicate API input (ISTI FORMAT KAO U generate-image.js)
     const inputData = {
       prompt: finalPrompt,
       image_input: imageInput
     };
 
+    console.log('=== Full Input Data ===');
+    console.log('Prompt length:', inputData.prompt.length);
+    console.log('Image input count:', inputData.image_input.length);
+    console.log('Full inputData:', JSON.stringify(inputData, null, 2));
+
     console.log('🚀 Starting Replicate generation (async)...');
-    console.log('📦 Request size:', JSON.stringify(inputData).length, 'bytes');
+    console.log('📦 Request size:', JSON.stringify({ input: inputData }).length, 'bytes');
 
     // Pokreni Replicate prediction (NE čekaj rezultat!)
     const replicateResponse = await fetch(

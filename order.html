@@ -1941,21 +1941,25 @@ ${logsText}
                     
                     updateLoadingStep(3, 'Processing your photos...');
                     
-                    let maxAttempts = 150; // Max 5 minuta
+                    // Max 5 minuta: 300 pokušaja × 1s = 300s (5 min)
+                    let maxAttempts = 300; // Max 5 minuta (300 × 1s)
                     let attempt = 0;
                     let pollInterval = 2000; // Počni s 2 sekunde
+                    const startTime = Date.now();
                     
                     while (attempt < maxAttempts) {
                         await new Promise(resolve => setTimeout(resolve, pollInterval));
                         attempt++;
                         
+                        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        
                         // Smart polling: exponential backoff
-                        // Prvih 30s: poll svake 2s (15 pokušaja)
-                        // 30-60s: poll svake 1s (30 pokušaja)
-                        // Nakon 60s: poll svake 0.5s (brže)
-                        if (attempt <= 15) {
+                        // Prvih 30s: poll svake 2s
+                        // 30-90s: poll svake 1s
+                        // Nakon 90s: poll svake 0.5s (brže)
+                        if (elapsedSeconds <= 30) {
                             pollInterval = 2000; // 2 sekunde
-                        } else if (attempt <= 45) {
+                        } else if (elapsedSeconds <= 90) {
                             pollInterval = 1000; // 1 sekunda
                         } else {
                             pollInterval = 500; // 0.5 sekundi
@@ -1974,29 +1978,31 @@ ${logsText}
                         }
                         
                         try {
-                            // Poll Bunny CDN URL (HEAD request - brže od GET)
-                            console.log(`[${attempt}/${maxAttempts}] Checking Bunny CDN (${bunnyUrl.substring(0, 50)}...)...`);
+                            // Poll Bunny CDN URL (GET request - pouzdanije od HEAD)
+                            console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Checking Bunny CDN (${bunnyUrl.substring(0, 50)}...)...`);
                             
-                            const headResponse = await fetchWithTimeout(bunnyUrl, {
-                                method: 'HEAD',
+                            // Koristimo GET umjesto HEAD jer je pouzdanije
+                            const imageResponse = await fetchWithTimeout(bunnyUrl, {
+                                method: 'GET',
                                 cache: 'no-cache',
                                 headers: {
-                                    'Cache-Control': 'no-cache'
+                                    'Cache-Control': 'no-cache',
+                                    'Range': 'bytes=0-0' // Samo prvi byte - brže od punog downloada
                                 }
                             }, 10000); // 10 sekundi timeout
                             
-                            if (headResponse.ok) {
-                                console.log('✅ Image available on Bunny CDN!');
+                            if (imageResponse.ok || imageResponse.status === 206) { // 206 = Partial Content (Range request)
+                                console.log(`✅ Image available on Bunny CDN! (status: ${imageResponse.status})`);
                                 finalImageUrl = bunnyUrl;
                                 updateLoadingStep(6, 'Generation complete!');
                                 updateProgress(95);
                                 break;
-                            } else if (headResponse.status === 404) {
+                            } else if (imageResponse.status === 404) {
                                 // Slika još nije uploadana, nastavi poll-ati
-                                console.log(`[${attempt}/${maxAttempts}] Image not ready yet (404), waiting ${pollInterval}ms...`);
+                                console.log(`[${attempt}/${maxAttempts}] [${elapsedSeconds}s] Image not ready yet (404), waiting ${pollInterval}ms...`);
                                 continue;
                             } else {
-                                console.warn(`Unexpected status: ${headResponse.status}, retrying...`);
+                                console.warn(`[${attempt}/${maxAttempts}] Unexpected status: ${imageResponse.status}, retrying...`);
                                 continue;
                             }
                         } catch (fetchError) {
@@ -2017,7 +2023,8 @@ ${logsText}
                     }
                     
                     if (attempt >= maxAttempts) {
-                        throw new Error('Generation timeout - image took too long to appear on CDN (max 5 minutes)');
+                        const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+                        throw new Error(`Generation timeout - image took too long to appear on CDN (waited ${totalSeconds}s, max 5 minutes). Please check Netlify Function logs to see if background task completed.`);
                     }
                     
                     if (!finalImageUrl) {

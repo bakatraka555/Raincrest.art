@@ -259,8 +259,9 @@ exports.handler = async (event, context) => {
     console.log('Bunny filename:', bunnyFilename);
 
     // 4. Pokreni Google AI generaciju u background (ne čekaj!)
-    // Koristimo Promise.resolve().then() umjesto setImmediate za bolju kompatibilnost
-    Promise.resolve().then(async () => {
+    // Koristimo setTimeout(0) da osiguramo da se task pokrene nakon što handler vrati response
+    // Netlify funkcije će zadržati proces živim dok se background task izvršava
+    setTimeout(async () => {
       try {
         console.log(`[Job ${jobId}] Starting Google AI generation in background...`);
         
@@ -357,10 +358,7 @@ exports.handler = async (event, context) => {
       } catch (error) {
         console.error(`[Job ${jobId}] Error:`, error.message, error.stack);
       }
-    }).catch(err => {
-      // Catch any unhandled errors in the promise chain
-      console.error(`[Job ${jobId}] Unhandled error in background task:`, err);
-    });
+    }, 0); // Pokreni odmah nakon što handler vrati response
 
     // 5. Vrati Bunny URL odmah (bez čekanja!) - frontend će poll-ovati
     return {

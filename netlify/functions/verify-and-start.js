@@ -119,10 +119,12 @@ exports.handler = async (event, context) => {
     const isCoupleBool = !!isCouple;
     console.log('Normalized isCouple:', isCoupleBool);
 
-    // Get prompt (ako nije poslan, generiraj ga)
+    // Get prompt (ISTA LOGIKA KAO U generate-image.js)
+    // U generate-image.js se prompt generira s: getPrompt(templateId, isCouple)
     const finalPrompt = prompt || getPrompt(templateId, isCoupleBool);
     console.log('Using prompt (length):', finalPrompt.length);
-    console.log('Prompt preview:', finalPrompt.substring(0, 200) + '...');
+    console.log('Prompt preview (first 200 chars):', finalPrompt.substring(0, 200) + '...');
+    console.log('Prompt preview (last 200 chars):', '...' + finalPrompt.substring(finalPrompt.length - 200));
 
     if (!finalPrompt || finalPrompt.length < 10) {
       return {
@@ -130,7 +132,8 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           error: 'Failed to generate prompt',
-          details: 'Prompt is empty or too short'
+          details: 'Prompt is empty or too short',
+          promptLength: finalPrompt ? finalPrompt.length : 0
         })
       };
     }
@@ -154,11 +157,9 @@ exports.handler = async (event, context) => {
     if (!isCoupleBool && image2Url) {
       imageInput.push(image2Url);
     }
-    // Logo URL (ako je potreban)
-    const logoUrl = process.env.BUNNY_CDN_DOMAIN 
-      ? `https://${process.env.BUNNY_CDN_DOMAIN}/logo.jpg`
-      : 'https://examples.b-cdn.net/logo.jpg';
-    imageInput.push(logoUrl);
+    // Logo URL (ISTI KAO U generate-image.js)
+    const logoUrl = 'https://examples.b-cdn.net/logo.jpg';
+    imageInput.push(logoUrl); // Logo je uvijek zadnji
 
     console.log('=== Image Input Array ===');
     console.log('Image count:', imageInput.length);

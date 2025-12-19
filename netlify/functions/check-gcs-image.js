@@ -64,21 +64,72 @@ exports.handler = async (event, context) => {
 
     console.log('Checking GCS image:', imageUrl);
 
-    // Check if image exists using HEAD request
-    const response = await fetch(imageUrl, {
-      method: 'HEAD',
-      headers: {
-        'Cache-Control': 'no-cache'
+    // Extract jobId from imageUrl if not provided
+    let jobId = event.queryStringParameters?.jobId || JSON.parse(event.body || '{}').jobId;
+    if (!jobId && imageUrl) {
+      const match = imageUrl.match(/google-([a-f0-9-]+)\.jpg/);
+      if (match) {
+        jobId = match[1].split('-').slice(0, -1).join('-'); // Remove last part (random hex)
+        const fullMatch = imageUrl.match(/(google-[a-f0-9-]+)\.jpg/);
+        if (fullMatch) {
+          jobId = fullMatch[1];
+        }
       }
-    });
+    }
 
-    const exists = response.ok || response.status === 200;
+    // Try to check job info file first (more reliable)
+    let exists = false;
+    let httpStatus = 0;
+    
+    if (jobId) {
+      const bucketName = process.env.GCS_BUCKET_NAME || 'raincrest-art-images';
+      const jobInfoUrl = `https://storage.googleapis.com/${bucketName}/jobs/${jobId}.json`;
+      
+      try {
+        const jobInfoResponse = await fetch(jobInfoUrl, {
+          method: 'GET',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        
+        if (jobInfoResponse.ok) {
+          const jobInfo = await jobInfoResponse.json();
+          if (jobInfo.status === 'completed' || jobInfo.status === 'ready') {
+            exists = true;
+            httpStatus = 200;
+            console.log('Job info indicates image is ready:', jobInfo.status);
+          }
+        }
+      } catch (jobError) {
+        console.log('Job info check failed (non-critical):', jobError.message);
+      }
+    }
 
-    console.log('GCS image check result:', {
-      exists: exists,
-      status: response.status,
-      imageUrl: imageUrl.substring(0, 80) + '...'
-    });
+    // If job info doesn't exist or status is not ready, try direct image check
+    if (!exists) {
+      try {
+        // Use GET request with Range header (more reliable than HEAD for GCS)
+        const response = await fetch(imageUrl, {
+          method: 'GET',
+          headers: {
+            'Range': 'bytes=0-0', // Request only first byte (efficient!)
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        httpStatus = response.status;
+        exists = response.ok || response.status === 200 || response.status === 206; // 206 = Partial Content
+
+        console.log('GCS image check result:', {
+          exists: exists,
+          status: response.status,
+          imageUrl: imageUrl.substring(0, 80) + '...'
+        });
+      } catch (fetchError) {
+        console.error('Error checking image:', fetchError.message);
+        exists = false;
+        httpStatus = 0;
+      }
+    }
 
     return {
       statusCode: 200,
@@ -88,7 +139,7 @@ exports.handler = async (event, context) => {
         exists: exists,
         imageUrl: imageUrl,
         status: exists ? 'ready' : 'not-ready',
-        httpStatus: response.status
+        httpStatus: httpStatus
       })
     };
 

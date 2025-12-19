@@ -363,19 +363,36 @@
                 if (status === 'starting') {
                     updateStep(1);
                     updateProgress(20);
-                    updateStatusText('Starting generation...');
+                    updateStatusText('Initializing AI model...');
                 } else if (status === 'processing') {
                     updateStep(2);
-                    updateProgress(50);
-                    updateStatusText('AI is working on your image...');
+                    // Simulate progressive loading for better UX
+                    const elapsed = Date.now() - startTime;
+                    const progressPercent = Math.min(50 + (elapsed / 1000) * 2, 85); // 2% per second, max 85%
+                    updateProgress(progressPercent);
+                    
+                    // Dynamic status messages
+                    if (elapsed < 10000) {
+                        updateStatusText('Analyzing your photo...');
+                    } else if (elapsed < 20000) {
+                        updateStatusText('Applying artistic transformation...');
+                    } else if (elapsed < 30000) {
+                        updateStatusText('Adding magical details...');
+                    } else {
+                        updateStatusText('Perfecting the final touches...');
+                    }
                 } else if (status === 'succeeded' && result.imageUrl) {
                     updateStep(3);
-                    updateProgress(90);
-                    updateStatusText('Almost done...');
+                    updateProgress(95);
+                    updateStatusText('Finalizing your masterpiece...');
                     
-                    // Wait a moment for dramatic effect
+                    // Smooth completion animation
                     setTimeout(() => {
-                        showResult(result.imageUrl);
+                        updateProgress(100);
+                        updateStatusText('Complete! 🎉');
+                        setTimeout(() => {
+                            showResult(result.imageUrl);
+                        }, 800);
                     }, 500);
                     return; // Stop polling
                 } else if (status === 'failed') {
@@ -401,7 +418,10 @@
 
                 // Continue polling if not done
                 if (status !== 'succeeded' && status !== 'failed') {
-                    setTimeout(checkStatus, 2000); // Poll every 2 seconds
+                    // Adaptive polling: faster at start, slower later to reduce server load
+                    const elapsed = Date.now() - startTime;
+                    const pollInterval = elapsed < 30000 ? 2000 : 3000; // 2s for first 30s, then 3s
+                    setTimeout(checkStatus, pollInterval);
                 }
 
             } catch (error) {

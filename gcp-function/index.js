@@ -257,7 +257,11 @@ functions.http('generateImageWorker', async (req, res) => {
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 8192,
-        responseModalities: ["IMAGE"]  // Image generation only
+        responseModalities: ["IMAGE"],  // Image generation only
+        imageConfig: {
+          aspectRatio: aspect_ratio || "1:1",  // Default 1:1, can be "16:9", "9:16", "1:1", etc.
+          outputFormat: output_format || "jpg"  // Output format: jpg or png
+        }
       }
     };
     

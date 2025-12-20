@@ -620,9 +620,9 @@
         </div>
 
         <!-- Email Section -->
-        <div class="email-section" style="margin: 30px 0; padding: 25px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px);">
-            <h3 style="color: white; margin-bottom: 15px; display: flex; align-items: center;">
-                <span style="margin-right: 10px;">📧</span>
+        <div class="email-section" style="margin: 40px 0; padding: 35px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%); border-radius: 20px; backdrop-filter: blur(15px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.2);">
+            <h3 style="color: #ffffff; margin-bottom: 20px; display: flex; align-items: center; font-size: 22px; font-weight: 600; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">
+                <span style="margin-right: 12px; font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));">📧</span>
                 Email for Delivery
             </h3>
             <div class="input-group">
@@ -630,40 +630,44 @@
                        id="userEmail" 
                        placeholder="your@email.com" 
                        required
-                       style="width: 100%; padding: 15px 20px; border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 10px; background: rgba(255, 255, 255, 0.3); color: #000000 !important; font-size: 16px; backdrop-filter: blur(5px); box-sizing: border-box; outline: none; transition: all 0.3s ease; font-weight: 500;">
+                       style="width: 100%; padding: 18px 24px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 12px; background: rgba(255, 255, 255, 0.95); color: #1a1a1a !important; font-size: 16px; box-sizing: border-box; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
                 <style>
                     #userEmail {
-                        color: #000000 !important;
-                        -webkit-text-fill-color: #000000 !important;
-                        background: rgba(255, 255, 255, 0.3) !important;
+                        color: #1a1a1a !important;
+                        -webkit-text-fill-color: #1a1a1a !important;
+                        background: rgba(255, 255, 255, 0.95) !important;
                     }
                     #userEmail::placeholder {
-                        color: rgba(0, 0, 0, 0.6) !important;
-                        -webkit-text-fill-color: rgba(0, 0, 0, 0.6) !important;
+                        color: rgba(0, 0, 0, 0.5) !important;
+                        -webkit-text-fill-color: rgba(0, 0, 0, 0.5) !important;
                     }
                     #userEmail:focus {
-                        background: rgba(255, 255, 255, 0.5) !important;
-                        border-color: rgba(255, 255, 255, 0.8) !important;
-                        color: #000000 !important;
-                        -webkit-text-fill-color: #000000 !important;
+                        background: rgba(255, 255, 255, 1) !important;
+                        border-color: rgba(102, 126, 234, 0.8) !important;
+                        color: #1a1a1a !important;
+                        -webkit-text-fill-color: #1a1a1a !important;
+                        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3), 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+                        transform: translateY(-1px);
                     }
                     #userEmail:hover {
-                        background: rgba(255, 255, 255, 0.4) !important;
-                        color: #000000 !important;
-                        -webkit-text-fill-color: #000000 !important;
+                        background: rgba(255, 255, 255, 1) !important;
+                        border-color: rgba(255, 255, 255, 0.6) !important;
+                        color: #1a1a1a !important;
+                        -webkit-text-fill-color: #1a1a1a !important;
+                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
                     }
                     #userEmail:-webkit-autofill,
                     #userEmail:-webkit-autofill:hover,
                     #userEmail:-webkit-autofill:focus {
-                        -webkit-text-fill-color: #000000 !important;
-                        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.3) inset !important;
+                        -webkit-text-fill-color: #1a1a1a !important;
+                        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.95) inset !important;
                         transition: background-color 5000s ease-in-out 0s;
                     }
                 </style>
-                <small style="color: rgba(255, 255, 255, 0.7); font-size: 14px; display: block; margin-top: 8px;">
-                    We'll send your generated image directly to this email address
+                <small style="color: rgba(255, 255, 255, 0.95); font-size: 14px; display: block; margin-top: 12px; font-weight: 400; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); line-height: 1.5;">
+                    ✨ We'll send your generated image directly to this email address
                 </small>
-                <div id="emailError" style="color: #ff6b6b; font-size: 14px; margin-top: 5px; display: none; font-weight: 500;"></div>
+                <div id="emailError" style="color: #ff6b6b; font-size: 14px; margin-top: 10px; display: none; font-weight: 600; background: rgba(255, 107, 107, 0.1); padding: 8px 12px; border-radius: 8px; border-left: 3px solid #ff6b6b;"></div>
             </div>
         </div>
 

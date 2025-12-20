@@ -413,13 +413,50 @@
                 } else if (status === 'succeeded' && result.imageUrl) {
                     updateStep(3);
                     updateProgress(90);
-                    updateStatusText('Almost done...');
+                    updateStatusText('Uploading to Bunny CDN...');
                     
-                    // Wait a moment for dramatic effect
-                    setTimeout(() => {
-                        showResult(result.imageUrl);
-                    }, 500);
-                    return; // Stop polling
+                    // Upload to Bunny CDN first (for permanent link)
+                    try {
+                        console.log('Uploading Replicate image to Bunny CDN...');
+                        const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                imageUrl: result.imageUrl, // Replicate URL
+                                templateId: templateId || 'template-01',
+                                userId: userId || `user-${Date.now()}`
+                            })
+                        });
+
+                        if (!uploadResponse.ok) {
+                            const errorText = await uploadResponse.text();
+                            console.warn('Bunny upload failed, using Replicate URL:', errorText);
+                            // Fallback to Replicate URL if Bunny upload fails
+                            setTimeout(() => {
+                                showResult(result.imageUrl);
+                            }, 500);
+                            return;
+                        }
+
+                        const uploadResult = await uploadResponse.json();
+                        const bunnyCdnUrl = uploadResult.cdnUrl;
+                        console.log('✅ Uploaded to Bunny CDN:', bunnyCdnUrl);
+                        
+                        // Wait a moment for dramatic effect
+                        setTimeout(() => {
+                            showResult(bunnyCdnUrl); // Use Bunny CDN URL instead
+                        }, 500);
+                        return; // Stop polling
+                    } catch (uploadError) {
+                        console.warn('Bunny upload error, using Replicate URL:', uploadError);
+                        // Fallback to Replicate URL if Bunny upload fails
+                        setTimeout(() => {
+                            showResult(result.imageUrl);
+                        }, 500);
+                        return;
+                    }
                 } else if (status === 'failed') {
                     // Better error message for Replicate API errors
                     const errorMsg = result.error || 'Generation failed';

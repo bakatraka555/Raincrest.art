@@ -1954,8 +1954,44 @@ ${logsText}
                     statusTextEl.textContent = 'Your transformation is ready!';
                 }
                 
-                const finalImageUrl = data.imageUrl;
-                console.log('✅ Final image URL:', finalImageUrl);
+                let finalImageUrl = data.imageUrl;
+                console.log('✅ Initial image URL:', finalImageUrl);
+                
+                // Check if URL is from Replicate (temporary) or GCS (temporary) - upload to Bunny for permanent link
+                const isTemporaryUrl = finalImageUrl.includes('replicate.delivery') || 
+                                      finalImageUrl.includes('storage.googleapis.com');
+                
+                if (isTemporaryUrl) {
+                    console.log('⚠️ Temporary URL detected, uploading to Bunny CDN for permanent link...');
+                    updateLoadingStep(6, 'Uploading to Bunny CDN...');
+                    updateProgress(95);
+                    
+                    try {
+                        const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                imageUrl: finalImageUrl,
+                                templateId: currentTemplate.id,
+                                userId: userId
+                            })
+                        });
+
+                        if (uploadResponse.ok) {
+                            const uploadResult = await uploadResponse.json();
+                            finalImageUrl = uploadResult.cdnUrl;
+                            console.log('✅ Uploaded to Bunny CDN:', finalImageUrl);
+                        } else {
+                            console.warn('⚠️ Bunny upload failed, using original URL');
+                        }
+                    } catch (uploadError) {
+                        console.warn('⚠️ Bunny upload error, using original URL:', uploadError);
+                    }
+                } else {
+                    console.log('✅ URL is already permanent (Bunny CDN)');
+                }
                 
                 // Show result on the same page (NO REDIRECT!) with email parameters
                 showResults(finalImageUrl, null, userEmail, currentTemplate.id, userId);

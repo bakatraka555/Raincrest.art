@@ -49,13 +49,14 @@ exports.handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body || '{}');
-        const { imageUrl, image2Url, templateId, isCouple } = body;
+        const { imageUrl, image2Url, templateId, isCouple, gender } = body;
 
         console.log('Request:', {
             hasImageUrl: !!imageUrl,
             hasImage2Url: !!image2Url,
             templateId,
-            isCouple
+            isCouple,
+            gender
         });
 
         // Validation
@@ -96,10 +97,12 @@ exports.handler = async (event, context) => {
             };
         }
 
-        // Generate prompt
+        // Generate prompt with gender parameter
         const isCoupleBool = !!isCouple;
-        const prompt = getPrompt(templateId, isCoupleBool);
+        const prompt = getPrompt(templateId, isCoupleBool, gender);
         console.log('Prompt length:', prompt.length);
+        console.log('Gender:', gender);
+        console.log('Prompt preview (first 300 chars):', prompt.substring(0, 300));
 
         // Fetch image(s) and convert to base64
         console.log('Fetching image from URL:', imageUrl.substring(0, 80) + '...');

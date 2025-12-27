@@ -216,9 +216,10 @@ exports.handler = async (event, context) => {
 
             if (candidate.content && candidate.content.parts) {
                 for (const part of candidate.content.parts) {
-                    if (part.inline_data) {
-                        generatedImageBase64 = part.inline_data.data;
-                        generatedMimeType = part.inline_data.mime_type || 'image/jpeg';
+                    // API returns camelCase: inlineData (not snake_case: inline_data)
+                    if (part.inlineData) {
+                        generatedImageBase64 = part.inlineData.data;
+                        generatedMimeType = part.inlineData.mimeType || 'image/jpeg';
                         console.log('Found generated image in response');
                         break;
                     }

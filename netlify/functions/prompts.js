@@ -110,20 +110,48 @@ const templateScenes = {
     location: 'Inside the card (the background) is a sprawling, detailed depiction of the walled city of Dubrovnik doubling as King\'s Landing, with the Red Keep looming over Blackwater Bay, filled with medieval ships. The title "CITY OF KINGS" and the character designation "Westeros Mercenary" (accompanied by a stylized iron throne or dragon icon) remain visible on remaining cracked, parchment-like parts of the card frame.',
     style: 'Ultra-photorealistic, gritty cinematic dark fantasy, Game of Thrones aesthetic, dramatic moody golden-hour sunset light filtering through heavy clouds, emphasizing textures of stone, steel, and the perilous drop below',
     specialInstructions: 'The person/people transformed into hardened Westerosi adventurer/sellsword bursting through ancient trading card frame. Dynamic action pose mid-leap from battlement. Trading card aesthetic with shattered stone border, magical fissures, and debris. Dubrovnik as King\'s Landing in background. Dramatic golden-hour lighting with heavy clouds. Ultra-photorealistic detail on armor, weapons, and stone textures.'
+  },
+
+  // ============================================================================
+  // RAINCREST ART - NEW TEMPLATES
+  // ============================================================================
+
+  'template-15': {
+    name: 'Raincrest Trading Card (King & Queen)',
+    // Scene will be dynamically built based on isCouple and gender
+    scene: 'Ultra-photorealistic, cinematic-style illustration depicting medieval royalty dynamically bursting through the frame of a "Raincrest" trading card. Standing confidently on Dubrovnik\'s ancient City Walls, raising an ornate sword high, wearing regal medieval armor with golden details and a magnificent crown.',
+    location: 'The card\'s weathered stone-carved border is partially shattered, creating dimensional cracks with energy and light, scattering dust and ancient stone fragments. Inside the card (the background) is a depiction of Dubrovnik\'s iconic Stradun street and a massive dragon breathing fire in the stormy sky above. The title "Raincrest" and subtitle "Claim Your Throne" remain visible on the remaining cracked parts of the card.',
+    style: 'Epic, Game of Thrones-style lighting that emphasizes royal power and the legendary atmosphere of King\'s Landing in Dubrovnik. Ultra detailed, photorealistic, 8k resolution, horizontal format, 16:9 aspect ratio',
+    specialInstructions: 'Upper body shot from head to chest, facing camera directly, front view. Sharp focus on face, detailed facial features, professional portrait photography, 85mm portrait lens, shallow depth of field, face in sharp focus, background slightly blurred.',
+    // Special flags for gender-aware prompts
+    hasGenderVariants: true,
+    kingPrompt: 'The KING wears magnificent golden crown with jewels, regal medieval armor with red velvet cape, golden embroidery. Powerful stance, sword raised high. Majestic and commanding presence.',
+    queenPrompt: 'The QUEEN wears elegant silver tiara with sapphires, flowing royal gown in deep crimson with golden thread embroidery. Graceful yet powerful pose. Regal beauty and authority.'
+  },
+
+  'template-16': {
+    name: 'Raincrest Dragon Rider',
+    scene: 'Ultra-photorealistic fantasy portrait of a dragon rider soaring above Dubrovnik on the back of a massive dragon. Epic clouds, fire elements, dramatic sky.',
+    location: 'High above the ancient walled city of Dubrovnik, Adriatic Sea visible below. Massive dragon with detailed scales, wings spread wide. Fire and smoke elements.',
+    style: 'Epic fantasy, cinematic, dramatic lighting with sunset/sunrise colors. Ultra detailed dragon scales and rider armor. 8k resolution.',
+    specialInstructions: 'Full body shot on dragon back. Rider in fantasy armor/robes suitable for dragon riding. Confident, powerful pose. Wind-swept hair and clothes.',
+    hasGenderVariants: true,
+    kingPrompt: 'Dragon KING in black and red armor with dragon motifs, riding a massive fire-breathing dragon. Commanding presence, warrior stance.',
+    queenPrompt: 'Dragon QUEEN in flowing silver and blue robes with dragon scale details, riding a majestic dragon. Ethereal beauty combined with fierce power.'
   }
 };
 
 // ============================================================================
-// PROMPT GENERATOR FUNCTION
+// PROMPT GENERATOR FUNCTION (BASE - for templates WITHOUT gender variants)
 // Generira prompt za bilo koji template, s podrškom za couple ili separate images
 // ============================================================================
 
-function generatePrompt(templateId, isCouple) {
+function generatePromptBase(templateId, isCouple) {
   const template = templateScenes[templateId];
-  
+
   if (!template) {
     console.warn(`Template ${templateId} not found, using template-01 as fallback`);
-    return generatePrompt('template-01', isCouple);
+    return generatePromptBase('template-01', isCouple);
   }
 
   // Bazni prompt header - safely handle undefined name
@@ -131,7 +159,7 @@ function generatePrompt(templateId, isCouple) {
 
   // Input image processing section - razlikuje couple vs separate
   let inputProcessing;
-  
+
   if (isCouple) {
     inputProcessing = `CRITICAL: INPUT IMAGE PROCESSING
 - image_input array contains: [COUPLE_IMAGE, LOGO_IMAGE]
@@ -177,15 +205,15 @@ STYLE: ${template.style || 'Cinematic, professional photography'}`;
   // Check if template has specific eye contact instructions (e.g., "looking into each others eyes")
   // Safely check specialInstructions - it might be undefined
   const specialInstructions = template.specialInstructions || '';
-  const hasSpecificEyeContact = specialInstructions.toLowerCase().includes('looking into') || 
-                                 specialInstructions.toLowerCase().includes('looking at each other') ||
-                                 specialInstructions.toLowerCase().includes('gaze between');
-  
+  const hasSpecificEyeContact = specialInstructions.toLowerCase().includes('looking into') ||
+    specialInstructions.toLowerCase().includes('looking at each other') ||
+    specialInstructions.toLowerCase().includes('gaze between');
+
   // Eye contact instruction - default to camera unless template specifies otherwise
-  const eyeContactInstruction = hasSpecificEyeContact 
+  const eyeContactInstruction = hasSpecificEyeContact
     ? '' // Template has specific eye contact instruction, don't override
     : '- EYE CONTACT: Both people looking directly at the camera with engaging eye contact, professional portrait style, confident and warm expressions';
-  
+
   const composition = `COMPOSITION:
 - Both people should be clearly visible in the scene
 ${specialInstructions ? `- ${specialInstructions}` : ''}
@@ -213,11 +241,148 @@ ${composition}`;
 
 // ============================================================================
 // MAIN EXPORT FUNCTION
+// gender parameter: 'king', 'queen', 'couple', or null (auto-detect based on isCouple)
 // ============================================================================
 
-function getPrompt(templateId, isCouple) {
-  return generatePrompt(templateId, isCouple);
+function getPrompt(templateId, isCouple, gender = null) {
+  return generatePrompt(templateId, isCouple, gender);
+}
+
+// Extended generatePrompt to handle gender variants
+function generatePromptExtended(templateId, isCouple, gender) {
+  const template = templateScenes[templateId];
+
+  if (!template) {
+    console.warn(`Template ${templateId} not found, using template-01 as fallback`);
+    return generatePrompt('template-01', isCouple, gender);
+  }
+
+  // Bazni prompt header
+  const baseHeader = `Ultra-photorealistic, highly cinematic ${template.name || 'romantic couple'} photograph.`;
+
+  // Gender-specific scene enhancement
+  let genderEnhancement = '';
+  if (template.hasGenderVariants) {
+    if (gender === 'king' || (!isCouple && gender !== 'queen')) {
+      // Single male photo or explicitly king
+      genderEnhancement = `\n\nGENDER-SPECIFIC APPEARANCE:\n${template.kingPrompt || 'Male character in powerful, commanding pose.'}`;
+    } else if (gender === 'queen') {
+      // Single female photo or explicitly queen
+      genderEnhancement = `\n\nGENDER-SPECIFIC APPEARANCE:\n${template.queenPrompt || 'Female character in elegant, regal pose.'}`;
+    } else if (isCouple) {
+      // Couple - include both
+      genderEnhancement = `\n\nGENDER-SPECIFIC APPEARANCE:
+FOR THE MALE PERSON (KING): ${template.kingPrompt || 'Powerful, commanding royal presence.'}
+FOR THE FEMALE PERSON (QUEEN): ${template.queenPrompt || 'Elegant, regal royal beauty.'}`;
+    }
+  }
+
+  // Input image processing section
+  let inputProcessing;
+
+  if (isCouple) {
+    inputProcessing = `CRITICAL: INPUT IMAGE PROCESSING
+- image_input array contains: [COUPLE_IMAGE, LOGO_IMAGE]
+- COUPLE IMAGE: One photo containing BOTH the MALE and FEMALE person together
+- LOGO IMAGE: Raincrest Art logo (transparent PNG)
+- EXTRACT and IDENTIFY both faces from the single couple image
+- Use the couple image to recognize both people's facial features`;
+  } else if (gender === 'queen') {
+    inputProcessing = `CRITICAL: INPUT IMAGE PROCESSING
+- image_input array contains: [FEMALE_FACE_IMAGE, LOGO_IMAGE]
+- IMAGE 1: FEMALE FACE (reference model - use this exact face for the QUEEN)
+- LOGO IMAGE: Raincrest Art logo (transparent PNG)
+- This is a SINGLE PERSON portrait - transform into a QUEEN`;
+  } else {
+    // Default to king for single male photo
+    inputProcessing = `CRITICAL: INPUT IMAGE PROCESSING
+- image_input array contains: [MALE_FACE_IMAGE, LOGO_IMAGE]
+- IMAGE 1: MALE FACE (reference model - use this exact face for the KING)
+- LOGO IMAGE: Raincrest Art logo (transparent PNG)
+- This is a SINGLE PERSON portrait - transform into a KING`;
+  }
+
+  // Face recognition section
+  let faceRecognition;
+  if (isCouple) {
+    faceRecognition = `FACE RECOGNITION & CONSISTENCY:
+- LOAD and ANALYZE the input face image(s)
+- IDENTIFY the MALE person (KING) - recognize ALL facial features
+- IDENTIFY the FEMALE person (QUEEN) - recognize ALL facial features
+- MAINTAIN MAXIMUM RECOGNIZABILITY for both faces
+- PRESERVE all distinctive facial features from reference images
+- Both people must be CLEARLY RECOGNIZABLE as the people from the input image
+- EXTRACT both faces from the single couple image and use them as reference models`;
+  } else {
+    const roleType = gender === 'queen' ? 'QUEEN' : 'KING';
+    faceRecognition = `FACE RECOGNITION & CONSISTENCY:
+- LOAD and ANALYZE the input face image
+- Transform this person into a ${roleType}
+- MAINTAIN MAXIMUM RECOGNIZABILITY - they must be clearly recognizable
+- PRESERVE all distinctive facial features: bone structure, eye shape, nose shape, mouth shape, jawline
+- DO NOT alter core facial features - only add royal attire/setting
+- The ${roleType} must be 100% RECOGNIZABLE as the person from the input image`;
+  }
+
+  // Logo integration section
+  const logoIntegration = `LOGO INTEGRATION:
+- Use the LOGO IMAGE from image_input array
+- make it transparent
+- PLACE logo in BOTTOM RIGHT CORNER of generated image
+- SIZE: 8% of image width
+- OPACITY: transparent
+- Logo should blend naturally into the scene`;
+
+  // Scene specific section
+  const sceneSection = `SCENE: ${template.scene || 'Medieval royalty scene'}
+LOCATION: ${template.location || 'Dubrovnik ancient walled city'}
+STYLE: ${template.style || 'Cinematic, epic fantasy, professional photography'}`;
+
+  // Composition section
+  const specialInstructions = template.specialInstructions || '';
+
+  let composition;
+  if (isCouple) {
+    composition = `COMPOSITION:
+- Both KING and QUEEN should be clearly visible in the scene
+${specialInstructions ? `- ${specialInstructions}` : ''}
+- Romantic and powerful royal connection between the couple
+- Professional photography quality, 8k resolution
+- Balanced composition with both faces clearly visible`;
+  } else {
+    composition = `COMPOSITION:
+- Single person portrait in royal medieval style
+${specialInstructions ? `- ${specialInstructions}` : ''}
+- Professional photography quality, 8k resolution
+- Sharp focus on face, dramatic royal atmosphere`;
+  }
+
+  // Kombinira sve sekcije
+  return `${baseHeader}
+${genderEnhancement}
+
+${inputProcessing}
+
+${faceRecognition}
+
+${logoIntegration}
+
+${sceneSection}
+
+${composition}`;
+}
+
+// Main generatePrompt function - routes to appropriate implementation
+function generatePrompt(templateId, isCouple, gender = null) {
+  // For templates with gender variants, use extended version
+  const template = templateScenes[templateId];
+  if (template && template.hasGenderVariants) {
+    return generatePromptExtended(templateId, isCouple, gender);
+  }
+  // For regular templates (no gender variants), use base implementation
+  return generatePromptBase(templateId, isCouple);
 }
 
 // Export za Netlify Functions
 module.exports = { getPrompt, templateScenes };
+

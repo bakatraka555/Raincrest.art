@@ -138,6 +138,17 @@ const templateScenes = {
     hasGenderVariants: true,
     kingPrompt: 'Dragon KING in black and red armor with dragon motifs, riding a massive fire-breathing dragon. Commanding presence, warrior stance.',
     queenPrompt: 'Dragon QUEEN in flowing silver and blue robes with dragon scale details, riding a majestic dragon. Ethereal beauty combined with fierce power.'
+  },
+
+  'template-17': {
+    name: 'Dragon Rider Caricature (GoT Dubrovnik)',
+    scene: '3D caricature illustration of a romantic couple riding together on a massive flying dragon, Game of Thrones dark fantasy style. Exaggerated BIG HEADS with small bodies (bobblehead proportions). Fun, playful caricature art style but with epic fantasy theme. Both waving at camera with excited expressions.',
+    location: 'Bird\'s eye view of Dubrovnik old town from above. RECOGNIZABLE: City walls, terracotta rooftops, Old Port, Lokrum island, Adriatic Sea. DARK TRANSFORMATION: Stormy dramatic sky with dark swirling clouds, twilight/dusk lighting, moody ominous atmosphere, medieval fantasy King\'s Landing vibes, mist around the city walls.',
+    style: '3D caricature with fantasy epic quality. Dynamic flying pose with sense of motion and adventure. Dramatic camera angle from slightly below. Dark dramatic sky (deep blues, purples, greys). Dragon in dark tones with fiery orange accents. Couple in rich reds and golds. Dubrovnik in warm terracotta against cool shadows.',
+    specialInstructions: 'CARICATURE BOBBLEHEAD STYLE: Big heads, small bodies, fun expressions. THE DRAGON: Massive, detailed dragon with dark black/grey scales, glowing orange/red eyes, wings spread wide in flight, fire-breathing or smoke trailing, detailed scales and spines. Both people sitting together on dragon back, waving happily.',
+    hasGenderVariants: true,
+    kingPrompt: 'KING caricature: Medieval armor, red cape flowing in wind, golden crown, excited waving expression, adventurous smile.',
+    queenPrompt: 'QUEEN caricature: Royal gown in deep crimson, silver tiara, hair flowing dramatically in wind, waving happily, joyful expression.'
   }
 };
 

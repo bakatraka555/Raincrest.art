@@ -152,16 +152,14 @@ exports.handler = async (event, context) => {
         // Gemini API request
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
+        // Request body for image generation
+        // Note: For Gemini 3 Pro Image, we just need contents with the prompt and image
         const requestBody = {
             contents: [
                 {
                     parts: parts
                 }
-            ],
-            generationConfig: {
-                responseModalities: ["image", "text"],
-                responseMimeType: "image/jpeg"
-            }
+            ]
         };
 
         console.log('Calling Gemini API...');

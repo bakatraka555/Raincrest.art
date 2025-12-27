@@ -156,7 +156,7 @@ exports.handler = async (event, context) => {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
         // Request body for image generation
-        // Standard format for all templates: 4:3, 2K (2048x1536), JPEG
+        // Standard format for all templates: 4:3 aspect ratio, JPEG
         const requestBody = {
             contents: [
                 {
@@ -165,12 +165,11 @@ exports.handler = async (event, context) => {
             ],
             generationConfig: {
                 responseModalities: ["image"],
-                responseMimeType: "image/jpeg",
-                // 4:3 aspect ratio at 2K resolution
-                imageGenerationConfig: {
-                    aspectRatio: "4:3",
-                    outputImageSize: "2048x1536"
-                }
+                responseMimeType: "image/jpeg"
+            },
+            // Image generation configuration
+            imageGenerationConfig: {
+                aspectRatio: "4:3"
             }
         };
 

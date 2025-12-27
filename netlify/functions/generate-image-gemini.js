@@ -156,7 +156,7 @@ exports.handler = async (event, context) => {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
         // Request body for image generation
-        // Only responseModalities: ["image"] is needed
+        // Using official Gemini API format with imageConfig
         const requestBody = {
             contents: [
                 {
@@ -164,7 +164,11 @@ exports.handler = async (event, context) => {
                 }
             ],
             generationConfig: {
-                responseModalities: ["image"]
+                responseModalities: ["IMAGE"],
+                imageConfig: {
+                    aspectRatio: "4:3",
+                    imageSize: "2K"
+                }
             }
         };
 

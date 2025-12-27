@@ -25,7 +25,7 @@ const { getPrompt, templateScenes } = require('./prompts');
 exports.handler = async (event, context) => {
   console.log('=== verify-and-start function called ===');
   console.log('HTTP Method:', event.httpMethod);
-  
+
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Missing required parameters',
           required: ['imageUrl', 'templateId']
         })
@@ -85,7 +85,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid imageUrl',
           details: 'imageUrl must be a valid HTTP(S) URL'
         })
@@ -96,7 +96,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Invalid image2Url',
           details: 'image2Url must be a valid HTTP(S) URL'
         })
@@ -108,7 +108,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Template not found',
           availableTemplates: Object.keys(templateScenes)
         })
@@ -130,7 +130,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Failed to generate prompt',
           details: 'Prompt is empty or too short',
           promptLength: finalPrompt ? finalPrompt.length : 0
@@ -148,8 +148,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Model: google/nano-banana (može se promijeniti na nano-banana-pro kasnije)
-    const REPLICATE_MODEL = 'google/nano-banana';
+    // Model: google/nano-banana-pro (PRO verzija za bolju kvalitetu)
+    const REPLICATE_MODEL = 'google/nano-banana-pro';
     console.log('Using Replicate model:', REPLICATE_MODEL);
 
     // Pripremi image_input array (ISTA LOGIKA KAO U generate-image.js)

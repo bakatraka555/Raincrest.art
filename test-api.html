@@ -448,8 +448,10 @@
                 }
 
                 // Show result
+                document.getElementById('resultImg').style.display = 'block'; // Reset display after error
                 document.getElementById('resultImg').src = result.imageUrl;
                 document.getElementById('resultInfo').textContent = `Source: ${selectedApi} | Time: ${((Date.now() - startTime) / 1000).toFixed(1)}s`;
+                document.getElementById('result').classList.remove('error'); // Remove error class
                 document.getElementById('result').classList.add('show');
 
             } catch (error) {

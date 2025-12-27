@@ -240,8 +240,24 @@
         <div class="form-group">
             <label>🎭 Template</label>
             <select id="templateSelect">
-                <option value="template-02">Medieval Ruler (Dubrovnik)</option>
-                <option value="template-01">Vintage Romance</option>
+                <optgroup label="🏰 Raincrest Art (NEW)">
+                    <option value="template-15">Raincrest Trading Card (King & Queen)</option>
+                    <option value="template-16">Dragon Rider</option>
+                </optgroup>
+                <optgroup label="💕 Love Stories Museum">
+                    <option value="template-02">Medieval Ruler (Dubrovnik)</option>
+                    <option value="template-01">Vintage Romance</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Gender Selection (for Raincrest templates) -->
+        <div class="form-group" id="genderGroup">
+            <label>👑 Character Type</label>
+            <select id="genderSelect">
+                <option value="couple">Couple (King & Queen)</option>
+                <option value="king">Solo: King (Male)</option>
+                <option value="queen">Solo: Queen (Female)</option>
             </select>
         </div>
 
@@ -299,6 +315,8 @@
             if (!selectedFile) return;
 
             const templateId = document.getElementById('templateSelect').value;
+            const gender = document.getElementById('genderSelect').value;
+            const isCouple = gender === 'couple';
 
             document.getElementById('generateBtn').disabled = true;
             document.getElementById('loading').classList.add('show');
@@ -359,7 +377,8 @@
                         body: JSON.stringify({
                             imageUrl,
                             templateId,
-                            isCouple: true
+                            isCouple,
+                            gender
                         })
                     });
 
@@ -382,7 +401,8 @@
                         body: JSON.stringify({
                             imageUrl,
                             templateId,
-                            isCouple: true
+                            isCouple,
+                            gender
                         })
                     });
 

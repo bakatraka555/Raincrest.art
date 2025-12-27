@@ -166,7 +166,7 @@ exports.handler = async (event, context) => {
             generationConfig: {
                 responseModalities: ["IMAGE"],
                 imageConfig: {
-                    aspectRatio: "4:3",
+                    aspectRatio: "4:5",
                     imageSize: "2K"
                 }
             }

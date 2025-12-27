@@ -156,13 +156,22 @@ exports.handler = async (event, context) => {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
         // Request body for image generation
-        // Note: For Gemini 3 Pro Image, we just need contents with the prompt and image
+        // Standard format for all templates: 4:3, 2K (2048x1536), JPEG
         const requestBody = {
             contents: [
                 {
                     parts: parts
                 }
-            ]
+            ],
+            generationConfig: {
+                responseModalities: ["image"],
+                responseMimeType: "image/jpeg",
+                // 4:3 aspect ratio at 2K resolution
+                imageGenerationConfig: {
+                    aspectRatio: "4:3",
+                    outputImageSize: "2048x1536"
+                }
+            }
         };
 
         console.log('Calling Gemini API...');

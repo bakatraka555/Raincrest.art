@@ -157,8 +157,8 @@ exports.handler = async (event, context) => {
     if (!isCoupleBool && image2Url) {
       imageInput.push(image2Url);
     }
-    // Logo URL (ISTI KAO U generate-image.js)
-    const logoUrl = 'https://examples.b-cdn.net/logo.jpg';
+    // Logo URL - Raincrest Art watermark
+    const logoUrl = 'https://raincrest-cdn.b-cdn.net/raincrest_logo.png';
     imageInput.push(logoUrl); // Logo je uvijek zadnji
 
     console.log('=== Image Input Array ===');

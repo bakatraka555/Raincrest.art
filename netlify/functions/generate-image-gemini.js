@@ -133,7 +133,7 @@ exports.handler = async (event, context) => {
             }
         ];
 
-        // Add second image if provided
+        // Add second image if provided (for separate King/Queen photos)
         if (!isCoupleBool && image2Url) {
             console.log('Fetching second image...');
             const image2Response = await fetch(image2Url);
@@ -150,6 +150,30 @@ exports.handler = async (event, context) => {
                 });
                 console.log('Second image added');
             }
+        }
+
+        // Add Raincrest logo watermark
+        const LOGO_URL = 'https://raincrest-cdn.b-cdn.net/raincrest_logo.png';
+        console.log('Fetching logo from:', LOGO_URL);
+        try {
+            const logoResponse = await fetch(LOGO_URL);
+            if (logoResponse.ok) {
+                const logoBuffer = await logoResponse.buffer();
+                const logoBase64 = logoBuffer.toString('base64');
+                const logoMimeType = logoResponse.headers.get('content-type') || 'image/png';
+
+                parts.push({
+                    inline_data: {
+                        mime_type: logoMimeType,
+                        data: logoBase64
+                    }
+                });
+                console.log('Logo added:', { size: logoBuffer.length, mimeType: logoMimeType });
+            } else {
+                console.warn('Failed to fetch logo:', logoResponse.status);
+            }
+        } catch (logoError) {
+            console.warn('Error fetching logo:', logoError.message);
         }
 
         // Gemini API request

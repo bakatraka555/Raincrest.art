@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hr">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raincrest Art - AI Photo Booth</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Raincrest Art - Choose Your Royal Transformation</title>
+    <meta name="description"
+        content="Transform your photo into epic medieval royalty. Choose from Trading Card, Dragon Rider, or Caricature styles.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #141414;
+            --gold: #c9a227;
+            --gold-light: #e8c547;
+            --gold-dark: #8b7019;
+            --text-light: #f5f5f5;
+            --text-muted: #888;
+            --border-gold: rgba(201, 162, 39, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,137 +33,356 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
             min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(10, 10, 10, 0.95) 100%);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-gold);
+        }
+
+        .logo {
+            height: 50px;
+            width: auto;
+        }
+
+        /* Hero Text */
+        .hero {
+            text-align: center;
+            padding: 30px 20px 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Template Cards Container */
+        .templates {
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Template Card */
+        .template-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-gold);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 30px rgba(201, 162, 39, 0.2);
+        }
+
+        /* Main Preview Image */
+        .preview-main {
+            width: 100%;
+            aspect-ratio: 4/5;
+            object-fit: cover;
+        }
+
+        /* Card Content */
+        .card-content {
+            padding: 16px;
+        }
+
+        .card-title {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        /* Thumbnail Grid */
+        .thumbnails {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .thumbnail {
+            flex: 1;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .thumbnail:hover {
+            border-color: var(--gold);
+        }
+
+        .thumbnail.active {
+            border-color: var(--gold-light);
+            box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Select Button */
+        .btn-select {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-light) 100%);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-select:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(201, 162, 39, 0.4);
+        }
+
+        .btn-select:active {
+            transform: translateY(0);
+        }
+
+        /* Sticky Footer */
+        .footer-sticky {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(0deg, var(--bg-dark) 0%, rgba(10, 10, 10, 0.98) 100%);
+            padding: 16px 20px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--border-gold);
+            z-index: 100;
+        }
+
+        .btn-upload {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--bg-dark);
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 60px 40px;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(201, 162, 39, 0.5);
         }
 
-        h1 {
-            font-size: 3rem;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-weight: 700;
+        .btn-upload svg {
+            width: 20px;
+            height: 20px;
         }
 
-        .subtitle {
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 40px;
-        }
-
-        .cta-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 18px 50px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-size: 1.3rem;
-            font-weight: 600;
-            display: inline-block;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
-        }
-
-        .features {
-            margin-top: 50px;
-            text-align: left;
-        }
-
-        .feature {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .feature-title {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .feature-desc {
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .footer {
-            margin-top: 40px;
-            color: #999;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+        /* Responsive */
+        @media (min-width: 768px) {
+            .templates {
+                max-width: 500px;
+                margin: 0 auto;
             }
-            
-            .container {
-                padding: 40px 30px;
+
+            .hero h1 {
+                font-size: 32px;
             }
+        }
+
+        /* Coming Soon Badge */
+        .coming-soon {
+            position: relative;
+        }
+
+        .coming-soon::after {
+            content: 'COMING SOON';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: var(--gold);
+            padding: 8px 16px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            border: 1px solid var(--gold);
+            border-radius: 4px;
+        }
+
+        .coming-soon .preview-main {
+            opacity: 0.3;
+            filter: grayscale(50%);
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🎨 Raincrest Art</h1>
-        <p class="subtitle">AI-Powered Photo Booth Experience</p>
-        
-        <a href="order.html?template=template-02" class="cta-button">Create Your Art →</a>
+    <!-- Header -->
+    <header class="header">
+        <img src="https://raincrest-cdn.b-cdn.net/raincrest_logo.png" alt="Raincrest Art" class="logo">
+    </header>
 
-        <div class="gallery-section" style="margin: 50px 0; text-align: center;">
-            <h2 style="color: #667eea; margin-bottom: 10px;">✨ See Our AI Creations</h2>
-            <p style="color: #666; margin-bottom: 30px;">Every artwork is unique - here are some examples of our style</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                <img src="public/examples/ruler-example-1.jpg" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Medieval King on Dubrovnik Walls">
-                <img src="public/examples/ruler-example-2.jpg" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Medieval Queen on Stradun">
-                <img src="public/examples/ruler-example-3.jpg" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" alt="Medieval Ruler at Lovrijenac">
-            </div>
-            <p style="color: #999; font-size: 0.9rem; margin-top: 20px;">🎨 Your artwork will be uniquely generated - no two are the same!</p>
-        </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Choose Your Transformation</h1>
+        <p>Select a style for your royal portrait</p>
+    </section>
 
-        <div class="features">
-            <div class="feature">
-                <div class="feature-title">✨ AI-Generated Artwork</div>
-                <div class="feature-desc">Transform your photos into stunning artistic masterpieces using advanced AI</div>
+    <!-- Template Cards -->
+    <section class="templates">
+        <!-- Template 01: Trading Card -->
+        <article class="template-card" data-template="template-01">
+            <img src="https://raincrest-cdn.b-cdn.net/previews/t01_couple.jpg" alt="Trading Card Preview"
+                class="preview-main" id="preview-01">
+            <div class="card-content">
+                <h2 class="card-title">👑 Trading Card</h2>
+                <div class="thumbnails">
+                    <div class="thumbnail active" onclick="changePreview('01', 'couple')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t01_couple.jpg" alt="Couple">
+                    </div>
+                    <div class="thumbnail" onclick="changePreview('01', 'king')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t01_king.jpg" alt="King">
+                    </div>
+                    <div class="thumbnail" onclick="changePreview('01', 'queen')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t01_queen.jpg" alt="Queen">
+                    </div>
+                </div>
+                <button class="btn-select" onclick="selectTemplate('template-01')">Select This Style</button>
             </div>
-            <div class="feature">
-                <div class="feature-title">⚡ Lightning Fast</div>
-                <div class="feature-desc">Get your personalized artwork in seconds, not hours</div>
-            </div>
-            <div class="feature">
-                <div class="feature-title">🎭 Multiple Styles</div>
-                <div class="feature-desc">Choose from a curated selection of artistic templates and themes</div>
-            </div>
-            <div class="feature">
-                <div class="feature-title">📱 Mobile Friendly</div>
-                <div class="feature-desc">Works perfectly on all devices - phone, tablet, or kiosk</div>
-            </div>
-        </div>
+        </article>
 
-        <div class="footer">
-            Powered by Replicate AI & Bunny.net CDN
-        </div>
-    </div>
+        <!-- Template 02: Dragon Rider -->
+        <article class="template-card" data-template="template-02">
+            <img src="https://raincrest-cdn.b-cdn.net/previews/t02_couple.jpg" alt="Dragon Rider Preview"
+                class="preview-main" id="preview-02">
+            <div class="card-content">
+                <h2 class="card-title">🐉 Dragon Rider</h2>
+                <div class="thumbnails">
+                    <div class="thumbnail active" onclick="changePreview('02', 'couple')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t02_couple.jpg" alt="Couple">
+                    </div>
+                    <div class="thumbnail" onclick="changePreview('02', 'king')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t02_king.jpg" alt="King">
+                    </div>
+                    <div class="thumbnail" onclick="changePreview('02', 'queen')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t02_queen.jpg" alt="Queen">
+                    </div>
+                </div>
+                <button class="btn-select" onclick="selectTemplate('template-02')">Select This Style</button>
+            </div>
+        </article>
+
+        <!-- Template 03: Caricature -->
+        <article class="template-card" data-template="template-03">
+            <img src="https://raincrest-cdn.b-cdn.net/previews/t03_couple.jpg" alt="Caricature Preview"
+                class="preview-main" id="preview-03">
+            <div class="card-content">
+                <h2 class="card-title">🎭 Dragon Caricature</h2>
+                <div class="thumbnails">
+                    <div class="thumbnail active" onclick="changePreview('03', 'couple')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t03_couple.jpg" alt="Couple">
+                    </div>
+                    <div class="thumbnail" onclick="changePreview('03', 'king')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t03_king.jpg" alt="King">
+                    </div>
+                    <div class="thumbnail" onclick="changePreview('03', 'queen')">
+                        <img src="https://raincrest-cdn.b-cdn.net/previews/t03_queen.jpg" alt="Queen">
+                    </div>
+                </div>
+                <button class="btn-select" onclick="selectTemplate('template-03')">Select This Style</button>
+            </div>
+        </article>
+    </section>
+
+    <!-- Sticky Footer -->
+    <footer class="footer-sticky">
+        <button class="btn-upload" onclick="goToUpload()">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+            Upload Your Photo
+        </button>
+    </footer>
+
+    <script>
+        // Selected template storage
+        let selectedTemplate = null;
+
+        // Change main preview image when clicking thumbnail
+        function changePreview(templateNum, variant) {
+            const preview = document.getElementById(`preview-${templateNum}`);
+            const baseUrl = 'https://raincrest-cdn.b-cdn.net/previews/';
+            preview.src = `${baseUrl}t${templateNum}_${variant}.jpg`;
+
+            // Update active thumbnail
+            const card = preview.closest('.template-card');
+            card.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+            event.target.closest('.thumbnail').classList.add('active');
+        }
+
+        // Select template and proceed
+        function selectTemplate(templateId) {
+            selectedTemplate = templateId;
+            // Store in sessionStorage for next page
+            sessionStorage.setItem('selectedTemplate', templateId);
+            // Navigate to test-api page (handles template recognition)
+            window.location.href = `test-api.html?template=${templateId}`;
+        }
+
+        // Go to upload page
+        function goToUpload() {
+            if (!selectedTemplate) {
+                // Default to first template if none selected
+                selectedTemplate = 'template-01';
+                sessionStorage.setItem('selectedTemplate', selectedTemplate);
+            }
+            window.location.href = `test-api.html?template=${selectedTemplate}`;
+        }
+    </script>
 </body>
-</html>
 
+</html>

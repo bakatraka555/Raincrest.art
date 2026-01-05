@@ -370,7 +370,7 @@
             // Store in sessionStorage for next page
             sessionStorage.setItem('selectedTemplate', templateId);
             // Navigate to upload page
-            window.location.href = `upload.html?template=${templateId}`;
+            window.location.href = `index.html?template=${templateId}`;
         }
 
         // Go to upload page
@@ -380,7 +380,7 @@
                 selectedTemplate = 'template-01';
                 sessionStorage.setItem('selectedTemplate', selectedTemplate);
             }
-            window.location.href = `upload.html?template=${selectedTemplate}`;
+            window.location.href = `index.html?template=${selectedTemplate}`;
         }
     </script>
 </body>

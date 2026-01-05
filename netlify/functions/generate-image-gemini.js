@@ -195,7 +195,7 @@ exports.handler = async (event, context) => {
         // Get worker URL (same Netlify site)
         const host = event.headers.host || 'raincrest-art.netlify.app';
         const workerUrl = `https://${host}/.netlify/functions/generate-image-google-worker`;
-        
+
         console.log('🚀 Starting async worker:', workerUrl);
         console.log('📦 Job details:', {
             jobId,
@@ -204,8 +204,9 @@ exports.handler = async (event, context) => {
             bunnyUrl
         });
 
-        // Fire-and-forget: Start worker in background (don't await!)
-        fetch(workerUrl, {
+        // Fire-and-forget: Start worker in background
+        // Must wait briefly to ensure the request is actually sent before function terminates
+        const workerPromise = fetch(workerUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -217,14 +218,20 @@ exports.handler = async (event, context) => {
                 templateId,
                 isCouple: isCoupleBool
             })
-        }).then(response => {
-            console.log('✅ Worker started, status:', response.status);
-        }).catch(err => {
-            console.error('⚠️ Worker start error (non-critical):', err.message);
         });
 
+        // Wait 500ms to ensure the request is initiated
+        await Promise.race([
+            workerPromise.then(response => {
+                console.log('✅ Worker request sent, status:', response.status);
+            }).catch(err => {
+                console.error('⚠️ Worker request error:', err.message);
+            }),
+            new Promise(resolve => setTimeout(resolve, 500))
+        ]);
+
         // Return immediately with job ID (like Replicate pattern!)
-        console.log('✅ Returning job ID immediately (async pattern)');
+        console.log('✅ Returning job ID (async pattern)');
         return {
             statusCode: 200,
             headers,

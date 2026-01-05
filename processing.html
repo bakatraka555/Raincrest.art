@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Processing Your Image - Raincrest Art</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -12,8 +20,8 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -22,23 +30,25 @@
         }
 
         .container {
-            background: white;
+            background: #141414;
             border-radius: 20px;
             padding: 40px;
             max-width: 600px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             text-align: center;
+            border: 1px solid rgba(201, 162, 39, 0.3);
         }
 
         h1 {
-            color: #333;
+            color: #c9a227;
             margin-bottom: 10px;
             font-size: 28px;
+            font-family: 'Cinzel', serif;
         }
 
         .subtitle {
-            color: #666;
+            color: #888;
             margin-bottom: 40px;
             font-size: 16px;
         }
@@ -68,42 +78,50 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #e0e0e0;
+            background: #2a2a2a;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-right: 15px;
             font-size: 20px;
+            color: #888;
             transition: all 0.3s;
         }
 
         .step.active .step-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #8b7019 0%, #c9a227 100%);
+            color: #0a0a0a;
             animation: pulse 2s infinite;
         }
 
         .step.completed .step-icon {
-            background: #4caf50;
-            color: white;
+            background: #2d5a27;
+            color: #4caf50;
         }
 
         .step-text {
             flex: 1;
             text-align: left;
             font-size: 16px;
-            color: #333;
+            color: #f5f5f5;
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         /* Spinner */
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 4px solid rgba(201, 162, 39, 0.2);
+            border-top: 4px solid #c9a227;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -112,15 +130,20 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Progress Bar */
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e0e0e0;
+            background: #2a2a2a;
             border-radius: 4px;
             overflow: hidden;
             margin: 30px 0;
@@ -128,7 +151,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #8b7019 0%, #c9a227 50%, #e8c547 100%);
             width: 0%;
             transition: width 0.3s;
             border-radius: 4px;
@@ -147,7 +170,8 @@
         .result-image img {
             max-width: 100%;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(201, 162, 39, 0.3);
         }
 
         /* Action Buttons */
@@ -172,35 +196,41 @@
             transition: all 0.3s;
             text-decoration: none;
             display: inline-block;
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #8b7019 0%, #c9a227 50%, #e8c547 100%);
+            color: #0a0a0a;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(201, 162, 39, 0.4);
         }
 
         .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
+            background: #2a2a2a;
+            color: #f5f5f5;
+            border: 1px solid rgba(201, 162, 39, 0.3);
         }
 
         .btn-secondary:hover {
-            background: #e0e0e0;
+            background: #3a3a3a;
+            border-color: #c9a227;
         }
 
         /* Error Message */
         .error-message {
             display: none;
-            background: #ffebee;
-            color: #c62828;
+            background: rgba(198, 40, 40, 0.2);
+            color: #ff6b6b;
             padding: 15px;
             border-radius: 10px;
             margin: 20px 0;
+            border: 1px solid rgba(198, 40, 40, 0.3);
         }
 
         .error-message.show {
@@ -231,6 +261,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>✨ Processing Your Image</h1>
@@ -349,7 +380,7 @@
                 updateStep(4);
                 updateProgress(100);
                 updateStatusText('Complete! 🎉');
-                
+
                 // Send email if userEmail is available
                 if (userEmail && imageUrl) {
                     sendEmailNotification(userEmail, imageUrl, templateId, userId);
@@ -370,7 +401,7 @@
                             userId: userId
                         })
                     });
-                    
+
                     if (emailResponse.ok) {
                         console.log('✅ Email sent successfully');
                         // Možeš dodati poruku korisniku
@@ -385,139 +416,139 @@
 
             // Polling function
             async function checkStatus() {
-            try {
-                const response = await fetch(`/.netlify/functions/check-status?predictionId=${predictionId}`);
-                
-                if (!response.ok) {
-                    throw new Error('Failed to check status: ' + response.status);
-                }
+                try {
+                    const response = await fetch(`/.netlify/functions/check-status?predictionId=${predictionId}`);
 
-                const result = await response.json();
-                console.log('Status check result:', result);
+                    if (!response.ok) {
+                        throw new Error('Failed to check status: ' + response.status);
+                    }
 
-                if (!result.success) {
-                    throw new Error(result.error || 'Status check failed');
-                }
+                    const result = await response.json();
+                    console.log('Status check result:', result);
 
-                // Update UI based on status
-                const status = result.status;
+                    if (!result.success) {
+                        throw new Error(result.error || 'Status check failed');
+                    }
 
-                if (status === 'starting') {
-                    updateStep(1);
-                    updateProgress(20);
-                    updateStatusText('Starting generation...');
-                } else if (status === 'processing') {
-                    updateStep(2);
-                    updateProgress(50);
-                    updateStatusText('AI is working on your image...');
-                } else if (status === 'succeeded' && result.imageUrl) {
-                    updateStep(3);
-                    updateProgress(90);
-                    updateStatusText('Uploading to Bunny CDN...');
-                    
-                    // Upload to Bunny CDN first (for permanent link)
-                    try {
-                        console.log('Uploading Replicate image to Bunny CDN...');
-                        const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                imageUrl: result.imageUrl, // Replicate URL
-                                templateId: templateId || 'template-01',
-                                userId: userId || `user-${Date.now()}`
-                            })
-                        });
+                    // Update UI based on status
+                    const status = result.status;
 
-                        if (!uploadResponse.ok) {
-                            const errorText = await uploadResponse.text();
-                            console.warn('Bunny upload failed, using Replicate URL:', errorText);
+                    if (status === 'starting') {
+                        updateStep(1);
+                        updateProgress(20);
+                        updateStatusText('Starting generation...');
+                    } else if (status === 'processing') {
+                        updateStep(2);
+                        updateProgress(50);
+                        updateStatusText('AI is working on your image...');
+                    } else if (status === 'succeeded' && result.imageUrl) {
+                        updateStep(3);
+                        updateProgress(90);
+                        updateStatusText('Uploading to Bunny CDN...');
+
+                        // Upload to Bunny CDN first (for permanent link)
+                        try {
+                            console.log('Uploading Replicate image to Bunny CDN...');
+                            const uploadResponse = await fetch('/.netlify/functions/upload-to-bunny', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    imageUrl: result.imageUrl, // Replicate URL
+                                    templateId: templateId || 'template-01',
+                                    userId: userId || `user-${Date.now()}`
+                                })
+                            });
+
+                            if (!uploadResponse.ok) {
+                                const errorText = await uploadResponse.text();
+                                console.warn('Bunny upload failed, using Replicate URL:', errorText);
+                                // Fallback to Replicate URL if Bunny upload fails
+                                setTimeout(() => {
+                                    showResult(result.imageUrl);
+                                }, 500);
+                                return;
+                            }
+
+                            const uploadResult = await uploadResponse.json();
+                            const bunnyCdnUrl = uploadResult.cdnUrl;
+                            console.log('✅ Uploaded to Bunny CDN:', bunnyCdnUrl);
+
+                            // Wait a moment for dramatic effect
+                            setTimeout(() => {
+                                showResult(bunnyCdnUrl); // Use Bunny CDN URL instead
+                            }, 500);
+                            return; // Stop polling
+                        } catch (uploadError) {
+                            console.warn('Bunny upload error, using Replicate URL:', uploadError);
                             // Fallback to Replicate URL if Bunny upload fails
                             setTimeout(() => {
                                 showResult(result.imageUrl);
                             }, 500);
                             return;
                         }
+                    } else if (status === 'failed') {
+                        // Better error message for Replicate API errors
+                        const errorMsg = result.error || 'Generation failed';
+                        let userFriendlyError = errorMsg;
 
-                        const uploadResult = await uploadResponse.json();
-                        const bunnyCdnUrl = uploadResult.cdnUrl;
-                        console.log('✅ Uploaded to Bunny CDN:', bunnyCdnUrl);
-                        
-                        // Wait a moment for dramatic effect
-                        setTimeout(() => {
-                            showResult(bunnyCdnUrl); // Use Bunny CDN URL instead
-                        }, 500);
-                        return; // Stop polling
-                    } catch (uploadError) {
-                        console.warn('Bunny upload error, using Replicate URL:', uploadError);
-                        // Fallback to Replicate URL if Bunny upload fails
-                        setTimeout(() => {
-                            showResult(result.imageUrl);
-                        }, 500);
-                        return;
+                        // Make Replicate errors more user-friendly
+                        if (errorMsg.includes('Director:') || errorMsg.includes('E6716')) {
+                            userFriendlyError = 'The AI service encountered an unexpected error. Please try again in a moment.';
+                        } else if (errorMsg.includes('timeout') || errorMsg.includes('time out')) {
+                            userFriendlyError = 'The generation took too long. Please try again with a smaller image.';
+                        } else if (errorMsg.includes('invalid') || errorMsg.includes('Invalid')) {
+                            userFriendlyError = 'Invalid input. Please try uploading a different image.';
+                        }
+
+                        throw new Error(userFriendlyError);
+                    } else {
+                        // Still processing
+                        const progress = currentStep * 25 + 10;
+                        updateProgress(Math.min(progress, 85));
                     }
-                } else if (status === 'failed') {
-                    // Better error message for Replicate API errors
-                    const errorMsg = result.error || 'Generation failed';
-                    let userFriendlyError = errorMsg;
-                    
-                    // Make Replicate errors more user-friendly
-                    if (errorMsg.includes('Director:') || errorMsg.includes('E6716')) {
-                        userFriendlyError = 'The AI service encountered an unexpected error. Please try again in a moment.';
-                    } else if (errorMsg.includes('timeout') || errorMsg.includes('time out')) {
-                        userFriendlyError = 'The generation took too long. Please try again with a smaller image.';
-                    } else if (errorMsg.includes('invalid') || errorMsg.includes('Invalid')) {
-                        userFriendlyError = 'Invalid input. Please try uploading a different image.';
+
+                    // Continue polling if not done
+                    if (status !== 'succeeded' && status !== 'failed') {
+                        setTimeout(checkStatus, 2000); // Poll every 2 seconds
                     }
-                    
-                    throw new Error(userFriendlyError);
-                } else {
-                    // Still processing
-                    const progress = currentStep * 25 + 10;
-                    updateProgress(Math.min(progress, 85));
-                }
 
-                // Continue polling if not done
-                if (status !== 'succeeded' && status !== 'failed') {
-                    setTimeout(checkStatus, 2000); // Poll every 2 seconds
+                } catch (error) {
+                    console.error('Error checking status:', error);
+                    showError('Error: ' + error.message);
                 }
-
-            } catch (error) {
-                console.error('Error checking status:', error);
-                showError('Error: ' + error.message);
-            }
             }
 
             // Share/Save functionality
-            document.getElementById('shareButton').addEventListener('click', async function() {
-            const imageUrl = document.getElementById('generatedImage').src;
-            
-            // Try native share API first (mobile)
-            if (navigator.share) {
-                try {
-                    // Fetch image as blob for sharing
-                    const response = await fetch(imageUrl);
-                    const blob = await response.blob();
-                    const file = new File([blob], 'raincrest-art.jpg', { type: 'image/jpeg' });
+            document.getElementById('shareButton').addEventListener('click', async function () {
+                const imageUrl = document.getElementById('generatedImage').src;
 
-                    await navigator.share({
-                        title: 'My Raincrest Art Transformation',
-                        text: 'Check out my transformation!',
-                        files: [file]
-                    });
-                    return;
-                } catch (error) {
-                    console.log('Share failed, falling back to download:', error);
+                // Try native share API first (mobile)
+                if (navigator.share) {
+                    try {
+                        // Fetch image as blob for sharing
+                        const response = await fetch(imageUrl);
+                        const blob = await response.blob();
+                        const file = new File([blob], 'raincrest-art.jpg', { type: 'image/jpeg' });
+
+                        await navigator.share({
+                            title: 'My Raincrest Art Transformation',
+                            text: 'Check out my transformation!',
+                            files: [file]
+                        });
+                        return;
+                    } catch (error) {
+                        console.log('Share failed, falling back to download:', error);
+                    }
                 }
-            }
 
-            // Fallback: Download
-            const link = document.createElement('a');
-            link.href = imageUrl;
-            link.download = 'raincrest-art.jpg';
-            document.body.appendChild(link);
-            link.click();
+                // Fallback: Download
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = 'raincrest-art.jpg';
+                document.body.appendChild(link);
+                link.click();
                 document.body.removeChild(link);
             });
 
@@ -529,5 +560,5 @@
         }
     </script>
 </body>
-</html>
 
+</html>

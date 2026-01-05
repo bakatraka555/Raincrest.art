@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Your Transformation - Raincrest Art</title>
-    <!-- QR code library removed - not needed for kiosk mode -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.3/dist/heic2any.min.js"></script>
     <style>
         * {
@@ -14,9 +19,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #f5f5f5;
             min-height: 100vh;
             padding: 20px;
         }
@@ -24,29 +29,31 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: #141414;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(201, 162, 39, 0.3);
         }
 
         h1 {
-            color: #667eea;
+            color: #c9a227;
             text-align: center;
             margin-bottom: 10px;
             font-size: 28px;
+            font-family: 'Cinzel', serif;
         }
 
         .subtitle {
             text-align: center;
-            color: #666;
+            color: #888;
             margin-bottom: 30px;
             font-size: 16px;
         }
 
         .template-info {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #8b7019 0%, #c9a227 100%);
+            color: #0a0a0a;
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 30px;
@@ -56,6 +63,7 @@
         .template-info h2 {
             font-size: 24px;
             margin-bottom: 5px;
+            font-family: 'Cinzel', serif;
         }
 
         .template-info p {
@@ -68,9 +76,10 @@
         }
 
         .upload-section h3 {
-            color: #667eea;
+            color: #c9a227;
             margin-bottom: 15px;
             font-size: 20px;
+            font-family: 'Cinzel', serif;
         }
 
         .upload-options {
@@ -81,18 +90,18 @@
         }
 
         .upload-option {
-            border: 2px dashed #667eea;
+            border: 2px dashed rgba(201, 162, 39, 0.5);
             border-radius: 12px;
             padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            background: #f8f9fa;
+            background: #1a1a1a;
         }
 
         .upload-option:hover {
-            background: #e9ecef;
-            border-color: #764ba2;
+            background: #2a2a2a;
+            border-color: #c9a227;
         }
 
         .upload-option input[type="file"] {
@@ -111,13 +120,13 @@
 
         .upload-text {
             font-weight: 600;
-            color: #667eea;
+            color: #c9a227;
             margin-bottom: 5px;
         }
 
         .upload-hint {
             font-size: 12px;
-            color: #666;
+            color: #888;
         }
 
         .upload-buttons {
@@ -128,8 +137,8 @@
         }
 
         .upload-btn {
-            background: #667eea;
-            color: white;
+            background: linear-gradient(135deg, #8b7019 0%, #c9a227 100%);
+            color: #0a0a0a;
             border: none;
             padding: 10px 20px;
             border-radius: 8px;
@@ -142,9 +151,9 @@
         }
 
         .upload-btn:hover {
-            background: #764ba2;
+            background: linear-gradient(135deg, #c9a227 0%, #e8c547 100%);
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(201, 162, 39, 0.4);
         }
 
         .upload-btn:active {
@@ -176,7 +185,7 @@
             border-radius: 12px;
             overflow: hidden;
             aspect-ratio: 1;
-            background: #f8f9fa;
+            background: #1a1a1a;
         }
 
         .preview-item img {
@@ -242,8 +251,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Progress Bar Styles */
@@ -279,13 +293,18 @@
             left: 0;
             bottom: 0;
             right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             animation: shimmer 2s infinite;
         }
 
         @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
         }
 
         .progress-text {
@@ -372,7 +391,8 @@
             margin-top: 15px;
         }
 
-        .retry-button, .save-button {
+        .retry-button,
+        .save-button {
             padding: 12px 24px;
             border: none;
             border-radius: 8px;
@@ -557,6 +577,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>🎨 Create Your Art</h1>
@@ -570,31 +591,39 @@
         <div class="upload-section">
             <h3>📸 Select Photos</h3>
             <div class="info-box">
-                💡 You can upload <strong>1 photo with both of you</strong> or <strong>2 separate photos</strong> (one per person)<br>
-                📱 On mobile you can choose a photo from <strong>gallery</strong> or <strong>take a new one with camera</strong>
+                💡 You can upload <strong>1 photo with both of you</strong> or <strong>2 separate photos</strong> (one
+                per person)<br>
+                📱 On mobile you can choose a photo from <strong>gallery</strong> or <strong>take a new one with
+                    camera</strong>
             </div>
-            
+
             <div class="upload-options">
                 <div class="upload-option">
                     <!-- ANDROID FIX: Separate inputs for camera and gallery -->
                     <input type="file" id="coupleImageGallery" class="android-fix-input" accept="image/*" />
-                    <input type="file" id="coupleImageCamera" class="android-fix-input" accept="image/*" capture="user" />
+                    <input type="file" id="coupleImageCamera" class="android-fix-input" accept="image/*"
+                        capture="user" />
                     <div class="upload-icon">👫</div>
                     <div class="upload-text">Couple in one photo</div>
                     <div class="upload-buttons">
-                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('couple')">📁 Gallery</button>
-                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('couple')">📷 Camera</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('couple')">📁
+                            Gallery</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('couple')">📷
+                            Camera</button>
                     </div>
                 </div>
                 <div class="upload-option">
                     <!-- ANDROID FIX: Separate inputs for camera and gallery -->
                     <input type="file" id="person1ImageGallery" class="android-fix-input" accept="image/*" />
-                    <input type="file" id="person1ImageCamera" class="android-fix-input" accept="image/*" capture="user" />
+                    <input type="file" id="person1ImageCamera" class="android-fix-input" accept="image/*"
+                        capture="user" />
                     <div class="upload-icon">👤</div>
                     <div class="upload-text">Person 1</div>
                     <div class="upload-buttons">
-                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('person1')">📁 Gallery</button>
-                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('person1')">📷 Camera</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('person1')">📁
+                            Gallery</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('person1')">📷
+                            Camera</button>
                     </div>
                 </div>
             </div>
@@ -602,14 +631,18 @@
                 <div class="upload-option" style="grid-column: 1 / -1;">
                     <!-- ANDROID FIX: Separate inputs for camera and gallery -->
                     <input type="file" id="person2ImageGallery" class="android-fix-input" accept="image/*" />
-                    <input type="file" id="person2ImageCamera" class="android-fix-input" accept="image/*" capture="user" />
+                    <input type="file" id="person2ImageCamera" class="android-fix-input" accept="image/*"
+                        capture="user" />
                     <div class="upload-icon">👤</div>
                     <div class="upload-text">Person 2 (optional)</div>
                     <div class="upload-buttons">
-                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('person2')">📁 Gallery</button>
-                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('person2')">📷 Camera</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidGallery('person2')">📁
+                            Gallery</button>
+                        <button type="button" class="upload-btn" onclick="triggerAndroidCamera('person2')">📷
+                            Camera</button>
                     </div>
-                    <div class="upload-hint" style="margin-top: 10px; font-size: 12px; color: #666;">Only if using separate photos</div>
+                    <div class="upload-hint" style="margin-top: 10px; font-size: 12px; color: #666;">Only if using
+                        separate photos</div>
                 </div>
             </div>
 
@@ -620,60 +653,56 @@
         </div>
 
         <!-- Email Section -->
-        <div class="email-section" style="margin: 40px 0; padding: 35px; background: linear-gradient(135deg, rgba(30, 30, 50, 0.85) 0%, rgba(50, 40, 70, 0.9) 100%); border-radius: 20px; backdrop-filter: blur(15px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);">
-            <h3 style="color: #ffffff; margin-bottom: 20px; display: flex; align-items: center; font-size: 22px; font-weight: 600; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(102, 126, 234, 0.3);">
-                <span style="margin-right: 12px; font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));">📧</span>
+        <div class="email-section"
+            style="margin: 30px 0; padding: 25px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; backdrop-filter: blur(10px);">
+            <h3 style="color: white; margin-bottom: 15px; display: flex; align-items: center;">
+                <span style="margin-right: 10px;">📧</span>
                 Email for Delivery
             </h3>
             <div class="input-group">
-                <input type="email" 
-                       id="userEmail" 
-                       placeholder="your@email.com" 
-                       required
-                       style="width: 100%; padding: 18px 24px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 12px; background: rgba(255, 255, 255, 0.95); color: #1a1a1a !important; font-size: 16px; box-sizing: border-box; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
+                <input type="email" id="userEmail" placeholder="your@email.com" required
+                    style="width: 100%; padding: 15px 20px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 10px; background: rgba(255, 255, 255, 0.25); color: #ffffff !important; font-size: 16px; backdrop-filter: blur(5px); box-sizing: border-box; outline: none; transition: all 0.3s ease; -webkit-text-fill-color: #ffffff !important;">
                 <style>
                     #userEmail {
-                        color: #1a1a1a !important;
-                        -webkit-text-fill-color: #1a1a1a !important;
-                        background: rgba(255, 255, 255, 0.95) !important;
+                        color: #ffffff !important;
+                        -webkit-text-fill-color: #ffffff !important;
                     }
+
                     #userEmail::placeholder {
-                        color: rgba(0, 0, 0, 0.5) !important;
-                        -webkit-text-fill-color: rgba(0, 0, 0, 0.5) !important;
+                        color: rgba(255, 255, 255, 0.7) !important;
+                        -webkit-text-fill-color: rgba(255, 255, 255, 0.7) !important;
                     }
+
                     #userEmail:focus {
-                        background: rgba(255, 255, 255, 1) !important;
-                        border-color: rgba(102, 126, 234, 0.8) !important;
-                        color: #1a1a1a !important;
-                        -webkit-text-fill-color: #1a1a1a !important;
-                        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3), 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
-                        transform: translateY(-1px);
+                        background: rgba(255, 255, 255, 0.35) !important;
+                        border-color: rgba(255, 255, 255, 0.6) !important;
+                        color: #ffffff !important;
+                        -webkit-text-fill-color: #ffffff !important;
                     }
+
                     #userEmail:hover {
-                        background: rgba(255, 255, 255, 1) !important;
-                        border-color: rgba(255, 255, 255, 0.5) !important;
-                        color: #1a1a1a !important;
-                        -webkit-text-fill-color: #1a1a1a !important;
-                        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25) !important;
+                        background: rgba(255, 255, 255, 0.3) !important;
                     }
+
                     #userEmail:-webkit-autofill,
                     #userEmail:-webkit-autofill:hover,
                     #userEmail:-webkit-autofill:focus {
-                        -webkit-text-fill-color: #1a1a1a !important;
-                        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.95) inset !important;
+                        -webkit-text-fill-color: #ffffff !important;
+                        -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.25) inset !important;
                         transition: background-color 5000s ease-in-out 0s;
                     }
                 </style>
-                <small style="color: rgba(255, 255, 255, 0.98); font-size: 14px; display: block; margin-top: 12px; font-weight: 400; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 15px rgba(102, 126, 234, 0.2); line-height: 1.5; background: rgba(0, 0, 0, 0.2); padding: 10px 15px; border-radius: 8px; border-left: 3px solid rgba(102, 126, 234, 0.6);">
-                    ✨ We'll send your generated image directly to this email address
+                <small style="color: rgba(255, 255, 255, 0.7); font-size: 14px; display: block; margin-top: 8px;">
+                    We'll send your generated image directly to this email address
                 </small>
-                <div id="emailError" style="color: #ff6b6b; font-size: 14px; margin-top: 10px; display: none; font-weight: 600; background: rgba(255, 107, 107, 0.15); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #ff6b6b; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);"></div>
+                <div id="emailError"
+                    style="color: #ff6b6b; font-size: 14px; margin-top: 5px; display: none; font-weight: 500;"></div>
             </div>
         </div>
 
         <!-- Validation Messages -->
         <div id="validationMessage" class="validation-message"></div>
-        
+
         <!-- Error Message with Recovery -->
         <div id="errorMessage" class="error" style="display: none;">
             <div id="errorContent"></div>
@@ -692,7 +721,7 @@
 
         <div class="loading" id="loadingSection" style="display: none;">
             <div class="loading-spinner"></div>
-            
+
             <!-- Step Indicators -->
             <div class="step-indicator" id="stepIndicator">
                 <div class="step" id="step1" data-step="1">📤</div>
@@ -702,13 +731,13 @@
                 <div class="step" id="step5" data-step="5">🎭</div>
                 <div class="step" id="step6" data-step="6">✅</div>
             </div>
-            
+
             <!-- Loading Message -->
             <div class="loading-message-container">
                 <span class="step-icon" id="stepIcon">📤</span>
                 <p id="loadingMessage">AI is generating your transformation...</p>
             </div>
-            
+
             <!-- Progress Bar -->
             <div class="progress-container">
                 <div class="progress-bar">
@@ -747,10 +776,10 @@
 
         // Interceptiraj sve console metode
         ['log', 'error', 'warn', 'info', 'debug'].forEach(method => {
-            console[method] = function(...args) {
+            console[method] = function (...args) {
                 // Pozovi originalnu metodu
                 originalConsole[method].apply(console, args);
-                
+
                 // Spremi u naš array
                 const timestamp = new Date().toISOString();
                 const message = args.map(arg => {
@@ -767,32 +796,32 @@
                     }
                     return String(arg);
                 }).join(' ');
-                
+
                 consoleLogs.push({
                     timestamp,
                     method,
                     message,
                     raw: args
                 });
-                
+
                 // Limit na 1000 logova (da ne zauzme previše memorije)
                 if (consoleLogs.length > 1000) {
                     consoleLogs.shift();
                 }
             };
         });
-        
+
         // Get template from URL, or use default
         const urlParams = new URLSearchParams(window.location.search);
         const templateId = urlParams.get('template') || 'template-02'; // Default to template-02 if not specified
-        
+
         // ANDROID DEBUGGING SYSTEM
         const debugLogs = [];
         const isAndroid = /Android/i.test(navigator.userAgent);
         const isChrome = /Chrome/i.test(navigator.userAgent);
         const isMobile = /Mobi/i.test(navigator.userAgent);
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        
+
         // NETWORK MONITORING FOR ANDROID
         let networkStatus = {
             online: navigator.onLine,
@@ -800,26 +829,26 @@
             retryCount: 0,
             lastError: null
         };
-        
+
         function checkNetworkStatus() {
             const wasOnline = networkStatus.online;
             networkStatus.online = navigator.onLine;
             networkStatus.lastCheck = new Date();
-            
+
             if (wasOnline !== networkStatus.online) {
                 const status = networkStatus.online ? 'online' : 'offline';
                 debugLog(`🌐 Network status changed: ${status}`, networkStatus.online ? 'success' : 'error');
-                
+
                 if (!networkStatus.online) {
                     showValidationMessage('⚠️ You are offline. Please check your internet connection.', 'warning');
                 } else {
                     showValidationMessage('✅ Back online! You can continue.', 'success');
                 }
             }
-            
+
             return networkStatus.online;
         }
-        
+
         // Monitor network changes
         window.addEventListener('online', () => {
             networkStatus.online = true;
@@ -827,68 +856,68 @@
             debugLog('🌐 Device is back online', 'success');
             showValidationMessage('✅ Internet connection restored', 'success');
         });
-        
+
         window.addEventListener('offline', () => {
             networkStatus.online = false;
             networkStatus.lastCheck = new Date();
             debugLog('🌐 Device went offline', 'error');
             showError('⚠️ You lost internet connection. Please reconnect and try again.', false);
         });
-        
+
         // Enhanced console.log that also logs to debug panel
         function debugLog(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
             const logEntry = `[${timestamp}] ${message}`;
-            
+
             // Log to console
             console.log(`[DEBUG] ${logEntry}`);
-            
+
             // Add to debug logs array
             debugLogs.push({ message: logEntry, type, timestamp });
-            
+
             // Update debug panel if visible
             updateDebugPanel();
-            
+
             // Also log to our custom debug function
             logToDebugPanel(logEntry, type);
         }
-        
+
         // ANDROID FIX: Network-aware fetch with better error handling
         async function networkAwareFetch(url, options, maxRetries = 2) {
             // Check network before attempting
             if (!checkNetworkStatus()) {
                 throw new Error('No internet connection. Please connect to WiFi or mobile data.');
             }
-            
+
             debugLog(`🌐 Fetching: ${url}`, 'info');
-            
+
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     debugLog(`Attempt ${attempt}/${maxRetries}`, 'info');
-                    
+
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 30000);
-                    
+
                     const fetchOptions = {
                         ...options,
                         signal: controller.signal
                     };
-                    
+
                     const response = await fetch(url, fetchOptions);
                     clearTimeout(timeoutId);
-                    
+
                     // ANDROID FIX: Validate response is not a ProgressEvent
                     if (response.constructor && response.constructor.name === 'ProgressEvent') {
                         debugLog(`Attempt ${attempt}: Got ProgressEvent instead of Response`, 'error');
                         throw new Error('Network error - connection failed');
                     }
-                    
+
                     debugLog(`Attempt ${attempt}: Success (Status: ${response.status})`, 'success');
                     return response;
-                    
+
                 } catch (error) {
                     debugLog(`Attempt ${attempt} failed: ${error.message}`, 'error');
-                    
+
                     if (attempt === maxRetries) {
                         // Last attempt failed
                         if (error.name === 'AbortError') {
@@ -910,7 +939,7 @@
                         }
                         throw error;
                     }
-                    
+
                     // Wait before retry (exponential backoff)
                     const delay = 1000 * attempt;
                     debugLog(`Waiting ${delay}ms before retry...`, 'info');
@@ -918,27 +947,27 @@
                 }
             }
         }
-        
+
         function logToDebugPanel(message, type = 'info') {
             const debugLogsDiv = document.getElementById('debugLogs');
             if (!debugLogsDiv) return;
-            
+
             const logElement = document.createElement('div');
             logElement.className = `debug-log ${type}`;
             logElement.textContent = message;
-            
+
             debugLogsDiv.appendChild(logElement);
-            
+
             // Keep only last 20 logs
             const logs = debugLogsDiv.querySelectorAll('.debug-log');
             if (logs.length > 20) {
                 logs[0].remove();
             }
-            
+
             // Auto-scroll to bottom
             debugLogsDiv.scrollTop = debugLogsDiv.scrollHeight;
         }
-        
+
         function toggleDebugPanel() {
             const panel = document.getElementById('debugPanel');
             if (panel.style.display === 'block') {
@@ -948,14 +977,14 @@
                 updateDebugPanel();
             }
         }
-        
+
         // ============================================
         // SHOW ALL LOGS IN DEBUG PANEL (F12 equivalent)
         // ============================================
         function showAllLogsInDebugPanel() {
             const debugLogsDiv = document.getElementById('debugLogs');
             if (!debugLogsDiv) return;
-            
+
             // Dodaj header sa copy button
             const header = document.createElement('div');
             header.style.cssText = 'margin-bottom: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;';
@@ -970,16 +999,16 @@
                     Total console logs: ${consoleLogs.length} | Debug logs: ${debugLogs.length}
                 </div>
             `;
-            
+
             // Clear i dodaj header
             debugLogsDiv.innerHTML = '';
             debugLogsDiv.appendChild(header);
-            
+
             // Dodaj sve console logove
             const logsContainer = document.createElement('div');
             logsContainer.id = 'allConsoleLogs';
             logsContainer.style.cssText = 'max-height: 400px; overflow-y: auto; font-family: "Courier New", monospace; font-size: 11px; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px; margin-top: 10px; line-height: 1.4;';
-            
+
             // Kombiniraj console logove i debug logove
             const allLogs = [
                 ...consoleLogs.map(log => ({
@@ -995,39 +1024,38 @@
                     type: log.type
                 }))
             ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Sortiraj po vremenu
-            
+
             if (allLogs.length === 0) {
                 logsContainer.textContent = 'No logs available yet.';
             } else {
                 allLogs.forEach(log => {
                     const logElement = document.createElement('div');
-                    logElement.style.cssText = `margin-bottom: 3px; padding: 4px 8px; border-left: 3px solid ${
-                        log.type === 'error' ? '#f44336' : 
-                        log.type === 'warning' ? '#ff9800' : 
-                        log.type === 'success' ? '#4caf50' : 
-                        '#2196f3'
-                    }; word-wrap: break-word; white-space: pre-wrap;`;
-                    
+                    logElement.style.cssText = `margin-bottom: 3px; padding: 4px 8px; border-left: 3px solid ${log.type === 'error' ? '#f44336' :
+                        log.type === 'warning' ? '#ff9800' :
+                            log.type === 'success' ? '#4caf50' :
+                                '#2196f3'
+                        }; word-wrap: break-word; white-space: pre-wrap;`;
+
                     const time = new Date(log.timestamp).toLocaleTimeString();
                     const method = log.method.toUpperCase().padEnd(6);
                     logElement.textContent = `[${time}] ${method} ${log.message}`;
-                    
+
                     logsContainer.appendChild(logElement);
                 });
             }
-            
+
             debugLogsDiv.appendChild(logsContainer);
-            
+
             // Auto-scroll to bottom
             logsContainer.scrollTop = logsContainer.scrollHeight;
-            
+
             // Auto-otvori debug panel ako je zatvoren
             const debugPanel = document.getElementById('debugPanel');
             if (debugPanel && debugPanel.style.display === 'none') {
                 debugPanel.style.display = 'block';
             }
         }
-        
+
         // ============================================
         // COPY ALL LOGS TO CLIPBOARD
         // ============================================
@@ -1047,9 +1075,9 @@
                 const timeB = b.match(/\[(.*?)\]/)?.[1];
                 return timeA && timeB ? timeA.localeCompare(timeB) : 0;
             });
-            
+
             const logsText = allLogs.join('\n');
-            
+
             // Dodaj header sa informacijama
             const fullText = `=== RAINCREST.ART ERROR LOGS ===
 Timestamp: ${new Date().toISOString()}
@@ -1065,7 +1093,7 @@ Browser: ${isChrome ? 'Chrome' : 'Other'}
 ${logsText}
 
 === END LOGS ===`;
-            
+
             // Kopiraj u clipboard
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(fullText).then(() => {
@@ -1078,7 +1106,7 @@ ${logsText}
                 fallbackCopyToClipboard(fullText);
             }
         }
-        
+
         // Fallback za starije browsere
         function fallbackCopyToClipboard(text) {
             const textarea = document.createElement('textarea');
@@ -1098,14 +1126,14 @@ ${logsText}
             }
             document.body.removeChild(textarea);
         }
-        
+
         function updateDebugPanel() {
             const debugLogsDiv = document.getElementById('debugLogs');
             if (!debugLogsDiv) return;
-            
+
             // Clear and rebuild
             debugLogsDiv.innerHTML = '';
-            
+
             // Add device info
             logToDebugPanel(`📱 Device: ${navigator.userAgent.substring(0, 50)}...`, 'info');
             logToDebugPanel(`🤖 Android: ${isAndroid} | Chrome: ${isChrome} | Mobile: ${isMobile}`, 'info');
@@ -1113,23 +1141,23 @@ ${logsText}
             logToDebugPanel(`📏 Screen: ${window.innerWidth}x${window.innerHeight}`, 'info');
             logToDebugPanel(`🔗 URL: ${window.location.href}`, 'info');
             logToDebugPanel('---', 'info');
-            
+
             // Add recent logs
             debugLogs.slice(-10).forEach(log => {
                 logToDebugPanel(log.message, log.type);
             });
         }
-        
+
         // Initialize debug logging
         debugLog('=== ANDROID DEBUG INITIALIZED ===', 'success');
         debugLog(`User Agent: ${navigator.userAgent}`, 'info');
         debugLog(`Is Android: ${isAndroid}`, isAndroid ? 'success' : 'info');
         debugLog(`Is Chrome: ${isChrome}`, isChrome ? 'success' : 'info');
         debugLog(`Is Mobile: ${isMobile}`, isMobile ? 'success' : 'info');
-        
+
         // ANDROID FIX: Use separate approach for Android
         const useAndroidFix = isAndroid && isMobile;
-        
+
         let currentTemplate = null;
         let uploadedImages = {
             couple: null,
@@ -1142,19 +1170,19 @@ ${logsText}
             try {
                 const response = await fetch('docs/couples-templates-database.json');
                 const data = await response.json();
-                
+
                 // Filter only enabled templates
                 const enabledTemplates = data.templates.filter(t => t.enabled === true);
-                
+
                 // Find template (use default if not found)
                 currentTemplate = enabledTemplates.find(t => t.id === templateId);
-                
+
                 // If template not found, try to use default
                 if (!currentTemplate) {
                     console.warn(`Template ${templateId} not found, using default template-02`);
                     currentTemplate = enabledTemplates.find(t => t.id === 'template-02');
                 }
-                
+
                 if (currentTemplate) {
                     document.getElementById('templateInfo').innerHTML = `
                         <h2>${currentTemplate.number}. ${currentTemplate.name}</h2>
@@ -1180,22 +1208,22 @@ ${logsText}
 
         // ANDROID FIX: Separate functions for camera and gallery
         // Make function globally available for onclick handlers
-        window.triggerAndroidGallery = function(imageType) {
+        window.triggerAndroidGallery = function (imageType) {
             console.log(`Android Gallery trigger for: ${imageType}`);
             const inputId = `${imageType}ImageGallery`;
             const input = document.getElementById(inputId);
-            
+
             if (!input) {
                 console.error(`Input not found: ${inputId}`);
                 showValidationMessage('❌ Error: Input element not found', 'error');
                 return;
             }
-            
+
             // Reset and trigger
             input.value = '';
             input.removeAttribute('capture');
             input.setAttribute('accept', 'image/*');
-            
+
             // Try multiple methods to trigger file picker
             try {
                 // Method 1: Direct click (works in most browsers)
@@ -1225,23 +1253,23 @@ ${logsText}
                 }
             }
         };
-        
-        window.triggerAndroidCamera = function(imageType) {
+
+        window.triggerAndroidCamera = function (imageType) {
             console.log(`Android Camera trigger for: ${imageType}`);
             const inputId = `${imageType}ImageCamera`;
             const input = document.getElementById(inputId);
-            
+
             if (!input) {
                 console.error(`Input not found: ${inputId}`);
                 showValidationMessage('❌ Error: Input element not found', 'error');
                 return;
             }
-            
+
             // Reset and trigger
             input.value = '';
             input.setAttribute('capture', 'user');
             input.setAttribute('accept', 'image/*');
-            
+
             setTimeout(() => {
                 try {
                     input.click();
@@ -1251,47 +1279,47 @@ ${logsText}
                 }
             }, 100);
         };
-        
+
         // ANDROID FIX: Event listeners for separate inputs
         function setupAndroidInputListeners() {
             // Couple image listeners
-            document.getElementById('coupleImageGallery').addEventListener('change', function(e) {
+            document.getElementById('coupleImageGallery').addEventListener('change', function (e) {
                 handleFileSelect(e, 'couple', false);
             });
-            document.getElementById('coupleImageCamera').addEventListener('change', function(e) {
+            document.getElementById('coupleImageCamera').addEventListener('change', function (e) {
                 handleFileSelect(e, 'couple', true);
             });
-            
+
             // Person1 image listeners
-            document.getElementById('person1ImageGallery').addEventListener('change', function(e) {
+            document.getElementById('person1ImageGallery').addEventListener('change', function (e) {
                 handleFileSelect(e, 'person1', false);
             });
-            document.getElementById('person1ImageCamera').addEventListener('change', function(e) {
+            document.getElementById('person1ImageCamera').addEventListener('change', function (e) {
                 handleFileSelect(e, 'person1', true);
             });
-            
+
             // Person2 image listeners
-            document.getElementById('person2ImageGallery').addEventListener('change', function(e) {
+            document.getElementById('person2ImageGallery').addEventListener('change', function (e) {
                 handleFileSelect(e, 'person2', false);
             });
-            document.getElementById('person2ImageCamera').addEventListener('change', function(e) {
+            document.getElementById('person2ImageCamera').addEventListener('change', function (e) {
                 handleFileSelect(e, 'person2', true);
             });
         }
-        
+
         function handleFileSelect(event, imageType, fromCamera) {
             console.log(`=== ANDROID FILE SELECT: ${imageType} (fromCamera: ${fromCamera}) ===`);
             console.log('Event:', event);
             console.log('Files:', event.target.files);
-            
+
             if (!event.target.files || event.target.files.length === 0) {
                 console.log('User cancelled file selection');
                 showValidationMessage('❌ File selection cancelled', 'warning');
                 return;
             }
-            
+
             const file = event.target.files[0];
-            
+
             // DETALJNO LOGIRANJE: Provjeri File objekt iz galerije vs camera
             console.log('=== FILE OBJECT ANALYSIS ===');
             console.log('Source:', fromCamera ? 'CAMERA' : 'GALLERY');
@@ -1303,12 +1331,12 @@ ${logsText}
             console.log('File has type?', file.type !== undefined && file.type !== null && file.type !== '');
             console.log('File keys:', Object.keys(file));
             console.log('File constructor:', file.constructor?.name);
-            
+
             // NORMALIZACIJA: Ako galerija vraća File bez name ili type, kreiraj novi File objekt
             let normalizedFile = file;
             if (!fromCamera && (!file.name || !file.type)) {
                 console.warn('⚠️ GALLERY FILE MISSING METADATA - Creating normalized File object...');
-                
+
                 // Odredi type
                 let fileType = file.type;
                 if (!fileType) {
@@ -1329,17 +1357,17 @@ ${logsText}
                         console.log('🔧 Using default type: image/jpeg');
                     }
                 }
-                
+
                 // Odredi name
                 let fileName = file.name;
                 if (!fileName) {
                     const timestamp = Date.now();
-                    const ext = fileType.includes('png') ? 'png' : 
-                               fileType.includes('webp') ? 'webp' : 'jpg';
+                    const ext = fileType.includes('png') ? 'png' :
+                        fileType.includes('webp') ? 'webp' : 'jpg';
                     fileName = `gallery-image-${timestamp}.${ext}`;
                     console.log('🔧 Generated filename:', fileName);
                 }
-                
+
                 // Kreiraj novi File objekt iz Blob-a (File je subklasa Blob-a)
                 try {
                     normalizedFile = new File([file], fileName, {
@@ -1363,7 +1391,7 @@ ${logsText}
                     }
                 }
             }
-            
+
             processSelectedFile(normalizedFile, imageType, fromCamera);
         }
 
@@ -1378,25 +1406,25 @@ ${logsText}
                 isAndroid: isAndroid,
                 source: fromCamera ? 'CAMERA' : 'GALLERY'
             });
-            
+
             try {
                 // Provjeri je li HEIC (sa provjerom da file.type i file.name postoje)
-                const isHeic = (file.type && (file.type === 'image/heic' || file.type === 'image/heif')) || 
-                               (file.name && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
-                
+                const isHeic = (file.type && (file.type === 'image/heic' || file.type === 'image/heif')) ||
+                    (file.name && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
+
                 console.log('Is HEIC file:', isHeic);
-                
+
                 let processedFile = file;
-                
+
                 // Ako je HEIC, konvertuj
                 if (isHeic) {
                     showValidationMessage('🔄 Converting Samsung HEIC to JPEG...', 'warning');
                     processedFile = await convertHeicToJpegInBrowser(file);
                     showValidationMessage('✅ Converted successfully!', 'success');
                 }
-                
+
                 await validateImage(processedFile);
-                
+
                 // KRITIČNO: Odmah pretvori File u Blob preko Canvas-a
                 // Razlog: File objekt može postati "consumed" nakon što se koristi za preview
                 // Blob je siguran i može se koristiti više puta (preview + upload)
@@ -1404,35 +1432,35 @@ ${logsText}
                 const quality = processedFile.size > (5 * 1024 * 1024) ? 0.8 : 0.9;
                 const cleanBlob = await convertFileToCleanBlob(processedFile, quality);
                 console.log('✅ Clean Blob created:', (cleanBlob.size / 1024 / 1024).toFixed(2) + ' MB');
-                
+
                 // Set the BLOB (not File) based on type
                 if (imageType === 'couple') {
                     uploadedImages.couple = cleanBlob;
                     uploadedImages.person1 = null;
                     uploadedImages.person2 = null;
-                    
+
                     // ANDROID FIX: Clear other inputs safely
                     clearAllInputsForType('person1');
                     clearAllInputsForType('person2');
-                    
+
                 } else if (imageType === 'person1') {
                     uploadedImages.person1 = cleanBlob;
                     uploadedImages.couple = null;
-                    
+
                     // ANDROID FIX: Clear other inputs safely
                     clearAllInputsForType('couple');
-                    
+
                 } else if (imageType === 'person2') {
                     uploadedImages.person2 = cleanBlob;
                 }
-                
+
                 if (!isHeic) {
                     showValidationMessage(`✅ Image validated! (${(cleanBlob.size / 1024 / 1024).toFixed(1)}MB)`, 'success');
                 }
-                
+
                 checkGenerateButton();
                 updatePreview();
-                
+
                 console.log('✅ File processing completed successfully for', imageType);
             } catch (error) {
                 const errorMsg = error?.message || error?.toString() || 'Invalid image file';
@@ -1492,20 +1520,20 @@ ${logsText}
             } else if (uploadedImages.person1) {
                 console.log('📸 Updating preview for person1 and/or person2 images...');
                 const images = [];
-                
+
                 try {
                     if (uploadedImages.person1) {
                         const blobUrl1 = URL.createObjectURL(uploadedImages.person1);
                         console.log('✅ Preview URL created for person1 image');
-                        images.push({src: blobUrl1, type: 'person1'});
+                        images.push({ src: blobUrl1, type: 'person1' });
                     }
-                    
+
                     if (uploadedImages.person2) {
                         const blobUrl2 = URL.createObjectURL(uploadedImages.person2);
                         console.log('✅ Preview URL created for person2 image');
-                        images.push({src: blobUrl2, type: 'person2'});
+                        images.push({ src: blobUrl2, type: 'person2' });
                     }
-                    
+
                     if (images.length > 0) {
                         displayPreview(images);
                     }
@@ -1533,18 +1561,18 @@ ${logsText}
                 uploadedImages.couple = null;
                 // ANDROID FIX: Use safe helper function
                 clearAllInputsForType('couple');
-                
+
             } else if (type === 'person1') {
                 uploadedImages.person1 = null;
                 // ANDROID FIX: Use safe helper function
                 clearAllInputsForType('person1');
-                
+
             } else if (type === 'person2') {
                 uploadedImages.person2 = null;
                 // ANDROID FIX: Use safe helper function
                 clearAllInputsForType('person2');
             }
-            
+
             if (!uploadedImages.couple && !uploadedImages.person1) {
                 document.getElementById('previewSection').style.display = 'none';
             } else {
@@ -1557,7 +1585,7 @@ ${logsText}
             const hasImages = uploadedImages.couple || uploadedImages.person1;
             const button = document.getElementById('generateButton');
             const shouldEnable = hasImages && currentTemplate;
-            
+
             console.log('checkGenerateButton:', {
                 hasImages: hasImages,
                 hasCouple: !!uploadedImages.couple,
@@ -1567,9 +1595,9 @@ ${logsText}
                 shouldEnable: shouldEnable,
                 currentDisabled: button.disabled
             });
-            
+
             button.disabled = !shouldEnable;
-            
+
             // Dodatna provjera - ako je button još uvijek disabled, pokušaj ponovno
             if (!shouldEnable && button.disabled === false) {
                 console.warn('Button state mismatch - forcing disabled');
@@ -1581,20 +1609,20 @@ ${logsText}
         }
 
         // Generate transformation
-        document.getElementById('generateButton').addEventListener('click', async function() {
+        document.getElementById('generateButton').addEventListener('click', async function () {
             // 1. PROVJERI EMAIL PRIJE SVEGA OSTALOG
             const userEmail = document.getElementById('userEmail').value;
             const emailValidation = validateEmail(userEmail);
-            
+
             if (!emailValidation.valid) {
                 showEmailError(emailValidation.message);
                 return; // PREKINI IZVRŠAVANJE - ne pokreći generiranje!
             }
-            
+
             // Očisti grešku ako je email valjan
             clearEmailError();
             console.log('✅ Email validation passed:', userEmail);
-            
+
             if (!currentTemplate) {
                 showError('Template not loaded. Please refresh the page.');
                 return;
@@ -1617,10 +1645,10 @@ ${logsText}
             document.getElementById('loadingSection').style.display = 'block';
             document.getElementById('resultsSection').classList.remove('show');
             document.getElementById('generateButton').disabled = true;
-            
+
             // Start progress tracking
             startProgressTracking();
-            
+
             // Save generation data for retry
             saveGenerationData({
                 templateId: currentTemplate.id,
@@ -1630,24 +1658,24 @@ ${logsText}
 
             try {
                 const isCouple = !!uploadedImages.couple;
-                
+
                 // NOVO: Uploadaj slike na Bunny.net PRVO (smanjuje request size za 90%+)
                 const userId = generateUserId();
                 updateLoadingStep(1, 'Uploading images...');
-                
+
                 // Upload kroz Netlify function (Bunny.net ne podržava CORS za direktan upload)
                 const image1File = uploadedImages.couple || uploadedImages.person1;
-                
+
                 if (!image1File) {
                     throw new Error('No image selected. Please select an image first.');
                 }
-                
+
                 const image1Filename = `${userId}-image1.jpg`;
-                
+
                 console.log('📤 Uploading image1 through Netlify function...');
                 console.log('Image1 file size:', image1File.size ? (image1File.size / 1024 / 1024).toFixed(2) + ' MB' : 'unknown');
                 console.log('Image1 filename:', image1Filename);
-                
+
                 // Timeout wrapper za fetch (definirano jednom za sve uploade)
                 const fetchWithTimeout = (url, options, timeout = 60000) => {
                     return Promise.race([
@@ -1657,12 +1685,12 @@ ${logsText}
                         )
                     ]);
                 };
-                
+
                 // SIGNED TOKEN UPLOAD: Direktan upload na Bunny.net sa privremenim tokenom
                 console.log('🔍 Preparing Blob for direct upload...');
                 console.log('Blob type:', image1File.type);
                 console.log('Blob size:', (image1File.size / 1024 / 1024).toFixed(2), 'MB');
-                
+
                 let image1Url;
                 try {
                     // Korak 1: Zatraži signed token od Netlify funkcije (brzo - mali JSON)
@@ -1676,18 +1704,18 @@ ${logsText}
                             filename: image1Filename
                         })
                     }, 10000); // 10s za token request
-                    
+
                     if (!tokenResponse.ok) {
                         throw new Error('Failed to get upload token');
                     }
-                    
+
                     const tokenData = await tokenResponse.json();
                     if (!tokenData.success) {
                         throw new Error(tokenData.error || 'Failed to get upload token');
                     }
-                    
+
                     console.log('✅ Token received, expires at:', new Date(tokenData.expiresAt).toLocaleTimeString());
-                    
+
                     // Korak 2: Upload Blob direktno na Bunny.net sa tokenom (BRZO - direktan upload!)
                     console.log('📤 Uploading directly to Bunny.net...');
                     const bunnyResponse = await fetchWithTimeout(tokenData.uploadUrl, {
@@ -1698,27 +1726,27 @@ ${logsText}
                         },
                         body: image1File // Blob direktno, ne base64!
                     }, 60000); // 60s za upload
-                    
+
                     if (!bunnyResponse.ok && bunnyResponse.status !== 201) {
                         throw new Error(`Bunny.net upload failed: ${bunnyResponse.status} ${bunnyResponse.statusText}`);
                     }
-                    
+
                     // Uspješan upload!
                     image1Url = tokenData.cdnUrl;
                     console.log('✅ Image1 uploaded directly to Bunny.net:', image1Url);
-                    
+
                     // FINALNA PROVJERA: Da li imamo image1Url?
                     if (!image1Url) {
                         throw new Error('Upload completed but no URL returned');
                     }
                     console.log('✅✅✅ FINAL CHECK: image1Url is valid:', image1Url);
-                    
+
                 } catch (uploadError) {
                     console.error('❌❌❌ Upload error:', uploadError);
                     console.error('❌❌❌ Upload error type:', uploadError.constructor?.name);
                     console.error('❌❌❌ Upload error message:', uploadError.message);
                     console.error('❌❌❌ Upload error stack:', uploadError.stack);
-                    
+
                     if (uploadError.message && uploadError.message.includes('timeout')) {
                         throw new Error('Upload timeout - please check your internet connection and try again.');
                     } else if (uploadError.message && (uploadError.message.includes('Failed to fetch') || uploadError.message.includes('CORS'))) {
@@ -1739,18 +1767,18 @@ ${logsText}
                         throw new Error('Failed to upload image1: ' + (uploadError.message || 'Upload error'));
                     }
                 }
-                
+
                 // Uploadaj image2 ako postoji - kroz Netlify funkciju
                 let image2Url = null;
                 if (!isCouple && uploadedImages.person2) {
                     updateLoadingStep(1, 'Uploading second image...');
-                    
+
                     const image2Filename = `${userId}-image2.jpg`;
                     let image2File = uploadedImages.person2;
-                    
+
                     console.log('📤 Uploading image2 directly to Bunny.net...');
                     console.log('Image2 Blob size:', (image2File.size / 1024 / 1024).toFixed(2), 'MB');
-                    
+
                     try {
                         // Korak 1: Zatraži token
                         console.log('🔐 Requesting upload token for image2...');
@@ -1763,18 +1791,18 @@ ${logsText}
                                 filename: image2Filename
                             })
                         }, 10000);
-                        
+
                         if (!token2Response.ok) {
                             throw new Error('Failed to get upload token for image2');
                         }
-                        
+
                         const token2Data = await token2Response.json();
                         if (!token2Data.success) {
                             throw new Error(token2Data.error || 'Failed to get upload token for image2');
                         }
-                        
+
                         console.log('✅ Token2 received');
-                        
+
                         // Korak 2: Upload direktno na Bunny.net
                         const bunny2Response = await fetchWithTimeout(token2Data.uploadUrl, {
                             method: 'PUT',
@@ -1784,17 +1812,17 @@ ${logsText}
                             },
                             body: image2File
                         }, 60000);
-                        
+
                         if (!bunny2Response.ok && bunny2Response.status !== 201) {
                             throw new Error(`Bunny.net upload failed for image2: ${bunny2Response.status}`);
                         }
-                        
+
                         image2Url = token2Data.cdnUrl;
                         console.log('✅ Image2 uploaded directly to Bunny.net:', image2Url);
-                        
+
                     } catch (upload2Error) {
                         console.error('Upload error for image2:', upload2Error);
-                        
+
                         if (upload2Error.message && upload2Error.message.includes('timeout')) {
                             throw new Error('Upload timeout - please check your internet connection and try again.');
                         } else if (upload2Error.message && upload2Error.message.includes('Failed to fetch')) {
@@ -1816,13 +1844,13 @@ ${logsText}
                         }
                     }
                 }
-                
+
                 // SADA: Pozovi verify-and-start za Replicate generaciju (async pattern)
                 updateLoadingStep(2, 'Starting AI generation...');
-                
+
                 console.log('🚀 Using new async pattern: verify-and-start → processing.html');
                 console.log('Calling verify-and-start function with URLs...');
-                
+
                 // Validacija URL-ova prije slanja
                 if (!image1Url || !image1Url.startsWith('http')) {
                     throw new Error('Invalid image1 URL. Please try uploading the image again.');
@@ -1830,9 +1858,9 @@ ${logsText}
                 if (image2Url && !image2Url.startsWith('http')) {
                     throw new Error('Invalid image2 URL. Please try uploading the image again.');
                 }
-                
+
                 console.log('✅ URL validation passed');
-                
+
                 // Pozovi verify-and-start (on će generirati prompt interno)
                 console.log('📡 Calling verify-and-start...');
                 const verifyResponse = await fetchWithTimeout('/.netlify/functions/verify-and-start', {
@@ -1848,25 +1876,25 @@ ${logsText}
                         prompt: prompt // Opcionalno, verify-and-start može generirati svoj
                     })
                 }, 30000); // 30 sekundi timeout
-                
+
                 if (!verifyResponse.ok) {
                     const errorText = await verifyResponse.text();
                     throw new Error('Failed to start generation: ' + errorText);
                 }
-                
+
                 const verifyResult = await verifyResponse.json();
                 console.log('✅ verify-and-start result:', verifyResult);
-                
+
                 if (!verifyResult.success || !verifyResult.predictionId) {
                     throw new Error('Failed to get prediction ID: ' + (verifyResult.error || 'Unknown error'));
                 }
-                
+
                 // Redirect na processing.html s predictionId i email
                 const predictionId = verifyResult.predictionId;
                 console.log('✅ Prediction started, redirecting to processing.html...');
                 window.location.href = `processing.html?predictionId=${predictionId}&email=${encodeURIComponent(userEmail)}&templateId=${encodeURIComponent(currentTemplate.id)}&userId=${encodeURIComponent(userId)}`;
                 return; // Exit early - redirect će se dogoditi
-                
+
             } catch (error) {
                 console.error('Generation error:', error);
                 console.error('Error type:', typeof error);
@@ -1876,17 +1904,17 @@ ${logsText}
                     stack: error?.stack,
                     toString: error?.toString()
                 });
-                
+
                 // ANDROID FIX: Better handling for ProgressEvent errors
                 let errorMessage = 'An error occurred while generating your transformation.';
-                
+
                 // Detaljno logiranje za debugging (posebno važno za Android)
                 console.error('=== ERROR DETAILS ===');
                 console.error('Error object:', error);
                 console.error('Error type:', typeof error);
                 console.error('Error constructor:', error?.constructor?.name);
                 console.error('Error keys:', error ? Object.keys(error) : 'N/A');
-                
+
                 // ANDROID FIX: Specific handling for ProgressEvent
                 if (error?.constructor?.name === 'ProgressEvent') {
                     errorMessage = 'Network error - connection failed. Please check your internet connection and try again.';
@@ -1924,17 +1952,17 @@ ${logsText}
                         }
                     }
                 }
-                
+
                 // Ako je error message još uvijek prazan ili "undefined", koristi default
                 if (!errorMessage || errorMessage.trim().length === 0 || errorMessage === 'undefined') {
                     errorMessage = 'An unexpected error occurred. Please try again or contact support if the problem persists.';
                 }
-                
+
                 console.error('Final error message:', errorMessage);
-                
+
                 // NOVO: Prikaži sve logove u debug panelu za analizu
                 showAllLogsInDebugPanel();
-                
+
                 showError(errorMessage, true);
                 document.getElementById('loadingSection').style.display = 'none';
                 document.getElementById('generateButton').disabled = false;
@@ -1948,7 +1976,7 @@ ${logsText}
         async function convertFileToCleanBlob(file, quality = 0.9) {
             // MAX_DIMENSION: Limit za Android memory optimization (kao u lovestories)
             const MAX_DIMENSION = 2048;
-            
+
             return new Promise((resolve, reject) => {
                 console.log('🎨 Converting File to clean Blob via Canvas...');
                 console.log('Input file:', {
@@ -1956,26 +1984,26 @@ ${logsText}
                     type: file.type,
                     size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
                 });
-                
+
                 // Kreiraj nevidljivi canvas u memoriji
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
-                
+
                 let retryCount = 0;
                 const MAX_RETRIES = 1; // Jedan retry pokušaj
-                
+
                 const loadImage = (blobUrl) => {
                     img.onload = () => {
                         try {
                             // Izračunaj nove dimenzije (održavajući aspect ratio)
                             let newWidth = img.width;
                             let newHeight = img.height;
-                            
+
                             // Ako je slika veća od MAX_DIMENSION, resize-uj je
                             if (newWidth > MAX_DIMENSION || newHeight > MAX_DIMENSION) {
                                 const aspectRatio = newWidth / newHeight;
-                                
+
                                 if (newWidth > newHeight) {
                                     // Landscape: width je veći
                                     newWidth = MAX_DIMENSION;
@@ -1985,21 +2013,21 @@ ${logsText}
                                     newHeight = MAX_DIMENSION;
                                     newWidth = Math.round(MAX_DIMENSION * aspectRatio);
                                 }
-                                
+
                                 console.log(`📐 Resizing image: ${img.width}x${img.height} → ${newWidth}x${newHeight} (max ${MAX_DIMENSION}px)`);
                             } else {
                                 console.log(`📐 Image dimensions OK: ${img.width}x${img.height} (within ${MAX_DIMENSION}px limit)`);
                             }
-                            
+
                             // Postavi dimenzije canvas-a
                             canvas.width = newWidth;
                             canvas.height = newHeight;
-                            
+
                             console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
-                            
+
                             // Nacrtaj sliku na canvas (s resize-om ako je potrebno)
                             ctx.drawImage(img, 0, 0, newWidth, newHeight);
-                            
+
                             // Pretvori canvas u čisti Blob
                             canvas.toBlob((blob) => {
                                 if (!blob) {
@@ -2007,38 +2035,38 @@ ${logsText}
                                     reject(new Error('Failed to create Blob from canvas'));
                                     return;
                                 }
-                                
+
                                 console.log('✅ Clean Blob created:', {
                                     size: (blob.size / 1024 / 1024).toFixed(2) + ' MB',
                                     type: blob.type,
                                     originalSize: (file.size / 1024 / 1024).toFixed(2) + ' MB',
                                     compression: ((1 - blob.size / file.size) * 100).toFixed(1) + '%'
                                 });
-                                
+
                                 // Cleanup
                                 URL.revokeObjectURL(blobUrl);
-                                
+
                                 resolve(blob);
                             }, 'image/jpeg', quality);
-                            
+
                         } catch (error) {
                             console.error('❌ Canvas processing error:', error);
                             URL.revokeObjectURL(blobUrl);
                             reject(error);
                         }
                     };
-                    
+
                     img.onerror = (error) => {
                         console.error(`❌ Image load error (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error);
-                        
+
                         // Retry mechanism: Pokušaj ponovno ako još ima pokušaja
                         if (retryCount < MAX_RETRIES) {
                             retryCount++;
                             console.log(`🔄 Retrying image load (attempt ${retryCount + 1}/${MAX_RETRIES + 1})...`);
-                            
+
                             // Cleanup stari URL
                             URL.revokeObjectURL(blobUrl);
-                            
+
                             // Kratka pauza prije retry-a (100ms)
                             setTimeout(() => {
                                 const newBlobUrl = URL.createObjectURL(file);
@@ -2051,11 +2079,11 @@ ${logsText}
                             reject(new Error('Failed to load image for canvas processing after retries. The image may be corrupted or too large for mobile memory.'));
                         }
                     };
-                    
+
                     // Postavi src nakon što su event handleri postavljeni
                     img.src = blobUrl;
                 };
-                
+
                 // Učitaj sliku iz File objekta (prvi pokušaj)
                 const blobUrl = URL.createObjectURL(file);
                 loadImage(blobUrl);
@@ -2066,45 +2094,45 @@ ${logsText}
         // HEIC CONVERSION
         // ============================================
         async function convertHeicToJpegInBrowser(file) {
-            const isHeic = (file.type && (file.type === 'image/heic' || file.type === 'image/heif')) || 
-                           (file.name && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
-            
+            const isHeic = (file.type && (file.type === 'image/heic' || file.type === 'image/heif')) ||
+                (file.name && (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')));
+
             if (!isHeic) {
                 return file; // Nije HEIC, vrati original
             }
-            
+
             console.log('Converting HEIC to JPEG:', file.name);
-            
+
             try {
                 // Provjeri je li biblioteka učitana
                 if (typeof heic2any === 'undefined') {
                     throw new Error('HEIC converter library not loaded');
                 }
-                
+
                 // Konvertuj HEIC u JPEG
                 const jpegBlob = await heic2any({
                     blob: file,
                     toType: 'image/jpeg',
                     quality: 0.85 // 85% kvalitete
                 });
-                
+
                 // heic2any vraća array ako je više slika, uzmi prvu
                 const blob = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
-                
+
                 // Kreiraj novi File objekt
-                const jpegFile = new File([blob], 
+                const jpegFile = new File([blob],
                     (file.name ? file.name.replace(/\.(heic|heif)$/i, '.jpg') : 'converted.jpg'), {
-                        type: 'image/jpeg',
-                        lastModified: Date.now()
-                    });
-                
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                });
+
                 console.log('HEIC conversion successful:', {
                     original: `${(file.size / 1024 / 1024).toFixed(2)}MB (${file.type})`,
                     converted: `${(blob.size / 1024 / 1024).toFixed(2)}MB (image/jpeg)`
                 });
-                
+
                 return jpegFile;
-                
+
             } catch (error) {
                 console.error('HEIC conversion failed:', error);
                 throw new Error(`Cannot convert HEIC image: ${error.message}. Please save as JPEG first.`);
@@ -2122,35 +2150,35 @@ ${logsText}
                     size: file?.size,
                     constructor: file?.constructor?.name
                 });
-                
+
                 // Provjeri da li File objekt postoji i je li validan
                 if (!file) {
                     reject(new Error('No file provided'));
                     return;
                 }
-                
+
                 // Provjeri da li je File objekt ili Blob
                 if (!(file instanceof File) && !(file instanceof Blob)) {
                     reject(new Error('Invalid file object - not a File or Blob'));
                     return;
                 }
-                
+
                 const minWidth = 400;
                 const minHeight = 400;
                 const maxSize = 10 * 1024 * 1024; // 10MB
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
-                
+
                 // Provjeri ekstenziju za Samsung HEIC (sa provjerom da file.name i file.type postoje)
                 const fileName = file.name ? file.name.toLowerCase() : '';
                 const isHeic = fileName && (fileName.endsWith('.heic') || fileName.endsWith('.heif'));
                 const isAllowedType = (file.type && allowedTypes.includes(file.type)) || isHeic;
-                
+
                 // Check file type
                 if (!isAllowedType) {
                     reject(new Error(`Invalid file type (${file.type || 'unknown'}). Samsung users: Please save as JPEG or disable Motion Photo.`));
                     return;
                 }
-                
+
                 // Check file size (provjeri da li size postoji)
                 if (file.size !== undefined && file.size !== null) {
                     if (file.size === 0) {
@@ -2164,7 +2192,7 @@ ${logsText}
                 } else {
                     console.warn('⚠️ File size is undefined, skipping size check');
                 }
-                
+
                 // Check image dimensions
                 let objectURL;
                 try {
@@ -2178,9 +2206,9 @@ ${logsText}
                     reject(new Error('Invalid file - cannot create preview URL'));
                     return;
                 }
-                
+
                 const img = new Image();
-                img.onload = function() {
+                img.onload = function () {
                     try {
                         if (img.width < minWidth || img.height < minHeight) {
                             reject(new Error(`Image too small (${img.width}x${img.height}px). Minimum: ${minWidth}x${minHeight}px`));
@@ -2191,8 +2219,8 @@ ${logsText}
                                 size: file.size,
                                 type: file.type
                             });
-                            resolve({ 
-                                width: img.width, 
+                            resolve({
+                                width: img.width,
                                 height: img.height,
                                 size: file.size,
                                 type: file.type
@@ -2214,7 +2242,7 @@ ${logsText}
                 img.src = objectURL;
             });
         }
-        
+
         function showValidationMessage(message, type = 'success') {
             const validationDiv = document.getElementById('validationMessage');
             validationDiv.textContent = message;
@@ -2223,7 +2251,7 @@ ${logsText}
                 validationDiv.classList.remove('show');
             }, 5000);
         }
-        
+
         // ============================================
         // PROGRESS TRACKING
         // ============================================
@@ -2235,16 +2263,16 @@ ${logsText}
             { step: 5, message: 'Adding final touches...', icon: '🎭', estimatedTime: 20 },
             { step: 6, message: 'Complete! Preparing download...', icon: '✅', estimatedTime: 5 }
         ];
-        
+
         let currentStep = 0;
         let startTime = null;
-        
+
         function updateLoadingStep(step, customMessage = null) {
             if (step < 1 || step > loadingStates.length) return;
-            
+
             currentStep = step;
             const state = loadingStates[step - 1];
-            
+
             // Update step indicators
             for (let i = 1; i <= loadingStates.length; i++) {
                 const stepEl = document.getElementById(`step${i}`);
@@ -2257,7 +2285,7 @@ ${logsText}
                     }
                 }
             }
-            
+
             // Update loading message
             const loadingMessage = document.getElementById('loadingMessage');
             const stepIcon = document.getElementById('stepIcon');
@@ -2267,24 +2295,24 @@ ${logsText}
             if (stepIcon) {
                 stepIcon.textContent = state.icon;
             }
-            
+
             // Update progress bar
             const progressPercent = ((step - 1) / (loadingStates.length - 1)) * 100;
             updateProgress(progressPercent);
         }
-        
+
         function updateProgress(percent) {
             const progressFill = document.getElementById('progressFill');
             const progressText = document.getElementById('progressText');
-            
+
             if (progressFill) {
                 progressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
             }
-            
+
             if (progressText) {
                 progressText.textContent = `${Math.round(percent)}%`;
             }
-            
+
             // Update time estimate
             if (startTime && percent > 0 && percent < 100) {
                 const elapsed = (Date.now() - startTime) / 1000;
@@ -2293,7 +2321,7 @@ ${logsText}
                 updateTimeEstimate(remaining);
             }
         }
-        
+
         function updateTimeEstimate(remainingSeconds) {
             const timeEstimate = document.getElementById('timeEstimate');
             if (timeEstimate && remainingSeconds > 0) {
@@ -2306,18 +2334,18 @@ ${logsText}
                 }
             }
         }
-        
+
         function startProgressTracking() {
             startTime = Date.now();
             currentStep = 0;
             updateLoadingStep(1);
         }
-        
+
         // ============================================
         // ERROR RECOVERY & RETRY
         // ============================================
         let lastGenerationData = null;
-        
+
         function saveGenerationData(data) {
             lastGenerationData = {
                 ...data,
@@ -2330,26 +2358,26 @@ ${logsText}
                 console.warn('Could not save to localStorage:', e);
             }
         }
-        
+
         function retryGeneration() {
             if (!lastGenerationData) {
                 showError('No previous generation data found. Please upload images again.');
                 return;
             }
-            
+
             // Check network connection before retry
             if (!navigator.onLine) {
                 showError('No internet connection. Please connect to the internet and try again.', false);
                 return;
             }
-            
+
             // Hide error recovery
             document.getElementById('errorRecovery').style.display = 'none';
             document.getElementById('errorMessage').style.display = 'none';
-            
+
             // Show network checking message
             showValidationMessage('🔍 Checking network connection...', 'warning');
-            
+
             // Small delay to show message
             setTimeout(() => {
                 // Restore images if they exist
@@ -2357,12 +2385,12 @@ ${logsText}
                     uploadedImages = lastGenerationData.uploadedImages;
                     updatePreview();
                 }
-                
+
                 // Retry generation
                 document.getElementById('generateButton').click();
             }, 1000);
         }
-        
+
         function saveProgress() {
             try {
                 const progressData = {
@@ -2376,7 +2404,7 @@ ${logsText}
                 showValidationMessage('❌ Could not save progress: ' + e.message, 'error');
             }
         }
-        
+
         function loadSavedProgress() {
             try {
                 const saved = localStorage.getItem('raincrestProgress');
@@ -2390,7 +2418,7 @@ ${logsText}
                 console.warn('Could not load saved progress:', e);
             }
         }
-        
+
         // ============================================
         // IMPROVED ERROR HANDLING
         // ============================================
@@ -2398,29 +2426,29 @@ ${logsText}
             const errorDiv = document.getElementById('errorMessage');
             const errorContent = document.getElementById('errorContent');
             const errorRecovery = document.getElementById('errorRecovery');
-            
+
             if (errorContent) {
                 errorContent.textContent = message;
             }
-            
+
             if (errorDiv) {
                 errorDiv.style.display = 'block';
             }
-            
+
             // ANDROID FIX: Provjeri da li je stvarno network error ili samo upload/server error
-            const isNetworkError = message && (message.includes('Network') || 
-                                  message.includes('connection') || 
-                                  message.includes('internet'));
-            
+            const isNetworkError = message && (message.includes('Network') ||
+                message.includes('connection') ||
+                message.includes('internet'));
+
             // Provjeri da li je uređaj stvarno offline
             const isActuallyOffline = !navigator.onLine;
-            
+
             // Ako je uređaj online, ali poruka sugerira network error, to je vjerojatno server/upload error
             const isServerError = isNetworkError && !isActuallyOffline;
-            
+
             if (errorRecovery && (showRetry || isNetworkError)) {
                 errorRecovery.style.display = 'block';
-                
+
                 // Update retry button text ovisno o tipu greške
                 const retryButton = errorRecovery.querySelector('.retry-button');
                 if (retryButton) {
@@ -2437,16 +2465,16 @@ ${logsText}
             } else if (errorRecovery) {
                 errorRecovery.style.display = 'none';
             }
-            
+
             // Hide loading section
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('generateButton').disabled = false;
         }
-        
+
         // ============================================
         // Helper funkcije
         // ============================================
-        
+
         /**
          * Kompresira sliku u browseru prije uploada
          * Smanjuje veličinu na max 2MB za mobilne uploads
@@ -2461,7 +2489,7 @@ ${logsText}
                         const maxDimension = 2000;
                         let width = img.width;
                         let height = img.height;
-                        
+
                         if (width > maxDimension || height > maxDimension) {
                             if (width > height) {
                                 height = (height / width) * maxDimension;
@@ -2471,30 +2499,30 @@ ${logsText}
                                 height = maxDimension;
                             }
                         }
-                        
+
                         // Kreiraj canvas za kompresiju
                         const canvas = document.createElement('canvas');
                         canvas.width = width;
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
-                        
+
                         // Crtaj sliku na canvas
                         ctx.drawImage(img, 0, 0, width, height);
-                        
+
                         // Kompresiraj s različitim kvalitetama dok ne dobijemo željenu veličinu
                         const maxSizeBytes = maxSizeMB * 1024 * 1024;
                         let quality = 0.85; // Počni s 85% kvalitetom
                         let compressedBlob;
-                        
+
                         const tryCompress = () => {
                             canvas.toBlob((blob) => {
                                 if (!blob) {
                                     reject(new Error('Failed to compress image'));
                                     return;
                                 }
-                                
+
                                 console.log(`Compression attempt: ${(blob.size / 1024 / 1024).toFixed(2)}MB (quality: ${(quality * 100).toFixed(0)}%)`);
-                                
+
                                 if (blob.size <= maxSizeBytes || quality <= 0.3) {
                                     // Ako je dovoljno mala ili smo na minimumu kvalitete
                                     compressedBlob = blob;
@@ -2511,7 +2539,7 @@ ${logsText}
                                 }
                             }, 'image/jpeg', quality);
                         };
-                        
+
                         tryCompress();
                     };
                     img.onerror = () => reject(new Error('Failed to load image'));
@@ -2521,7 +2549,7 @@ ${logsText}
                 reader.readAsDataURL(file);
             });
         }
-        
+
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -2549,7 +2577,7 @@ ${logsText}
         // ANDROID FIX: Clear all related inputs for an image type
         function clearAllInputsForType(imageType) {
             console.log(`Clearing all inputs for: ${imageType}`);
-            
+
             if (imageType === 'couple') {
                 safeClearInput('coupleImage');
                 safeClearInput('coupleImageGallery');
@@ -2568,23 +2596,23 @@ ${logsText}
         function showResults(imageUrl, videoUrl, userEmail, templateId, userId) {
             const resultsContainer = document.getElementById('resultsContainer');
             resultsContainer.innerHTML = '';
-            
+
             if (imageUrl) {
                 const imageDiv = document.createElement('div');
                 imageDiv.className = 'result-item';
-                    imageDiv.innerHTML = `
+                imageDiv.innerHTML = `
                     <h4>📸 Transformed Image</h4>
                     <img src="${imageUrl}" alt="Result">
                     <a href="${imageUrl}" download="raincrest-image.jpg" class="download-button">⬇️ Download Image</a>
                 `;
                 resultsContainer.appendChild(imageDiv);
-                
+
                 // Send email if userEmail is provided
                 if (userEmail) {
                     sendEmailNotification(userEmail, imageUrl, templateId, userId);
                 }
             }
-            
+
             if (videoUrl) {
                 const videoDiv = document.createElement('div');
                 videoDiv.className = 'result-item';
@@ -2595,14 +2623,14 @@ ${logsText}
                 `;
                 resultsContainer.appendChild(videoDiv);
             }
-            
+
             document.getElementById('resultsSection').classList.add('show');
             document.getElementById('loadingSection').style.display = 'none';
-            
+
             // Show 100% progress
             updateProgress(100);
             updateLoadingStep(6, 'Complete!');
-            
+
             // Clear saved progress
             try {
                 localStorage.removeItem('raincrestProgress');
@@ -2610,7 +2638,7 @@ ${logsText}
                 console.warn('Could not clear saved progress:', e);
             }
         }
-        
+
         // QR code function removed - not needed for kiosk mode
 
         // Email validation functions
@@ -2619,44 +2647,44 @@ ${logsText}
             if (!email || email.trim().length === 0) {
                 return { valid: false, message: 'Email address is required' };
             }
-            
+
             // Ukloni razmake
             email = email.trim();
-            
+
             // Basic email regex pattern
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
+
             if (!emailRegex.test(email)) {
                 return { valid: false, message: 'Please enter a valid email address' };
             }
-            
+
             // Provjeri da li ima točku nakon @
             if (!email.includes('.')) {
                 return { valid: false, message: 'Email must contain a domain (e.g., @gmail.com)' };
             }
-            
+
             // Provjeri minimalne duljine
             if (email.length < 5) {
                 return { valid: false, message: 'Email address is too short' };
             }
-            
+
             // Provjeri maksimalne duljine
             if (email.length > 100) {
                 return { valid: false, message: 'Email address is too long' };
             }
-            
+
             // Provjeri da li ima @ znak
             const atCount = (email.match(/@/g) || []).length;
             if (atCount !== 1) {
                 return { valid: false, message: 'Email must contain exactly one @ symbol' };
             }
-            
+
             // Provjeri da li domain dio postoji
             const parts = email.split('@');
             if (parts[1].length < 3) {
                 return { valid: false, message: 'Domain part is too short' };
             }
-            
+
             return { valid: true, message: 'Valid email' };
         }
 
@@ -2666,7 +2694,7 @@ ${logsText}
                 errorDiv.textContent = message;
                 errorDiv.style.display = 'block';
             }
-            
+
             // Dodaj crveni border na input
             const emailInput = document.getElementById('userEmail');
             if (emailInput) {
@@ -2679,7 +2707,7 @@ ${logsText}
             if (errorDiv) {
                 errorDiv.style.display = 'none';
             }
-            
+
             // Vrati normalni border
             const emailInput = document.getElementById('userEmail');
             if (emailInput) {
@@ -2701,7 +2729,7 @@ ${logsText}
                         userId: userId
                     })
                 });
-                
+
                 if (emailResponse.ok) {
                     console.log('✅ Email sent successfully');
                     showValidationMessage('📧 Image sent to your email!', 'success');
@@ -2719,19 +2747,19 @@ ${logsText}
         loadTemplateInfo();
         checkGenerateButton();
         loadSavedProgress();
-        
+
         // Setup email input event listeners
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('userEmail');
-            
+
             if (emailInput) {
                 // Real-time validation while typing
-                emailInput.addEventListener('input', function() {
+                emailInput.addEventListener('input', function () {
                     const email = this.value;
-                    
+
                     if (email.length > 0) {
                         const validation = validateEmail(email);
-                        
+
                         if (validation.valid) {
                             clearEmailError();
                             this.style.borderColor = '#4CAF50';
@@ -2740,14 +2768,14 @@ ${logsText}
                         }
                     }
                 });
-                
+
                 // Validate when user finishes typing
-                emailInput.addEventListener('blur', function() {
+                emailInput.addEventListener('blur', function () {
                     const email = this.value;
-                    
+
                     if (email.length > 0) {
                         const validation = validateEmail(email);
-                        
+
                         if (!validation.valid) {
                             showEmailError(validation.message);
                         } else {
@@ -2757,29 +2785,29 @@ ${logsText}
                 });
             }
         });
-        
+
         // ANDROID FIX: Setup listeners - ALWAYS (buttons use these functions on all platforms)
         debugLog('Setting up file input listeners', 'info');
         setupAndroidInputListeners();
-        
+
         if (useAndroidFix) {
             debugLog('Android fix enabled: Using optimized file selection', 'success');
             showValidationMessage('📱 Android detected: Using optimized file selection', 'success');
         } else {
             debugLog('Using standard file input approach', 'info');
         }
-        
+
         // Auto-show debug panel on Android for testing
         if (isAndroid) {
             setTimeout(() => {
                 debugLog('Android device detected - debug panel available', 'success');
-                debugLog(`Network status: ${networkStatus.online ? 'online' : 'offline'}`, 
-                        networkStatus.online ? 'success' : 'error');
+                debugLog(`Network status: ${networkStatus.online ? 'online' : 'offline'}`,
+                    networkStatus.online ? 'success' : 'error');
                 // Uncomment next line to auto-show debug panel on Android
                 // toggleDebugPanel();
             }, 1000);
         }
-        
+
         // Periodic network check for Android
         if (isAndroid) {
             setInterval(() => {
@@ -2788,6 +2816,5 @@ ${logsText}
         }
     </script>
 </body>
+
 </html>
-
-

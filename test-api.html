@@ -503,28 +503,62 @@
                 let result;
 
                 if (selectedApi === 'gemini') {
-                    // Call Gemini API directly
-                    log('Calling Gemini API...');
-                    document.getElementById('loadingText').textContent = 'Gemini is generating...';
+                    // Use Background Function (15 minute timeout!)
+                    const jobId = `gemini-${Date.now()}`;
+                    const outputFilename = `generated/${jobId}.jpg`;
+                    const cdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
 
-                    const geminiResponse = await fetch('/.netlify/functions/generate-image-gemini', {
+                    log('Starting Gemini Background Function...');
+                    document.getElementById('loadingText').textContent = 'Starting generation...';
+
+                    // Call background function (returns 202 immediately)
+                    const bgResponse = await fetch('/.netlify/functions/generate-image-gemini-background', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             imageUrl,
                             templateId,
                             isCouple,
-                            gender
+                            gender,
+                            jobId,
+                            outputFilename
                         })
                     });
 
-                    result = await geminiResponse.json();
+                    log(`Background function started (status: ${bgResponse.status})`);
 
-                    if (!result.success) {
-                        throw new Error(result.error || 'Gemini generation failed');
+                    // Poll for result
+                    document.getElementById('loadingText').textContent = 'AI is generating...';
+                    let attempts = 0;
+                    const maxAttempts = 90; // 3 minutes
+
+                    while (attempts < maxAttempts) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        attempts++;
+
+                        try {
+                            const checkResponse = await fetch(cdnUrl, { method: 'HEAD' });
+                            if (checkResponse.ok) {
+                                log(`✅ Image ready after ${attempts * 2}s`);
+                                result = { success: true, imageUrl: cdnUrl };
+                                break;
+                            }
+                        } catch (e) {
+                            // Not ready yet
+                        }
+
+                        document.getElementById('loadingText').textContent = `Generating... (${attempts * 2}s)`;
+                        if (attempts % 10 === 0) {
+                            log(`Still generating... (${attempts * 2}s)`);
+                        }
+                    }
+
+                    if (!result) {
+                        throw new Error('Generation timed out');
                     }
 
                     log(`✅ Gemini completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
 
                 } else {
                     // Call Replicate API (async pattern)

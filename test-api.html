@@ -311,11 +311,15 @@
         <div class="api-select">
             <div class="api-option selected" data-api="replicate">
                 <div class="api-label">Replicate</div>
-                <div class="api-desc">google/nano-banana</div>
+                <div class="api-desc">Image (nano-banana)</div>
             </div>
             <div class="api-option" data-api="gemini">
-                <div class="api-label">Google Gemini</div>
-                <div class="api-desc">gemini-3-pro-image-preview</div>
+                <div class="api-label">Gemini</div>
+                <div class="api-desc">Image (gemini-3)</div>
+            </div>
+            <div class="api-option" data-api="veo">
+                <div class="api-label">🎬 Veo 3.1</div>
+                <div class="api-desc">VIDEO (5 sec)</div>
             </div>
         </div>
 
@@ -560,6 +564,100 @@
                     log(`✅ Gemini completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
 
+                } else if (selectedApi === 'veo') {
+                    // 🎬 VEO 3.1 VIDEO GENERATION
+                    const jobId = `veo-${Date.now()}`;
+                    const outputFilename = `videos/${jobId}.mp4`;
+                    const cdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
+
+                    // First, we need a generated image to animate
+                    log('Step 1: Generating image with Gemini...');
+                    document.getElementById('loadingText').textContent = 'Creating base image...';
+
+                    // Generate image first
+                    const bgImageResponse = await fetch('/.netlify/functions/generate-image-gemini-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId: `img-${jobId}`,
+                            outputFilename: `generated/img-${jobId}.jpg`
+                        })
+                    });
+
+                    log('Image generation started, waiting...');
+                    const generatedImageUrl = `https://raincrest-cdn.b-cdn.net/generated/img-${jobId}.jpg`;
+
+                    // Wait for image
+                    let imageReady = false;
+                    for (let i = 0; i < 60; i++) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        try {
+                            const check = await fetch(generatedImageUrl, { method: 'HEAD' });
+                            if (check.ok) {
+                                imageReady = true;
+                                break;
+                            }
+                        } catch (e) { }
+                        document.getElementById('loadingText').textContent = `Creating image... (${(i + 1) * 2}s)`;
+                    }
+
+                    if (!imageReady) {
+                        throw new Error('Image generation timed out');
+                    }
+
+                    log('✅ Image ready! Step 2: Generating video...');
+                    document.getElementById('loadingText').textContent = 'Creating video (this takes 2-3 min)...';
+
+                    // Video prompt
+                    const videoPrompt = `Epic cinematic camera movement. Slow dramatic zoom out revealing the full royal portrait. Flickering torchlight, floating dust particles, subtle cape movement in the wind. Medieval fantasy atmosphere. 5 seconds.`;
+
+                    // Start video generation
+                    const veoResponse = await fetch('/.netlify/functions/generate-video-veo-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl: generatedImageUrl,
+                            prompt: videoPrompt,
+                            jobId,
+                            outputFilename
+                        })
+                    });
+
+                    log(`Video generation started (status: ${veoResponse.status})`);
+
+                    // Poll for video
+                    let attempts = 0;
+                    const maxAttempts = 180; // 6 minutes
+
+                    while (attempts < maxAttempts) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        attempts++;
+
+                        try {
+                            const checkResponse = await fetch(cdnUrl, { method: 'HEAD' });
+                            if (checkResponse.ok) {
+                                log(`✅ Video ready after ${attempts * 2}s`);
+                                result = { success: true, videoUrl: cdnUrl, isVideo: true };
+                                break;
+                            }
+                        } catch (e) { }
+
+                        document.getElementById('loadingText').textContent = `Rendering video... (${attempts * 2}s)`;
+                        if (attempts % 15 === 0) {
+                            log(`Still rendering video... (${attempts * 2}s)`);
+                        }
+                    }
+
+                    if (!result) {
+                        throw new Error('Video generation timed out');
+                    }
+
+                    log(`✅ Video completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
                 } else {
                     // Call Replicate API (async pattern)
                     log('Calling Replicate API...');
@@ -618,10 +716,32 @@
                 }
 
                 // Show result
-                document.getElementById('resultImg').style.display = 'block'; // Reset display after error
-                document.getElementById('resultImg').src = result.imageUrl;
-                document.getElementById('resultInfo').textContent = `Source: ${selectedApi} | Time: ${((Date.now() - startTime) / 1000).toFixed(1)}s`;
-                document.getElementById('result').classList.remove('error'); // Remove error class
+                if (result.isVideo) {
+                    // Show video
+                    document.getElementById('resultImg').style.display = 'none';
+                    let videoEl = document.getElementById('resultVideo');
+                    if (!videoEl) {
+                        videoEl = document.createElement('video');
+                        videoEl.id = 'resultVideo';
+                        videoEl.controls = true;
+                        videoEl.autoplay = true;
+                        videoEl.loop = true;
+                        videoEl.style.maxWidth = '100%';
+                        videoEl.style.borderRadius = '10px';
+                        document.getElementById('resultImg').parentNode.insertBefore(videoEl, document.getElementById('resultImg'));
+                    }
+                    videoEl.src = result.videoUrl;
+                    videoEl.style.display = 'block';
+                    document.getElementById('resultInfo').textContent = `🎬 VIDEO | Source: ${selectedApi} | Time: ${((Date.now() - startTime) / 1000).toFixed(1)}s`;
+                } else {
+                    // Show image
+                    let videoEl = document.getElementById('resultVideo');
+                    if (videoEl) videoEl.style.display = 'none';
+                    document.getElementById('resultImg').style.display = 'block';
+                    document.getElementById('resultImg').src = result.imageUrl;
+                    document.getElementById('resultInfo').textContent = `Source: ${selectedApi} | Time: ${((Date.now() - startTime) / 1000).toFixed(1)}s`;
+                }
+                document.getElementById('result').classList.remove('error');
                 document.getElementById('result').classList.add('show');
 
             } catch (error) {

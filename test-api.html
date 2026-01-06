@@ -477,52 +477,49 @@
                 log(`Starting generation with ${selectedApi}...`);
                 const startTime = Date.now();
 
-                // First, upload image to Bunny.net
-                log('Getting upload token...');
+                // Upload via Netlify proxy (fixes Android CORS issue)
+                log('Uploading via Netlify proxy...');
                 const filename = `test-${Date.now()}.jpg`;
 
-                let tokenResponse;
+                // Convert file to base64
+                const toBase64 = (file) => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                });
+
+                let imageBase64;
                 try {
-                    tokenResponse = await fetch('/.netlify/functions/create-upload-token', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ filename })
-                    });
+                    imageBase64 = await toBase64(selectedFile);
                 } catch (e) {
-                    alert('❌ STEP 1 FAILED: Get upload token\n\nError: ' + e.message);
+                    alert('❌ FILE READ FAILED\\n\\nError: ' + e.message);
                     throw e;
                 }
 
-                if (!tokenResponse.ok) {
-                    alert('❌ STEP 1 FAILED: Token response not OK\n\nStatus: ' + tokenResponse.status);
-                    throw new Error('Failed to get upload token');
-                }
-
-                const tokenData = await tokenResponse.json();
-                log(`Token received, uploading to Bunny.net...`);
-
-                // Upload to Bunny
                 let uploadResponse;
                 try {
-                    uploadResponse = await fetch(tokenData.uploadUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'AccessKey': tokenData.apiKey,
-                            'Content-Type': 'image/jpeg'
-                        },
-                        body: selectedFile
+                    uploadResponse = await fetch('/.netlify/functions/upload-user-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageBase64,
+                            filename
+                        })
                     });
                 } catch (e) {
-                    alert('❌ STEP 2 FAILED: Bunny upload\n\nURL: ' + tokenData.uploadUrl + '\n\nError: ' + e.message);
+                    alert('❌ UPLOAD FAILED\\n\\nError: ' + e.message);
                     throw e;
                 }
 
-                if (!uploadResponse.ok && uploadResponse.status !== 201) {
-                    alert('❌ STEP 2 FAILED: Bunny upload status\n\nStatus: ' + uploadResponse.status);
-                    throw new Error(`Bunny upload failed: ${uploadResponse.status}`);
+                if (!uploadResponse.ok) {
+                    const errorText = await uploadResponse.text();
+                    alert('❌ UPLOAD FAILED\\n\\nStatus: ' + uploadResponse.status + '\\n\\n' + errorText);
+                    throw new Error(`Upload failed: ${uploadResponse.status}`);
                 }
 
-                const imageUrl = tokenData.cdnUrl;
+                const uploadResult = await uploadResponse.json();
+                const imageUrl = uploadResult.url;
                 log(`Image uploaded: ${imageUrl}`);
 
                 // Wait for CDN propagation

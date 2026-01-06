@@ -612,13 +612,15 @@
                     log('✅ Image ready! Step 2: Generating video...');
                     document.getElementById('loadingText').textContent = 'Creating video (this takes 1-2 min)...';
 
-                    // Dynamic video prompts per template
+                    // Dynamic video prompts per template - ALL include Raincrest logo
+                    const logoInstruction = `IMPORTANT: Display "RAINCREST.ART" watermark in elegant golden medieval font in the bottom-right corner throughout the entire video. Semi-transparent but clearly visible.`;
+
                     const videoPrompts = {
-                        'template-01': `The royal couple slowly turns their heads toward camera with piercing eyes. The King's cape billows dramatically in the wind. The Queen's crown jewels shimmer. Flickering torchlight casts dancing shadows. Epic orchestral music builds. Text appears: "HOUSE OF [NAME]" with golden particles. Medieval fantasy cinematic. Hyper-realistic character animation.`,
+                        'template-01': `The royal couple slowly turns their heads toward camera with piercing eyes. The King's cape billows dramatically in the wind. The Queen's crown jewels shimmer. Flickering torchlight casts dancing shadows. Medieval fantasy cinematic. Hyper-realistic character animation. ${logoInstruction}`,
 
-                        'template-02': `The dragon rider sits atop a massive dragon. Suddenly the DRAGON OPENS ITS MOUTH and BREATHES ENORMOUS FLAMES directly at camera! The rider's hair and cape whip in the wind from the fire's heat. Dramatic camera shake. Epic roar sound. Sparks and embers fill the air. The rider smirks confidently. Text: "BORN TO RULE". Cinematic Game of Thrones style.`,
+                        'template-02': `The dragon rider sits atop a massive dragon. Suddenly the DRAGON OPENS ITS MOUTH and BREATHES ENORMOUS FLAMES directly at camera! The rider's hair and cape whip in the wind. Dramatic camera shake. Sparks and embers fill the air. Cinematic Game of Thrones style. ${logoInstruction}`,
 
-                        'template-03': `Caricature style animation. The dragon rider character grins mischievously at camera. The cartoon dragon SNORTS FIRE from its nostrils playfully. Character does a dramatic hand gesture. Dragon winks at camera. Fun bouncy animation. Magical sparkles. Text appears: "DRAGON RIDER" with fire effects. Whimsical yet epic music.`
+                        'template-03': `Caricature style animation. The dragon rider grins mischievously. The cartoon dragon SNORTS FIRE from its nostrils playfully. Character does dramatic hand gesture. Dragon winks. Fun bouncy animation with magical sparkles. ${logoInstruction}`
                     };
 
                     const videoPrompt = videoPrompts[templateId] || videoPrompts['template-01'];

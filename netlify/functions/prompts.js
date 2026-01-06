@@ -105,26 +105,34 @@ FOR THE FEMALE PERSON (QUEEN): ${template.queenPrompt || 'Elegant, regal royal b
 - This is a SINGLE PERSON portrait - transform into a KING`;
   }
 
-  // Face recognition section
+  // Face recognition section - ENHANCED for identity preservation
   let faceRecognition;
   if (isCouple) {
-    faceRecognition = `FACE RECOGNITION & CONSISTENCY:
-- LOAD and ANALYZE the input face image(s)
-- IDENTIFY the MALE person (KING) - recognize ALL facial features
-- IDENTIFY the FEMALE person (QUEEN) - recognize ALL facial features
-- MAINTAIN MAXIMUM RECOGNIZABILITY for both faces
-- PRESERVE all distinctive facial features from reference images
-- Both people must be CLEARLY RECOGNIZABLE as the people from the input image
-- EXTRACT both faces from the single couple image and use them as reference models`;
+    faceRecognition = `CRITICAL FACE IDENTITY PRESERVATION:
+⚠️ THE FACES MUST BE PIXEL-PERFECT COPIES FROM THE INPUT IMAGE ⚠️
+
+- EXTRACT both faces from the input couple image with EXACT precision
+- DO NOT generate new faces - USE THE EXACT FACES from the input photo
+- PRESERVE 100%: exact eye shape, eye color, eyebrow shape, nose shape, nose size, lip shape, lip thickness, jaw shape, chin shape, cheekbone structure, forehead shape, skin tone, skin texture, facial hair, wrinkles, moles, freckles
+- The KING's face = EXACT copy of the male face from input
+- The QUEEN's face = EXACT copy of the female face from input
+- Face angles should match or be naturally rotated while preserving all features
+- NO artistic interpretation of faces - faces are SACRED and UNCHANGED
+- Only transform: clothing, background, lighting on body (NOT face lighting)
+- FACE SIMILARITY SCORE MUST BE 100%`;
   } else {
     const roleType = gender === 'queen' ? 'QUEEN' : 'KING';
-    faceRecognition = `FACE RECOGNITION & CONSISTENCY:
-- LOAD and ANALYZE the input face image
-- Transform this person into a ${roleType}
-- MAINTAIN MAXIMUM RECOGNIZABILITY - they must be clearly recognizable
-- PRESERVE all distinctive facial features: bone structure, eye shape, nose shape, mouth shape, jawline
-- DO NOT alter core facial features - only add royal attire/setting
-- The ${roleType} must be 100% RECOGNIZABLE as the person from the input image`;
+    faceRecognition = `CRITICAL FACE IDENTITY PRESERVATION:
+⚠️ THE FACE MUST BE A PIXEL-PERFECT COPY FROM THE INPUT IMAGE ⚠️
+
+- DO NOT generate a new face - USE THE EXACT FACE from the input photo
+- PRESERVE 100%: exact eye shape, eye color, eyebrow shape, nose shape, nose size, lip shape, lip thickness, jaw shape, chin shape, cheekbone structure, forehead shape, skin tone, skin texture, facial hair, wrinkles, moles, freckles
+- The ${roleType}'s face = EXACT copy of the face from input image
+- NO artistic interpretation of the face - the face is SACRED and UNCHANGED
+- Only transform: clothing, crown/tiara, background, body pose
+- Lighting on face should match original photo lighting
+- FACE SIMILARITY SCORE MUST BE 100%
+- The person MUST be immediately recognizable by their family and friends`;
   }
 
   // Logo integration section

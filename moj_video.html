@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="hr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Generator | Raincrest Art</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(30, 30, 50, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            color: #ffd700;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 215, 0, 0.4);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .upload-zone:hover {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .upload-zone.has-image {
+            padding: 10px;
+        }
+
+        .upload-zone img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .platform-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .platform-option:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+
+        .platform-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #ffd700;
+        }
+
+        .platform-option .icon {
+            font-size: 1.5rem;
+        }
+
+        .platform-option .info {
+            flex: 1;
+        }
+
+        .platform-option .name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .platform-option .format {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .result-item .info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .result-item .icon {
+            font-size: 1.5rem;
+        }
+
+        .result-item .status {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .result-item .status.ready {
+            color: #4ade80;
+        }
+
+        .result-item .status.processing {
+            color: #fbbf24;
+        }
+
+        .download-btn {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #ffd700, #ffb700);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 215, 0, 0.2);
+            border-top-color: #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #ffd700;
+            font-size: 1.2rem;
+        }
+
+        .loading-progress {
+            margin-top: 10px;
+            color: #888;
+        }
+
+        .log-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .log-entry.success {
+            color: #4ade80;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .platforms-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-item {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎬 Marketing Generator</h1>
+        <p class="subtitle">Generiraj sadržaj za sve društvene mreže jednim klikom</p>
+
+        <!-- Upload Before Image -->
+        <div class="card">
+            <h2>📸 Before slika (originalna)</h2>
+            <div class="upload-zone" id="beforeZone" onclick="document.getElementById('beforeInput').click()">
+                <input type="file" id="beforeInput" accept="image/*">
+                <p>Klikni za upload ili povuci sliku ovdje</p>
+                <p style="color: #888; font-size: 0.9rem; margin-top: 10px;">Originalna fotografija korisnika</p>
+            </div>
+        </div>
+
+        <!-- Upload After Image -->
+        <div class="card">
+            <h2>✨ After slika (AI generirana)</h2>
+            <div class="upload-zone" id="afterZone" onclick="document.getElementById('afterInput').click()">
+                <input type="file" id="afterInput" accept="image/*">
+                <p>Klikni za upload ili povuci sliku ovdje</p>
+                <p style="color: #888; font-size: 0.9rem; margin-top: 10px;">AI generirana kraljevska slika</p>
+            </div>
+        </div>
+
+        <!-- Platform Selection -->
+        <div class="card">
+            <h2>📱 Odaberi platforme</h2>
+            <div class="platforms-grid">
+                <label class="platform-option">
+                    <input type="checkbox" id="instagramReels" checked>
+                    <span class="icon">📱</span>
+                    <div class="info">
+                        <div class="name">Instagram Reels</div>
+                        <div class="format">9:16 • 8s video + slideshow</div>
+                    </div>
+                </label>
+
+                <label class="platform-option">
+                    <input type="checkbox" id="tiktok" checked>
+                    <span class="icon">🎵</span>
+                    <div class="info">
+                        <div class="name">TikTok</div>
+                        <div class="format">9:16 • 8s video + slideshow</div>
+                    </div>
+                </label>
+
+                <label class="platform-option">
+                    <input type="checkbox" id="youtubeShorts">
+                    <span class="icon">▶️</span>
+                    <div class="info">
+                        <div class="name">YouTube Shorts</div>
+                        <div class="format">9:16 • 8s video</div>
+                    </div>
+                </label>
+
+                <label class="platform-option">
+                    <input type="checkbox" id="facebookVideo">
+                    <span class="icon">📘</span>
+                    <div class="info">
+                        <div class="name">Facebook Video</div>
+                        <div class="format">1:1 • 8s video</div>
+                    </div>
+                </label>
+
+                <label class="platform-option">
+                    <input type="checkbox" id="instagramFeed" checked>
+                    <span class="icon">🖼️</span>
+                    <div class="info">
+                        <div class="name">Instagram Feed</div>
+                        <div class="format">4:5 • Carousel slike</div>
+                    </div>
+                </label>
+
+                <label class="platform-option">
+                    <input type="checkbox" id="facebookPost">
+                    <span class="icon">📷</span>
+                    <div class="info">
+                        <div class="name">Facebook Post</div>
+                        <div class="format">1:1 • Slika</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="card">
+            <button class="generate-btn" id="generateBtn" disabled>
+                🚀 Generiraj sadržaj
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card results-section" id="resultsSection">
+            <h2>📥 Gotovi materijali</h2>
+            <div id="resultsList">
+                <!-- Results will be added here dynamically -->
+            </div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="card">
+            <h2>📋 Log</h2>
+            <div class="log-section" id="logSection">
+                <div class="log-entry">Spreman za rad. Uploadaj slike za početak.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Generiranje sadržaja...</div>
+        <div class="loading-progress" id="loadingProgress">0 / 0</div>
+    </div>
+
+    <script>
+        // State
+        let beforeImage = null;
+        let afterImage = null;
+
+        // Log function
+        function log(message, type = 'info') {
+            const logSection = document.getElementById('logSection');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logSection.appendChild(entry);
+            logSection.scrollTop = logSection.scrollHeight;
+            console.log(message);
+        }
+
+        // Handle file uploads
+        function setupUploadZone(zoneId, inputId, imageVar) {
+            const zone = document.getElementById(zoneId);
+            const input = document.getElementById(inputId);
+
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (imageVar === 'before') {
+                        beforeImage = file;
+                        log(`Before slika učitana: ${file.name}`);
+                    } else {
+                        afterImage = file;
+                        log(`After slika učitana: ${file.name}`);
+                    }
+
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        zone.innerHTML = `<img src="${ev.target.result}" alt="Preview">`;
+                        zone.classList.add('has-image');
+                    };
+                    reader.readAsDataURL(file);
+
+                    checkReadyState();
+                }
+            });
+
+            // Drag and drop
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = '#ffd700';
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    input.files = e.dataTransfer.files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        setupUploadZone('beforeZone', 'beforeInput', 'before');
+        setupUploadZone('afterZone', 'afterInput', 'after');
+
+        // Check if ready to generate
+        function checkReadyState() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = !(beforeImage && afterImage);
+        }
+
+        // Generate content
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const platforms = {
+                instagramReels: document.getElementById('instagramReels').checked,
+                tiktok: document.getElementById('tiktok').checked,
+                youtubeShorts: document.getElementById('youtubeShorts').checked,
+                facebookVideo: document.getElementById('facebookVideo').checked,
+                instagramFeed: document.getElementById('instagramFeed').checked,
+                facebookPost: document.getElementById('facebookPost').checked
+            };
+
+            const selectedPlatforms = Object.entries(platforms).filter(([k, v]) => v).map(([k]) => k);
+
+            if (selectedPlatforms.length === 0) {
+                alert('Odaberi barem jednu platformu!');
+                return;
+            }
+
+            log(`Kreće generiranje za: ${selectedPlatforms.join(', ')}`);
+
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('show');
+
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            let completed = 0;
+            const total = selectedPlatforms.length;
+
+            for (const platform of selectedPlatforms) {
+                document.getElementById('loadingText').textContent = `Generiranje ${platform}...`;
+                document.getElementById('loadingProgress').textContent = `${completed + 1} / ${total}`;
+
+                try {
+                    log(`Generiranje za ${platform}...`);
+
+                    // For now, just create placeholder results
+                    // TODO: Implement actual generation
+                    await new Promise(r => setTimeout(r, 1000)); // Simulate processing
+
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `
+                        <div class="info">
+                            <span class="icon">${getIcon(platform)}</span>
+                            <div>
+                                <div class="name">${getPlatformName(platform)}</div>
+                                <div class="status ready">✅ Spremno</div>
+                            </div>
+                        </div>
+                        <button class="download-btn" onclick="downloadFile('${platform}')">Download</button>
+                    `;
+                    resultsList.appendChild(item);
+
+                    log(`✅ ${platform} završeno`, 'success');
+                    completed++;
+                } catch (error) {
+                    log(`❌ Greška za ${platform}: ${error.message}`, 'error');
+                }
+            }
+
+            overlay.classList.remove('show');
+            resultsSection.classList.add('show');
+            log(`Generiranje završeno! ${completed}/${total} uspješno.`, 'success');
+        });
+
+        function getIcon(platform) {
+            const icons = {
+                instagramReels: '📱',
+                tiktok: '🎵',
+                youtubeShorts: '▶️',
+                facebookVideo: '📘',
+                instagramFeed: '🖼️',
+                facebookPost: '📷'
+            };
+            return icons[platform] || '📄';
+        }
+
+        function getPlatformName(platform) {
+            const names = {
+                instagramReels: 'Instagram Reels',
+                tiktok: 'TikTok',
+                youtubeShorts: 'YouTube Shorts',
+                facebookVideo: 'Facebook Video',
+                instagramFeed: 'Instagram Feed',
+                facebookPost: 'Facebook Post'
+            };
+            return names[platform] || platform;
+        }
+
+        function downloadFile(platform) {
+            log(`Download ${platform}...`);
+            alert('TODO: Implementirati download za ' + platform);
+        }
+
+        log('Marketing Generator spreman! 🚀');
+    </script>
+</body>
+
+</html>

@@ -15,7 +15,7 @@ const templateScenes = {
   'template-01': {
     name: 'Raincrest Trading Card (King & Queen)',
     scene: 'Ultra-photorealistic, cinematic-style illustration depicting medieval royalty dynamically bursting through the CENTERED frame of a "Raincrest" trading card. The trading card frame should be CENTERED in the image with the royal couple positioned DIRECTLY IN FRONT of the card, breaking through its center.',
-    location: 'The trading card frame is CENTERED horizontally and vertically in the image. The stone-carved border surrounds the couple symmetrically. The border is partially shattered with dimensional cracks, energy and light, scattering dust and ancient stone fragments. Inside the card (background) is Dubrovnik\'s iconic Stradun street with a massive dragon breathing fire in the stormy sky. The title "Raincrest" and subtitle "Claim Your Throne" are visible at the TOP of the card frame.',
+    location: 'The trading card frame is CENTERED horizontally and vertically in the image. The stone-carved border surrounds the couple symmetrically. The border is partially shattered with dimensional cracks, energy and light, scattering dust and ancient stone fragments. Inside the card (background) is MEDIEVAL Dubrovnik - Stradun street in the MEDIEVAL ERA with wooden merchant carts, torches, medieval banners, NO MODERN ELEMENTS (no cars, no modern boats, no tourists). A massive dragon breathing fire FORWARD into the stormy sky. The title "Raincrest" and subtitle "Claim Your Throne" are visible at the TOP of the card frame.',
     style: 'Epic, Game of Thrones-style lighting emphasizing royal power. Portrait format 4:5 aspect ratio. Ultra detailed, photorealistic, 8k resolution.',
     specialInstructions: 'CENTERED COMPOSITION: Trading card frame fills the entire image as a decorative border. The couple stands IN THE CENTER of the frame, bursting through it. Symmetrical composition. Upper body shot from head to chest, facing camera directly. Sharp focus on faces, professional portrait photography, 85mm lens, shallow depth of field.',
     hasGenderVariants: true,
@@ -25,21 +25,21 @@ const templateScenes = {
 
   'template-02': {
     name: 'Raincrest Dragon Rider',
-    scene: 'Ultra-photorealistic fantasy portrait of a dragon rider soaring above Dubrovnik on the back of a massive dragon. Epic clouds, fire elements, dramatic sky.',
-    location: 'High above the ancient walled city of Dubrovnik, Adriatic Sea visible below. Massive dragon with detailed scales, wings spread wide. Fire and smoke elements.',
+    scene: 'Ultra-photorealistic fantasy portrait of a dragon rider soaring above MEDIEVAL Dubrovnik on the back of a massive dragon. Epic clouds, fire elements, dramatic sky.',
+    location: 'High above the ancient walled city of Dubrovnik IN THE MEDIEVAL ERA. Below: wooden sailing ships, medieval galleons, NO MODERN BOATS OR YACHTS. City walls with medieval banners, torch-lit towers. Adriatic Sea with period-accurate vessels. Massive dragon with detailed scales, wings spread wide. CRITICAL: Dragon breathes fire FORWARD towards the camera, flames shooting AHEAD of the dragon, NOT towards the rider.',
     style: 'Epic fantasy, cinematic, dramatic lighting with sunset/sunrise colors. Ultra detailed dragon scales and rider armor. 8k resolution.',
-    specialInstructions: 'Full body shot on dragon back. Rider in fantasy armor/robes suitable for dragon riding. Confident, powerful pose. Wind-swept hair and clothes.',
+    specialInstructions: 'Full body shot on dragon back. Rider in fantasy armor/robes suitable for dragon riding. Confident, powerful pose. Wind-swept hair and clothes. DRAGON FIRE DIRECTION: Fire shoots FORWARD from dragon mouth towards camera, creating dramatic effect. Rider is BEHIND the fire, safe from flames.',
     hasGenderVariants: true,
-    kingPrompt: 'Dragon KING in black and red armor with dragon motifs, riding a massive fire-breathing dragon. Commanding presence, warrior stance.',
-    queenPrompt: 'Dragon QUEEN in flowing silver and blue robes with dragon scale details, riding a majestic dragon. Ethereal beauty combined with fierce power.'
+    kingPrompt: 'Dragon KING in black and red armor with dragon motifs, riding a massive fire-breathing dragon. Dragon breathes fire FORWARD (away from rider). Commanding presence, warrior stance.',
+    queenPrompt: 'Dragon QUEEN in flowing silver and blue robes with dragon scale details, riding a majestic dragon. Dragon breathes fire FORWARD (away from rider). Ethereal beauty combined with fierce power.'
   },
 
   'template-03': {
     name: 'Dragon Rider Caricature (GoT Dubrovnik)',
     scene: '3D caricature illustration of a romantic couple riding together on a massive flying dragon, Game of Thrones dark fantasy style. Exaggerated BIG HEADS with small bodies (bobblehead proportions). Fun, playful caricature art style but with epic fantasy theme. Both waving at camera with excited expressions.',
-    location: 'Bird\'s eye view of Dubrovnik old town from above. RECOGNIZABLE: City walls, terracotta rooftops, Old Port, Lokrum island, Adriatic Sea. DARK TRANSFORMATION: Stormy dramatic sky with dark swirling clouds, twilight/dusk lighting, moody ominous atmosphere, medieval fantasy King\'s Landing vibes, mist around the city walls.',
+    location: 'Bird\'s eye view of MEDIEVAL Dubrovnik old town from above. RECOGNIZABLE: City walls, terracotta rooftops, Old Port with WOODEN SAILING SHIPS and medieval galleons (NO MODERN BOATS OR YACHTS), Lokrum island, Adriatic Sea. DARK TRANSFORMATION: Stormy dramatic sky with dark swirling clouds, twilight/dusk lighting, moody ominous atmosphere, medieval fantasy King\'s Landing vibes, mist around the city walls, burning torches on walls.',
     style: '3D caricature with fantasy epic quality. Dynamic flying pose with sense of motion and adventure. Dramatic camera angle from slightly below. Dark dramatic sky (deep blues, purples, greys). Dragon in dark tones with fiery orange accents. Couple in rich reds and golds. Dubrovnik in warm terracotta against cool shadows.',
-    specialInstructions: 'CARICATURE BOBBLEHEAD STYLE: Big heads, small bodies, fun expressions. THE DRAGON: Massive, detailed dragon with dark black/grey scales, glowing orange/red eyes, wings spread wide in flight, fire-breathing or smoke trailing, detailed scales and spines. Both people sitting together on dragon back, waving happily.',
+    specialInstructions: 'CARICATURE BOBBLEHEAD STYLE: Big heads, small bodies, fun expressions. THE DRAGON: Massive, detailed dragon with dark black/grey scales, glowing orange/red eyes, wings spread wide in flight, FIRE BREATHING FORWARD (away from riders, towards camera), detailed scales and spines. Both people sitting together on dragon back, waving happily. Riders are SAFE behind the dragon head.',
     hasGenderVariants: true,
     kingPrompt: 'KING caricature: Medieval armor, red cape flowing in wind, golden crown, excited waving expression, adventurous smile.',
     queenPrompt: 'QUEEN caricature: Royal gown in deep crimson, silver tiara, hair flowing dramatically in wind, waving happily, joyful expression.'

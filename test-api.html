@@ -429,16 +429,27 @@
         document.getElementById('imageInput').addEventListener('change', async (e) => {
             const originalFile = e.target.files[0];
             if (originalFile) {
+                alert('📁 FILE SELECTED\n\nName: ' + originalFile.name + '\nSize: ' + (originalFile.size / 1024).toFixed(1) + ' KB\nType: ' + originalFile.type);
                 log(`Original file: ${originalFile.name} (${(originalFile.size / 1024).toFixed(1)} KB)`);
 
                 // Compress if larger than 2MB
                 if (originalFile.size > 2 * 1024 * 1024) {
                     log('Compressing image...');
-                    selectedFile = await compressImage(originalFile);
-                    log(`Compressed: ${(selectedFile.size / 1024).toFixed(1)} KB`);
+                    try {
+                        selectedFile = await compressImage(originalFile);
+                        alert('✅ COMPRESSION OK\n\nNew size: ' + (selectedFile.size / 1024).toFixed(1) + ' KB\nType: ' + selectedFile.type);
+                        log(`Compressed: ${(selectedFile.size / 1024).toFixed(1)} KB`);
+                    } catch (compErr) {
+                        alert('❌ COMPRESSION FAILED\n\nError: ' + compErr.message);
+                        selectedFile = originalFile; // Fallback to original
+                    }
                 } else {
                     selectedFile = originalFile;
+                    alert('📷 NO COMPRESSION NEEDED\n\nUsing original file: ' + (selectedFile.size / 1024).toFixed(1) + ' KB');
                 }
+
+                // Debug: Check selectedFile before upload
+                alert('📤 READY TO UPLOAD\n\nFile size: ' + (selectedFile.size / 1024).toFixed(1) + ' KB\nFile type: ' + selectedFile.type + '\nFile name: ' + selectedFile.name);
 
                 const reader = new FileReader();
                 reader.onload = (e) => {

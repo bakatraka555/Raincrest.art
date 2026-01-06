@@ -610,10 +610,18 @@
                     }
 
                     log('✅ Image ready! Step 2: Generating video...');
-                    document.getElementById('loadingText').textContent = 'Creating video (this takes 2-3 min)...';
+                    document.getElementById('loadingText').textContent = 'Creating video (this takes 1-2 min)...';
 
-                    // Video prompt
-                    const videoPrompt = `Epic cinematic camera movement. Slow dramatic zoom out revealing the full royal portrait. Flickering torchlight, floating dust particles, subtle cape movement in the wind. Medieval fantasy atmosphere. 5 seconds.`;
+                    // Dynamic video prompts per template
+                    const videoPrompts = {
+                        'template-01': `The royal couple slowly turns their heads toward camera with piercing eyes. The King's cape billows dramatically in the wind. The Queen's crown jewels shimmer. Flickering torchlight casts dancing shadows. Epic orchestral music builds. Text appears: "HOUSE OF [NAME]" with golden particles. Medieval fantasy cinematic. Hyper-realistic character animation.`,
+
+                        'template-02': `The dragon rider sits atop a massive dragon. Suddenly the DRAGON OPENS ITS MOUTH and BREATHES ENORMOUS FLAMES directly at camera! The rider's hair and cape whip in the wind from the fire's heat. Dramatic camera shake. Epic roar sound. Sparks and embers fill the air. The rider smirks confidently. Text: "BORN TO RULE". Cinematic Game of Thrones style.`,
+
+                        'template-03': `Caricature style animation. The dragon rider character grins mischievously at camera. The cartoon dragon SNORTS FIRE from its nostrils playfully. Character does a dramatic hand gesture. Dragon winks at camera. Fun bouncy animation. Magical sparkles. Text appears: "DRAGON RIDER" with fire effects. Whimsical yet epic music.`
+                    };
+
+                    const videoPrompt = videoPrompts[templateId] || videoPrompts['template-01'];
 
                     // Start video generation
                     const veoResponse = await fetch('/.netlify/functions/generate-video-veo-background', {

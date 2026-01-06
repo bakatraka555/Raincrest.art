@@ -470,13 +470,20 @@
                 log('Getting upload token...');
                 const filename = `test-${Date.now()}.jpg`;
 
-                const tokenResponse = await fetch('/.netlify/functions/create-upload-token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename })
-                });
+                let tokenResponse;
+                try {
+                    tokenResponse = await fetch('/.netlify/functions/create-upload-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename })
+                    });
+                } catch (e) {
+                    alert('❌ STEP 1 FAILED: Get upload token\n\nError: ' + e.message);
+                    throw e;
+                }
 
                 if (!tokenResponse.ok) {
+                    alert('❌ STEP 1 FAILED: Token response not OK\n\nStatus: ' + tokenResponse.status);
                     throw new Error('Failed to get upload token');
                 }
 
@@ -484,16 +491,23 @@
                 log(`Token received, uploading to Bunny.net...`);
 
                 // Upload to Bunny
-                const uploadResponse = await fetch(tokenData.uploadUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'AccessKey': tokenData.apiKey,
-                        'Content-Type': 'image/jpeg'
-                    },
-                    body: selectedFile
-                });
+                let uploadResponse;
+                try {
+                    uploadResponse = await fetch(tokenData.uploadUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'AccessKey': tokenData.apiKey,
+                            'Content-Type': 'image/jpeg'
+                        },
+                        body: selectedFile
+                    });
+                } catch (e) {
+                    alert('❌ STEP 2 FAILED: Bunny upload\n\nURL: ' + tokenData.uploadUrl + '\n\nError: ' + e.message);
+                    throw e;
+                }
 
                 if (!uploadResponse.ok && uploadResponse.status !== 201) {
+                    alert('❌ STEP 2 FAILED: Bunny upload status\n\nStatus: ' + uploadResponse.status);
                     throw new Error(`Bunny upload failed: ${uploadResponse.status}`);
                 }
 

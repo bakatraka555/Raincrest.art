@@ -5,9 +5,11 @@
  * Background function = up to 15 minutes execution time
  * 
  * Uses REST API format based on Google documentation
+ * Now supports dynamic video prompts from prompts.js
  */
 
 const fetch = require('node-fetch');
+const { getVideoPrompt } = require('./prompts');
 
 const VEO_MODEL = 'veo-3.1-generate-preview';
 
@@ -16,14 +18,27 @@ exports.handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body || '{}');
-        const { imageUrl, prompt, jobId, outputFilename } = body;
+        const { imageUrl, prompt, jobId, outputFilename, templateId, isCouple, gender } = body;
+
+        // Get video prompt - either from request or generate from template
+        let videoPrompt = prompt;
+        if (!videoPrompt && templateId) {
+            videoPrompt = getVideoPrompt(templateId, isCouple, gender);
+            console.log('Using template video prompt for:', templateId, 'isCouple:', isCouple, 'gender:', gender);
+        }
+
+        // Add Raincrest watermark instruction if not already present
+        const logoInstruction = 'IMPORTANT: Display "RAINCREST.ART" watermark in elegant golden medieval font in the bottom-right corner throughout the entire video. Semi-transparent but clearly visible.';
+        if (videoPrompt && !videoPrompt.includes('RAINCREST')) {
+            videoPrompt = `${videoPrompt} ${logoInstruction}`;
+        }
 
         console.log('Job:', jobId);
         console.log('Image URL:', imageUrl?.substring(0, 60));
-        console.log('Prompt:', prompt?.substring(0, 100));
+        console.log('Video Prompt:', videoPrompt?.substring(0, 100));
 
         // Validation
-        if (!imageUrl || !prompt || !jobId || !outputFilename) {
+        if (!imageUrl || !videoPrompt || !jobId || !outputFilename) {
             console.error('Missing parameters');
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing parameters' }) };
         }
@@ -53,7 +68,7 @@ exports.handler = async (event, context) => {
         // Request body - using instances format with image
         const requestBody = {
             instances: [{
-                prompt: prompt,
+                prompt: videoPrompt,
                 image: {
                     bytesBase64Encoded: imageBase64,
                     mimeType: imageMimeType

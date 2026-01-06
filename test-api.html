@@ -337,9 +337,14 @@
         <div class="form-group">
             <label>🎭 Template</label>
             <select id="templateSelect">
-                <option value="template-01">Trading Card (King & Queen)</option>
-                <option value="template-02">Dragon Rider</option>
-                <option value="template-03">Dragon Rider Caricature (GoT)</option>
+                <option value="template-01">01: Trading Card (King & Queen)</option>
+                <option value="template-02">02: Dragon Rider</option>
+                <option value="template-03">03: Dragon Rider Caricature</option>
+                <option value="template-04">04: Royal Coronation</option>
+                <option value="template-05">05: Fortress Watch</option>
+                <option value="template-06">06: Sacred Vows (Couples Only)</option>
+                <option value="template-07">07: Dragon Masters</option>
+                <option value="template-08">08: Storm Rulers</option>
             </select>
         </div>
 
@@ -647,13 +652,15 @@
 
                     const videoPrompt = videoPrompts[templateId] || videoPrompts['template-01'];
 
-                    // Start video generation
+                    // Start video generation - now using backend getVideoPrompt()
                     const veoResponse = await fetch('/.netlify/functions/generate-video-veo-background', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             imageUrl: generatedImageUrl,
-                            prompt: videoPrompt,
+                            templateId,
+                            isCouple,
+                            gender,
                             jobId,
                             outputFilename
                         })

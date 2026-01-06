@@ -593,7 +593,7 @@
 
                     // Wait for image
                     let imageReady = false;
-                    for (let i = 0; i < 60; i++) {
+                    for (let i = 0; i < 90; i++) {  // 90 * 2s = 3 minutes
                         await new Promise(r => setTimeout(r, 2000));
                         try {
                             const check = await fetch(generatedImageUrl, { method: 'HEAD' });

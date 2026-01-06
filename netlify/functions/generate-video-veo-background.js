@@ -4,11 +4,7 @@
  * Uses Google Veo 3.1 API to generate video from image
  * Background function = up to 15 minutes execution time
  * 
- * Input:
- * - imageUrl: URL of source image (generated or uploaded)
- * - prompt: Video generation prompt
- * - jobId: Unique job identifier
- * - outputFilename: Where to save the video
+ * Uses REST API format based on Google documentation
  */
 
 const fetch = require('node-fetch');
@@ -51,45 +47,55 @@ exports.handler = async (event, context) => {
         const imageMimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
         console.log('Image fetched:', imageBuffer.length, 'bytes');
 
-        // Start Veo video generation
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_MODEL}:generateVideos?key=${GOOGLE_AI_API_KEY}`;
+        // Start Veo video generation using predictLongRunning endpoint
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_MODEL}:predictLongRunning`;
 
+        // Request body - using instances format with image
         const requestBody = {
-            prompt: prompt,
-            image: {
-                imageBytes: imageBase64,
-                mimeType: imageMimeType
-            },
-            config: {
-                aspectRatio: "9:16",  // Vertical for mobile/social
-                numberOfVideos: 1,
-                durationSeconds: 5
+            instances: [{
+                prompt: prompt,
+                image: {
+                    bytesBase64Encoded: imageBase64,
+                    mimeType: imageMimeType
+                }
+            }],
+            parameters: {
+                aspectRatio: "9:16",
+                sampleCount: 1
             }
         };
 
-        console.log('Starting Veo video generation...');
+        console.log('Starting Veo video generation with predictLongRunning...');
         const veoResponse = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': GOOGLE_AI_API_KEY
+            },
             body: JSON.stringify(requestBody)
         });
 
         const veoResult = await veoResponse.json();
         console.log('Veo response status:', veoResponse.status);
+        console.log('Veo response:', JSON.stringify(veoResult).substring(0, 500));
 
         if (!veoResponse.ok) {
-            console.error('Veo API error:', JSON.stringify(veoResult).substring(0, 500));
+            console.error('Veo API error:', JSON.stringify(veoResult));
             return { statusCode: 500, body: JSON.stringify({ error: 'Veo API error', details: veoResult }) };
         }
 
         // Get operation name for polling
         const operationName = veoResult.name;
+        if (!operationName) {
+            console.error('No operation name returned:', veoResult);
+            return { statusCode: 500, body: JSON.stringify({ error: 'No operation name', result: veoResult }) };
+        }
         console.log('Operation started:', operationName);
 
         // Poll for completion
         let attempts = 0;
         const maxAttempts = 60; // 10 minutes max (60 * 10s)
-        let videoData = null;
+        let videoUri = null;
 
         while (attempts < maxAttempts) {
             await new Promise(r => setTimeout(r, 10000)); // Wait 10 seconds
@@ -97,33 +103,45 @@ exports.handler = async (event, context) => {
 
             console.log(`Polling attempt ${attempts}...`);
 
-            const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${GOOGLE_AI_API_KEY}`;
-            const pollResponse = await fetch(pollUrl);
+            const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${operationName}`;
+            const pollResponse = await fetch(pollUrl, {
+                headers: { 'x-goog-api-key': GOOGLE_AI_API_KEY }
+            });
             const pollResult = await pollResponse.json();
+
+            console.log(`Poll result:`, JSON.stringify(pollResult).substring(0, 300));
 
             if (pollResult.done) {
                 console.log('Video generation completed!');
 
-                if (pollResult.response?.generatedVideos?.[0]) {
-                    videoData = pollResult.response.generatedVideos[0];
-                    break;
+                // Try different response formats
+                if (pollResult.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri) {
+                    videoUri = pollResult.response.generateVideoResponse.generatedSamples[0].video.uri;
+                } else if (pollResult.response?.generatedVideos?.[0]?.video?.uri) {
+                    videoUri = pollResult.response.generatedVideos[0].video.uri;
                 } else if (pollResult.error) {
-                    throw new Error(`Veo error: ${pollResult.error.message}`);
+                    throw new Error(`Veo error: ${JSON.stringify(pollResult.error)}`);
                 }
+
+                if (videoUri) break;
+
+                console.error('Could not find video URI in response:', JSON.stringify(pollResult));
+                throw new Error('Video URI not found in response');
             }
         }
 
-        if (!videoData) {
+        if (!videoUri) {
             throw new Error('Video generation timed out');
         }
 
-        // Download video from Google
-        const videoFile = videoData.video;
-        console.log('Video file info:', videoFile);
+        console.log('Video URI:', videoUri);
 
-        // Get video content
-        const downloadUrl = `https://generativelanguage.googleapis.com/v1beta/${videoFile.name}:download?key=${GOOGLE_AI_API_KEY}&alt=media`;
-        const videoResponse = await fetch(downloadUrl);
+        // Download video from Google
+        console.log('Downloading video...');
+        const videoResponse = await fetch(videoUri, {
+            headers: { 'x-goog-api-key': GOOGLE_AI_API_KEY },
+            redirect: 'follow'
+        });
 
         if (!videoResponse.ok) {
             throw new Error(`Failed to download video: ${videoResponse.status}`);
@@ -160,6 +178,7 @@ exports.handler = async (event, context) => {
 
     } catch (error) {
         console.error('Background function error:', error.message);
+        console.error('Stack:', error.stack);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message })

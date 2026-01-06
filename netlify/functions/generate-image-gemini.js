@@ -176,90 +176,175 @@ exports.handler = async (event, context) => {
             console.warn('Error fetching logo:', logoError.message);
         }
 
-        // Generate job ID and Bunny URL
-        const jobId = `gemini-${Date.now()}`;
-        const bunnyFilename = `generated/${jobId}.jpg`;
-        const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
-        const bunnyUrl = `https://${BUNNY_CDN_DOMAIN}/${bunnyFilename}`;
+        // Gemini API request
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
-        console.log('Created job:', { jobId, bunnyUrl });
-
-        // Prepare imageParts for worker (convert parts to worker format)
-        const imageParts = parts.filter(p => p.inline_data).map(p => ({
-            inline_data: {
-                mime_type: p.inline_data.mime_type,
-                data: p.inline_data.data
+        // Request body for image generation
+        // Using official Gemini API format with imageConfig
+        const requestBody = {
+            contents: [
+                {
+                    parts: parts
+                }
+            ],
+            generationConfig: {
+                responseModalities: ["IMAGE"],
+                imageConfig: {
+                    aspectRatio: "4:5",
+                    imageSize: "2K"
+                }
             }
-        }));
+        };
 
-        // Get worker URL (same Netlify site)
-        const host = event.headers.host || 'raincrest-art.netlify.app';
-        const workerUrl = `https://${host}/.netlify/functions/generate-image-google-worker`;
+        console.log('Calling Gemini API...');
+        console.log('API URL:', apiUrl.replace(GOOGLE_AI_API_KEY, 'HIDDEN'));
 
-        console.log('🚀 Starting async worker:', workerUrl);
-        console.log('📦 Job details:', {
-            jobId,
-            promptLength: prompt.length,
-            imagePartsCount: imageParts.length,
-            bunnyUrl
-        });
-
-        // Fire-and-forget: Start worker in background
-        // Must wait briefly to ensure the request is actually sent before function terminates
-        const workerPromise = fetch(workerUrl, {
+        const geminiResponse = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                jobId,
-                prompt,
-                imageParts,
-                bunnyUrl,
-                bunnyFilename,
-                templateId,
-                isCouple: isCoupleBool
-            })
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
         });
 
-        // Wait 500ms to ensure the request is initiated
-        await Promise.race([
-            workerPromise.then(response => {
-                console.log('✅ Worker request sent, status:', response.status);
-            }).catch(err => {
-                console.error('⚠️ Worker request error:', err.message);
-            }),
-            new Promise(resolve => setTimeout(resolve, 500))
-        ]);
+        const responseText = await geminiResponse.text();
+        console.log('Gemini response status:', geminiResponse.status);
 
-        // Return immediately with job ID (like Replicate pattern!)
-        console.log('✅ Returning job ID (async pattern)');
+        if (!geminiResponse.ok) {
+            console.error('Gemini API error:', responseText);
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                    error: 'Gemini API error',
+                    status: geminiResponse.status,
+                    details: responseText.substring(0, 500)
+                })
+            };
+        }
+
+        // Parse response
+        let geminiResult;
+        try {
+            geminiResult = JSON.parse(responseText);
+        } catch (e) {
+            console.error('Failed to parse Gemini response:', e);
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                    error: 'Failed to parse Gemini response',
+                    details: responseText.substring(0, 200)
+                })
+            };
+        }
+
+        console.log('Gemini result structure:', Object.keys(geminiResult));
+
+        // Extract generated image
+        let generatedImageBase64 = null;
+        let generatedMimeType = 'image/jpeg';
+
+        if (geminiResult.candidates && geminiResult.candidates[0]) {
+            const candidate = geminiResult.candidates[0];
+
+            if (candidate.content && candidate.content.parts) {
+                for (const part of candidate.content.parts) {
+                    // API returns camelCase: inlineData (not snake_case: inline_data)
+                    if (part.inlineData) {
+                        generatedImageBase64 = part.inlineData.data;
+                        generatedMimeType = part.inlineData.mimeType || 'image/jpeg';
+                        console.log('Found generated image in response');
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!generatedImageBase64) {
+            console.error('No image in Gemini response:', JSON.stringify(geminiResult).substring(0, 500));
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                    error: 'No image generated',
+                    details: 'Gemini API did not return an image',
+                    response: JSON.stringify(geminiResult).substring(0, 300)
+                })
+            };
+        }
+
+        // Upload generated image to Bunny.net
+        const BUNNY_API_KEY = process.env.BUNNY_API_KEY;
+        const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE || 'raincrest-art';
+        const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
+
+        if (!BUNNY_API_KEY) {
+            // Return base64 data URL if Bunny not configured
+            console.log('Bunny not configured, returning base64');
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    imageUrl: `data:${generatedMimeType};base64,${generatedImageBase64}`,
+                    source: 'gemini-base64'
+                })
+            };
+        }
+
+        // Upload to Bunny.net
+        const timestamp = Date.now();
+        const filename = `generated/gemini-${timestamp}.jpg`;
+        const uploadUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`;
+
+        console.log('Uploading to Bunny.net:', filename);
+
+        const imageBufferGenerated = Buffer.from(generatedImageBase64, 'base64');
+        const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+                'AccessKey': BUNNY_API_KEY,
+                'Content-Type': generatedMimeType
+            },
+            body: imageBufferGenerated
+        });
+
+        if (!uploadResponse.ok && uploadResponse.status !== 201) {
+            console.error('Bunny upload failed:', uploadResponse.status);
+            // Fallback to base64
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    imageUrl: `data:${generatedMimeType};base64,${generatedImageBase64}`,
+                    source: 'gemini-base64-fallback'
+                })
+            };
+        }
+
+        const cdnUrl = `https://${BUNNY_CDN_DOMAIN}/${filename}`;
+        console.log('✅ Image uploaded to CDN:', cdnUrl);
+
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                jobId: jobId,
-                imageUrl: bunnyUrl,
-                status: 'processing',
-                provider: 'Gemini 3 Pro (async worker)',
-                templateId: templateId,
-                isCouple: isCoupleBool,
-                message: 'Generation started. Poll imageUrl for result.',
-                timestamp: new Date().toISOString()
+                imageUrl: cdnUrl,
+                source: 'gemini'
             })
         };
 
     } catch (error) {
-        console.error('=== ERROR in generate-image-gemini ===');
-        console.error('Error:', error.message);
-        console.error('Stack:', error.stack);
-
+        console.error('Error in generate-image-gemini:', error);
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({
                 error: 'Internal server error',
-                details: error.message,
-                timestamp: new Date().toISOString()
+                details: error.message
             })
         };
     }

@@ -57,12 +57,18 @@ exports.handler = async (event, context) => {
         const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
 
         if (!GOOGLE_CLOUD_PROJECT || !GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY || !BUNNY_API_KEY) {
-            console.error('Missing required environment variables');
+            const missing = [];
+            if (!GOOGLE_CLOUD_PROJECT) missing.push('GOOGLE_CLOUD_PROJECT');
+            if (!GOOGLE_SERVICE_ACCOUNT_EMAIL) missing.push('GOOGLE_SERVICE_ACCOUNT_EMAIL');
+            if (!GOOGLE_PRIVATE_KEY) missing.push('GOOGLE_PRIVATE_KEY');
+            if (!BUNNY_API_KEY) missing.push('BUNNY_API_KEY');
+
+            console.error('Missing required environment variables:', missing.join(', '));
             return {
                 statusCode: 500,
                 body: JSON.stringify({
                     error: 'Server configuration error',
-                    details: 'Missing Google Cloud or Bunny credentials'
+                    details: `Missing variables: ${missing.join(', ')}`
                 })
             };
         }

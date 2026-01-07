@@ -105,9 +105,13 @@ STYLE REQUIREMENTS:
         const requestBody = {
             instances: [{
                 prompt: fullPrompt,
-                image: {
-                    bytesBase64Encoded: imageBase64
-                }
+                referenceImages: [{
+                    referenceId: 1,
+                    referenceImage: {
+                        bytesBase64Encoded: imageBase64
+                    },
+                    referenceType: 'REFERENCE_TYPE_SUBJECT'
+                }]
             }],
             parameters: {
                 sampleCount: IMAGEN_CONFIG.numberOfImages,
@@ -120,7 +124,7 @@ STYLE REQUIREMENTS:
 
         // Debug Log Payload (without massive base64)
         const debugBody = JSON.parse(JSON.stringify(requestBody));
-        debugBody.instances[0].image.bytesBase64Encoded = '...truncated...';
+        debugBody.instances[0].referenceImages[0].referenceImage.bytesBase64Encoded = '...truncated...';
         console.log('Request Payload:', JSON.stringify(debugBody, null, 2));
 
         const imagenResponse = await fetch(endpoint, {

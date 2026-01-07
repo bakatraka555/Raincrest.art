@@ -88,19 +88,26 @@ exports.handler = async (event, context) => {
         // Start Veo video generation using predictLongRunning endpoint
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_CONFIG.model}:predictLongRunning`;
 
+        // Add face identity preservation instruction to prompt
+        const faceIdentityInstruction = "MAINTAIN EXACT FACIAL IDENTITY: The person's face must remain consistent and recognizable throughout. Preserve exact facial features, bone structure, and likeness from the source image.";
+        const enhancedPrompt = `${faceIdentityInstruction} ${videoPrompt}`;
+
+        // Negative prompt to prevent face issues
+        const negativePrompt = "face morphing, face melting, changing facial features, distorted face, blurry face, different person, identity change, warped features, ugly, deformed, disfigured, bad anatomy, wrong proportions";
+
         // Request body - using instances format with image
-        // IMPORTANT: Gemini API only supports: aspectRatio, negativePrompt, resolution
-        // Does NOT support: sampleCount, durationSeconds, generateAudio (those are Vertex AI only)
+        // IMPORTANT: Gemini API supports: aspectRatio, negativePrompt, resolution
         const requestBody = {
             instances: [{
-                prompt: videoPrompt,
+                prompt: enhancedPrompt,
                 image: {
                     bytesBase64Encoded: imageBase64,
                     mimeType: imageMimeType
                 }
             }],
             parameters: {
-                aspectRatio: VEO_CONFIG.defaultAspectRatio
+                aspectRatio: VEO_CONFIG.defaultAspectRatio,
+                negativePrompt: negativePrompt
                 // Note: Audio is automatically included in Veo 3.1
             }
         };

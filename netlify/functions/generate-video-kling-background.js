@@ -26,7 +26,13 @@ const KLING_CONFIG = {
     aspect_ratio: '9:16',
 
     // Enable audio generation (adds to cost)
-    generate_audio: true
+    generate_audio: true,
+
+    // Professional mode for higher quality
+    mode: 'professional',
+
+    // Let Kling extend prompt with its own creativity
+    prompt_extension: true
 };
 // ============================================================================
 
@@ -89,6 +95,8 @@ exports.handler = async (event, context) => {
                         duration: KLING_CONFIG.duration,
                         aspect_ratio: KLING_CONFIG.aspect_ratio,
                         generate_audio: KLING_CONFIG.generate_audio,
+                        mode: KLING_CONFIG.mode,
+                        prompt_extension: KLING_CONFIG.prompt_extension,
                         negative_prompt: "face morphing, face melting, distorted face, blurry face, different person, ugly, deformed"
                     }
                 })

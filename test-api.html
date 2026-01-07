@@ -329,6 +329,10 @@
                 <div class="api-label">🎬 Kling 2.6</div>
                 <div class="api-desc">VIDEO ($0.35)</div>
             </div>
+            <div class="api-option" data-api="kling-direct">
+                <div class="api-label">🎯 Kling Direct</div>
+                <div class="api-desc">Gemini+Kling (NO IMG)</div>
+            </div>
             <div class="api-option" data-api="imagen3-kling">
                 <div class="api-label">🚀 Imagen+Kling</div>
                 <div class="api-desc">FULL PIPELINE</div>
@@ -763,6 +767,79 @@
                         result = { success: true, imageUrl: cdnUrl };
                         log(`✅ Imagen 3 completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
                     }
+
+                } else if (selectedApi === 'kling-direct') {
+                    // 🎯 KLING 2.6 DIRECT (Gemini Prompt + Original Image)
+                    // Skip image transformation, let Kling do the magic
+                    const jobId = `kling-direct-${Date.now()}`;
+                    const outputFilename = `videos/${jobId}.mp4`;
+                    const videoCdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
+
+                    // Step 1: Use Gemini to create an enhanced transformation prompt
+                    log('Step 1: Generating enhanced prompt with Gemini 1.5 Pro...');
+                    document.getElementById('loadingText').textContent = 'Analyzing image for transformation...';
+
+                    let enhancedPrompt = null;
+                    try {
+                        const geminiResponse = await fetch('/.netlify/functions/analyze-face-gemini', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ imageUrl, templateId, isCouple, gender })
+                        });
+                        const geminiResult = await geminiResponse.json();
+                        if (geminiResult.success && geminiResult.faceAnalysis) {
+                            enhancedPrompt = geminiResult.faceAnalysis;
+                            log(`Gemini prompt ready (${geminiResult.tokensUsed || '?'} tokens)`);
+                        }
+                    } catch (e) {
+                        log('Gemini failed, using default prompt...');
+                    }
+
+                    // Fallback prompt if Gemini fails
+                    if (!enhancedPrompt) {
+                        const targetRole = gender === 'queen' ? 'QUEEN' : 'KING';
+                        enhancedPrompt = `Transform this person into a powerful Game of Thrones ${targetRole}. Heavy black metal armor, fur cloak, on the walls of Dubrovnik at golden hour sunset. Cinematic, 4K quality. PRESERVE THE FACE EXACTLY.`;
+                    }
+
+                    // Step 2: Send original image + enhanced prompt to Kling 2.6
+                    log('Step 2: Generating video with Kling 2.6 (Professional Mode)...');
+                    document.getElementById('loadingText').textContent = 'Creating video with original image...';
+
+                    const klingResponse = await fetch('/.netlify/functions/generate-video-kling-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl: imageUrl, // ORIGINAL tourist image, not transformed
+                            prompt: enhancedPrompt,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId,
+                            outputFilename
+                        })
+                    });
+
+                    log(`Kling started (status: ${klingResponse.status})`);
+
+                    // Poll for video
+                    let videoAttempts = 0;
+                    while (videoAttempts < 180) { // 6 minutes max
+                        await new Promise(r => setTimeout(r, 2000));
+                        videoAttempts++;
+                        try {
+                            const checkVideo = await fetch(videoCdnUrl, { method: 'HEAD' });
+                            if (checkVideo.ok) {
+                                log(`✅ Video ready after ${videoAttempts * 2}s`);
+                                result = { success: true, videoUrl: videoCdnUrl, isVideo: true };
+                                break;
+                            }
+                        } catch (e) { }
+                        document.getElementById('loadingText').textContent = `Rendering video... (${videoAttempts * 2}s)`;
+                        if (videoAttempts % 15 === 0) log(`Still rendering... (${videoAttempts * 2}s)`);
+                    }
+
+                    if (!result) throw new Error('Kling Direct video timed out');
+                    log(`✅ Kling Direct completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
                 } else if (selectedApi === 'veo') {
                     // 🎬 VEO 3.1 VIDEO GENERATION

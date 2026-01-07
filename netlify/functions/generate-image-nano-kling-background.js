@@ -81,73 +81,67 @@ exports.handler = async (event, context) => {
         // =====================================================================
         console.log('STEP 2: Detecting face with Gemini 1.5 Pro...');
 
-        // Using direct REST API with gemini-1.5-flash for reliability
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`;
+        // Using gemini-1.5-flash-latest as a final attempt, but wrapped in valid try-catch for fallback
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
-        const facePrompt = `Analyze this image and find the main human face.
+        let faceBox;
+
+        try {
+            const facePrompt = `Analyze this image and find the main human face.
 Return ONLY a JSON object with the face bounding box coordinates as pixel values.
 Format: {"ymin": number, "xmin": number, "ymax": number, "xmax": number}
 These should be the pixel coordinates of the face region.
 Return ONLY the JSON, no other text or explanation.`;
 
-        const imageBase64 = imageBuffer.toString('base64');
-        const mimeType = 'image/jpeg';
+            const imageBase64 = imageBuffer.toString('base64');
+            const mimeType = 'image/jpeg';
 
-        const geminiRequestBody = {
-            contents: [{
-                parts: [
-                    {
-                        inlineData: {
-                            mimeType: mimeType,
-                            data: imageBase64
-                        }
-                    },
-                    {
-                        text: facePrompt
-                    }
-                ]
-            }],
-            generationConfig: {
-                temperature: 0.1
+            const geminiRequestBody = {
+                contents: [{
+                    parts: [
+                        { inlineData: { mimeType: mimeType, data: imageBase64 } },
+                        { text: facePrompt }
+                    ]
+                }],
+                generationConfig: { temperature: 0.1 }
+            };
+
+            const geminiResponse = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(geminiRequestBody)
+            });
+
+            if (!geminiResponse.ok) {
+                // Log warning but DO NOT THROW. Fallback to center crop.
+                console.warn(`Gemini API Warning: ${geminiResponse.status} - ${await geminiResponse.text()}`);
+                throw new Error('Gemini API request failed');
             }
-        };
 
-        const geminiResponse = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geminiRequestBody)
-        });
+            const geminiResult = await geminiResponse.json();
+            const responseText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            console.log('Gemini response:', responseText);
 
-        if (!geminiResponse.ok) {
-            const errorText = await geminiResponse.text();
-            throw new Error(`Gemini API Error: ${geminiResponse.status} - ${errorText}`);
-        }
-
-        const geminiResult = await geminiResponse.json();
-        const responseText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        console.log('Gemini response:', responseText);
-
-        // Parse face coordinates
-        let faceBox;
-        try {
+            // Parse face coordinates
             const jsonMatch = responseText.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 faceBox = JSON.parse(jsonMatch[0]);
             } else {
-                throw new Error('No JSON found');
+                throw new Error('No JSON found in response');
             }
-        } catch (parseError) {
-            console.warn('Failed to parse face coordinates, using center crop fallback');
-            // Fallback: center crop (assuming face is in upper-middle)
+
+        } catch (geminiError) {
+            console.warn('⚠️ Face detection failed, using CENTER CROP fallback:', geminiError.message);
+            // Fallback: Smart Center Crop (Upper body focus)
             faceBox = {
-                ymin: Math.round(metadata.height * 0.05),
+                ymin: Math.round(metadata.height * 0.1),
                 xmin: Math.round(metadata.width * 0.2),
-                ymax: Math.round(metadata.height * 0.7),
+                ymax: Math.round(metadata.height * 0.8),
                 xmax: Math.round(metadata.width * 0.8)
             };
         }
 
-        console.log('Face box (pixels):', faceBox);
+        console.log('Face box using:', faceBox);
 
         // =====================================================================
         // STEP 3: Smart Crop with Sharp (+20% margin)

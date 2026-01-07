@@ -81,8 +81,8 @@ exports.handler = async (event, context) => {
         // =====================================================================
         console.log('STEP 2: Detecting face with Gemini 1.5 Pro...');
 
-        // Using direct REST API as it's proven to work with gemini-1.5-pro (SDK had 404 issues in this environment)
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GOOGLE_AI_API_KEY}`;
+        // Using direct REST API with gemini-1.5-flash for reliability
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
         const facePrompt = `Analyze this image and find the main human face.
 Return ONLY a JSON object with the face bounding box coordinates as pixel values.

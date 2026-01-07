@@ -1,5 +1,5 @@
 /**
- * Netlify Background Function: generate-image-imagen3
+ * Netlify Background Function: generate-image-imagen3-background
  * 
  * Uses Google Imagen 3 (Vertex AI) with Subject Customization
  * via RAW REST API to bypass SDK version issues.
@@ -8,7 +8,7 @@
  * - Auth: google-auth-library (Service Account)
  * - API: Vertex AI Prediction Service (REST)
  * - Model: imagen-3.0-capability-001
- * - Feature: Subject Customization with [1] reference
+ * - Feature: Subject Customization with [1] reference (REST Schema)
  */
 
 const { GoogleAuth } = require('google-auth-library');
@@ -20,13 +20,13 @@ const fetch = require('node-fetch');
 const IMAGEN_CONFIG = {
     location: 'us-central1',
     model: 'imagen-3.0-capability-001',
-    aspectRatio: '16:9', // Optimized for video background
+    aspectRatio: '16:9', // Optimized for video
     numberOfImages: 1
 };
 // ============================================================================
 
 exports.handler = async (event, context) => {
-    console.log('=== generate-image-imagen3 STARTED (REST API) ===');
+    console.log('=== generate-image-imagen3-background STARTED (REST API v3) ===');
 
     try {
         const body = JSON.parse(event.body || '{}');
@@ -98,7 +98,7 @@ STYLE REQUIREMENTS:
 - Professional cinematic photography
 - Sharp facial features with defined edges`;
 
-        // 5. Build Request Payload
+        // 5. Build Request Payload (CORRECT REST FORMAT)
         console.log('Calling Imagen 3 REST API...');
         const endpoint = `https://${IMAGEN_CONFIG.location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/${IMAGEN_CONFIG.location}/publishers/google/models/${IMAGEN_CONFIG.model}:predict`;
 
@@ -107,24 +107,23 @@ STYLE REQUIREMENTS:
                 prompt: fullPrompt,
                 referenceImages: [{
                     referenceId: 1,
-                    referenceImage: {
+                    referenceType: "SUBJECT", // Plain string, not enum
+                    image: {
                         bytesBase64Encoded: imageBase64
-                    },
-                    referenceType: 'REFERENCE_TYPE_SUBJECT'
+                    }
                 }]
             }],
             parameters: {
                 sampleCount: IMAGEN_CONFIG.numberOfImages,
                 aspectRatio: IMAGEN_CONFIG.aspectRatio,
-                personGeneration: 'allow',
-                safetySetting: 'block_only_high',
-                outputMimeType: 'image/jpeg'
+                personGeneration: "allow" // Critical
+                // Removed safetySetting to rely on project defaults and avoid 400s
             }
         };
 
         // Debug Log Payload (without massive base64)
         const debugBody = JSON.parse(JSON.stringify(requestBody));
-        debugBody.instances[0].referenceImages[0].referenceImage.bytesBase64Encoded = '...truncated...';
+        debugBody.instances[0].referenceImages[0].image.bytesBase64Encoded = '...truncated...';
         console.log('Request Payload:', JSON.stringify(debugBody, null, 2));
 
         const imagenResponse = await fetch(endpoint, {

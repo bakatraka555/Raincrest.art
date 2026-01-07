@@ -89,6 +89,8 @@ exports.handler = async (event, context) => {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_CONFIG.model}:predictLongRunning`;
 
         // Request body - using instances format with image
+        // IMPORTANT: Gemini API only supports: aspectRatio, negativePrompt, resolution
+        // Does NOT support: sampleCount, durationSeconds, generateAudio (those are Vertex AI only)
         const requestBody = {
             instances: [{
                 prompt: videoPrompt,
@@ -98,10 +100,8 @@ exports.handler = async (event, context) => {
                 }
             }],
             parameters: {
-                aspectRatio: VEO_CONFIG.defaultAspectRatio,
-                sampleCount: 1,
-                durationSeconds: VEO_CONFIG.durationSeconds,
-                generateAudio: VEO_CONFIG.generateAudio
+                aspectRatio: VEO_CONFIG.defaultAspectRatio
+                // Note: Audio is automatically included in Veo 3.1
             }
         };
 

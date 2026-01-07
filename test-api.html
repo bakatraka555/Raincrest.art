@@ -333,6 +333,10 @@
                 <div class="api-label">🎯 Kling Direct</div>
                 <div class="api-desc">Gemini+Kling (NO IMG)</div>
             </div>
+            <div class="api-option" data-api="gemini2-kling">
+                <div class="api-label">⚡ Gemini 2.0</div>
+                <div class="api-desc">Flash Gen + Kling</div>
+            </div>
             <div class="api-option" data-api="imagen3-kling">
                 <div class="api-label">🚀 Imagen+Kling</div>
                 <div class="api-desc">FULL PIPELINE</div>
@@ -840,6 +844,90 @@
 
                     if (!result) throw new Error('Kling Direct video timed out');
                     log(`✅ Kling Direct completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
+                } else if (selectedApi === 'gemini2-kling') {
+                    // ⚡ GEMINI 2.0 FLASH (Native Image Gen) + KLING 2.6
+                    const jobId = `gemini2-${Date.now()}`;
+                    const outputFilename = `generated/img-${jobId}.png`;
+                    const cdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
+
+                    // Step 1: Generate transformed image with Gemini 2.0 Flash
+                    log('Step 1: Generating image with Gemini 2.0 Flash...');
+                    document.getElementById('loadingText').textContent = 'Creating transformed 4K image...';
+
+                    const gemini2Response = await fetch('/.netlify/functions/generate-image-gemini2-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId,
+                            outputFilename
+                        })
+                    });
+
+                    log(`Gemini 2.0 started (status: ${gemini2Response.status})`);
+
+                    // Poll for image
+                    let imageReady = false;
+                    for (let i = 0; i < 90; i++) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        try {
+                            const check = await fetch(cdnUrl, { method: 'HEAD' });
+                            if (check.ok) {
+                                imageReady = true;
+                                break;
+                            }
+                        } catch (e) { }
+                        document.getElementById('loadingText').textContent = `Creating image... (${(i + 1) * 2}s)`;
+                    }
+
+                    if (!imageReady) throw new Error('Gemini 2.0 generation timed out');
+                    log('✅ Gemini 2.0 image ready!');
+
+                    // Step 2: Animate with Kling 2.6
+                    log('Step 2: Generating video with Kling 2.6...');
+                    document.getElementById('loadingText').textContent = 'Animating with Kling...';
+
+                    const videoOutputFilename = `videos/kling-${jobId}.mp4`;
+                    const videoCdnUrl = `https://raincrest-cdn.b-cdn.net/${videoOutputFilename}`;
+
+                    const klingResponse = await fetch('/.netlify/functions/generate-video-kling-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl: cdnUrl,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId: `kling-${jobId}`,
+                            outputFilename: videoOutputFilename
+                        })
+                    });
+
+                    log(`Kling started (status: ${klingResponse.status})`);
+
+                    // Poll for video
+                    let videoAttempts = 0;
+                    while (videoAttempts < 180) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        videoAttempts++;
+                        try {
+                            const checkVideo = await fetch(videoCdnUrl, { method: 'HEAD' });
+                            if (checkVideo.ok) {
+                                log(`✅ Video ready after ${videoAttempts * 2}s`);
+                                result = { success: true, videoUrl: videoCdnUrl, isVideo: true };
+                                break;
+                            }
+                        } catch (e) { }
+                        document.getElementById('loadingText').textContent = `Rendering video... (${videoAttempts * 2}s)`;
+                        if (videoAttempts % 15 === 0) log(`Still rendering... (${videoAttempts * 2}s)`);
+                    }
+
+                    if (!result) throw new Error('Kling video timed out');
+                    log(`✅ Full pipeline completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
                 } else if (selectedApi === 'veo') {
                     // 🎬 VEO 3.1 VIDEO GENERATION

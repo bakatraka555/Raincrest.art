@@ -337,6 +337,10 @@
                 <div class="api-label">⚡ Gemini 2.0</div>
                 <div class="api-desc">Flash Gen + Kling</div>
             </div>
+            <div class="api-option" data-api="face-first">
+                <div class="api-label">🎭 Face-First</div>
+                <div class="api-desc">Crop+Nano+Kling</div>
+            </div>
             <div class="api-option" data-api="imagen3-kling">
                 <div class="api-label">🚀 Imagen+Kling</div>
                 <div class="api-desc">FULL PIPELINE</div>
@@ -928,6 +932,55 @@
 
                     if (!result) throw new Error('Kling video timed out');
                     log(`✅ Full pipeline completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
+                } else if (selectedApi === 'face-first') {
+                    // 🎭 FACE-FIRST PIPELINE (Crop + Nano Banana + Kling in ONE background function)
+                    const jobId = `facefirst-${Date.now()}`;
+                    const outputFilename = `videos/facefirst-${jobId}.mp4`;
+                    const videoCdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
+
+                    log('Starting Face-First Pipeline (Background)...');
+                    document.getElementById('loadingText').textContent = 'Face detection + Transform + Animate...';
+
+                    // Call the unified background function
+                    const faceFirstResponse = await fetch('/.netlify/functions/generate-image-nano-kling-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId,
+                            outputFilename
+                        })
+                    });
+
+                    log(`Background function started (status: ${faceFirstResponse.status})`);
+
+                    // Poll for video completion
+                    let videoAttempts = 0;
+                    while (videoAttempts < 300) { // 10 minutes max (face detection + transform + video)
+                        await new Promise(r => setTimeout(r, 2000));
+                        videoAttempts++;
+                        try {
+                            const checkVideo = await fetch(videoCdnUrl, { method: 'HEAD' });
+                            if (checkVideo.ok) {
+                                log(`✅ Video ready after ${videoAttempts * 2}s`);
+                                result = { success: true, videoUrl: videoCdnUrl, isVideo: true };
+                                break;
+                            }
+                        } catch (e) { }
+
+                        const phase = videoAttempts < 30 ? 'Face detection...' :
+                            videoAttempts < 90 ? 'Style transfer...' :
+                                'Rendering video...';
+                        document.getElementById('loadingText').textContent = `${phase} (${videoAttempts * 2}s)`;
+                        if (videoAttempts % 30 === 0) log(`Still processing... (${videoAttempts * 2}s)`);
+                    }
+
+                    if (!result) throw new Error('Face-First pipeline timed out');
+                    log(`✅ Face-First Pipeline completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
                 } else if (selectedApi === 'veo') {
                     // 🎬 VEO 3.1 VIDEO GENERATION

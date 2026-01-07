@@ -9,6 +9,25 @@
  */
 
 // ============================================================================
+// CLOSE-UP INSTRUCTIONS FOR BETTER FACE CONSISTENCY IN VIDEO
+// ============================================================================
+const CLOSE_UP_FACE_INSTRUCTIONS = `
+CRITICAL FRAMING FOR VIDEO COMPATIBILITY:
+- EXTREME CLOSE-UP portrait shot - face fills 60-70% of frame
+- Head and shoulders only - NO full body shots
+- Face centered and large in frame
+- Sharp focus on eyes and facial features
+- Dramatic lighting on face
+- Minimal background - blurred or simple
+- Portrait orientation optimized for mobile (9:16)
+`;
+
+// ============================================================================
+// VIDEO CLOSE-UP PREFIX - Prepended to all video prompts
+// ============================================================================
+const VIDEO_CLOSEUP_PREFIX = "EXTREME CLOSE-UP on face and eyes. Tight framing. Face fills most of frame. ";
+
+// ============================================================================
 // RAINCREST ART TEMPLATES
 // ============================================================================
 
@@ -171,18 +190,20 @@ function getPrompt(templateId, isCouple, gender = null) {
 function getVideoPrompt(templateId, isCouple, gender = null) {
   const template = templateScenes[templateId];
 
+  let basePrompt;
   if (!template) {
     console.warn(`Template ${templateId} not found for video prompt`);
-    return 'Cinematic slow motion video of the generated image coming to life. Subtle movements, dramatic lighting. Epic orchestral music. 8 seconds.';
+    basePrompt = 'Cinematic slow motion video of the generated image coming to life. Subtle movements, dramatic lighting. Epic orchestral music. 8 seconds.';
+  } else if (isCouple) {
+    basePrompt = template.coupleVideoPrompt || 'Epic cinematic video of the royal couple. Dramatic movement and lighting. Orchestral music. 10 seconds.';
+  } else if (gender === 'queen') {
+    basePrompt = template.queenVideoPrompt || 'Elegant cinematic video of the queen. Graceful movement. Ethereal music. 8 seconds.';
+  } else {
+    basePrompt = template.kingVideoPrompt || 'Powerful cinematic video of the king. Dramatic movement. Epic music. 8 seconds.';
   }
 
-  if (isCouple) {
-    return template.coupleVideoPrompt || 'Epic cinematic video of the royal couple. Dramatic movement and lighting. Orchestral music. 10 seconds.';
-  } else if (gender === 'queen') {
-    return template.queenVideoPrompt || 'Elegant cinematic video of the queen. Graceful movement. Ethereal music. 8 seconds.';
-  } else {
-    return template.kingVideoPrompt || 'Powerful cinematic video of the king. Dramatic movement. Epic music. 8 seconds.';
-  }
+  // Prepend close-up instructions for better face consistency in Fast model
+  return VIDEO_CLOSEUP_PREFIX + basePrompt;
 }
 
 // Extended generatePrompt to handle gender variants
@@ -306,9 +327,11 @@ ${specialInstructions ? `- ${specialInstructions}` : ''}
 - Sharp focus on face, dramatic royal atmosphere`;
   }
 
-  // Kombinira sve sekcije
+  // Kombinira sve sekcije - dodane CLOSE-UP instrukcije za bolje video lice
   return `${baseHeader}
 ${genderEnhancement}
+
+${CLOSE_UP_FACE_INSTRUCTIONS}
 
 ${inputProcessing}
 

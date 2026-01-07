@@ -71,26 +71,29 @@ exports.handler = async (event, context) => {
         }
 
         // Start Kling video generation via Replicate
+        // Using same format as verify-and-start.js which works
         console.log('Starting Kling v2.6 video generation...');
 
-        const replicateResponse = await fetch('https://api.replicate.com/v1/predictions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'wait'
-            },
-            body: JSON.stringify({
-                input: {
-                    start_image: imageUrl,
-                    prompt: videoPrompt,
-                    duration: KLING_CONFIG.duration,
-                    aspect_ratio: KLING_CONFIG.aspect_ratio,
-                    generate_audio: KLING_CONFIG.generate_audio,
-                    negative_prompt: "face morphing, face melting, distorted face, blurry face, different person, ugly, deformed"
-                }
-            })
-        });
+        const replicateResponse = await fetch(
+            `https://api.replicate.com/v1/models/${KLING_CONFIG.model}/predictions`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    input: {
+                        start_image: imageUrl,
+                        prompt: videoPrompt,
+                        duration: KLING_CONFIG.duration,
+                        aspect_ratio: KLING_CONFIG.aspect_ratio,
+                        generate_audio: KLING_CONFIG.generate_audio,
+                        negative_prompt: "face morphing, face melting, distorted face, blurry face, different person, ugly, deformed"
+                    }
+                })
+            }
+        );
 
         const prediction = await replicateResponse.json();
         console.log('Replicate response status:', replicateResponse.status);

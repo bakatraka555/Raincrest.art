@@ -14,7 +14,7 @@
  * - Kling receives already-transformed image (no mid-video morphing)
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+// GoogleGenerativeAI SDK removed in favor of direct REST API for better compatibility
 const fetch = require('node-fetch');
 const sharp = require('sharp');
 
@@ -77,11 +77,12 @@ exports.handler = async (event, context) => {
         console.log(`Original dimensions: ${metadata.width}x${metadata.height}`);
 
         // =====================================================================
-        // STEP 2: Face Detection with Gemini 1.5 Pro
+        // STEP 2: Face Detection with Gemini 1.5 Pro (Direct REST API)
         // =====================================================================
         console.log('STEP 2: Detecting face with Gemini 1.5 Pro...');
-        const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+
+        // Using direct REST API as it's proven to work with gemini-1.5-pro (SDK had 404 issues in this environment)
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
         const facePrompt = `Analyze this image and find the main human face.
 Return ONLY a JSON object with the face bounding box coordinates as pixel values.
@@ -90,17 +91,40 @@ These should be the pixel coordinates of the face region.
 Return ONLY the JSON, no other text or explanation.`;
 
         const imageBase64 = imageBuffer.toString('base64');
-        const geminiResult = await model.generateContent([
-            facePrompt,
-            {
-                inlineData: {
-                    mimeType: 'image/jpeg',
-                    data: imageBase64
-                }
-            }
-        ]);
+        const mimeType = 'image/jpeg';
 
-        const responseText = geminiResult.response.text().trim();
+        const geminiRequestBody = {
+            contents: [{
+                parts: [
+                    {
+                        inlineData: {
+                            mimeType: mimeType,
+                            data: imageBase64
+                        }
+                    },
+                    {
+                        text: facePrompt
+                    }
+                ]
+            }],
+            generationConfig: {
+                temperature: 0.1
+            }
+        };
+
+        const geminiResponse = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geminiRequestBody)
+        });
+
+        if (!geminiResponse.ok) {
+            const errorText = await geminiResponse.text();
+            throw new Error(`Gemini API Error: ${geminiResponse.status} - ${errorText}`);
+        }
+
+        const geminiResult = await geminiResponse.json();
+        const responseText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || '';
         console.log('Gemini response:', responseText);
 
         // Parse face coordinates

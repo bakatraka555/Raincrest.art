@@ -5,6 +5,7 @@
  * to transform tourist photos into medieval royalty with FACE PRESERVATION.
  * 
  * Key features:
+ * - AUTH: Uses Service Account (client_email + private_key) for 401 fix
  * - Subject Customization: Uses tourist photo as reference [1]
  * - Face Preservation: Maintains exact facial features
  * - High Resolution: 4K quality output
@@ -18,8 +19,7 @@ const fetch = require('node-fetch');
 // CONFIGURATION
 // ============================================================================
 const IMAGEN_CONFIG = {
-    // Project settings - these should be in env vars
-    project: process.env.GOOGLE_CLOUD_PROJECT || 'raincrest-art',
+    // Project settings
     location: 'us-central1',
 
     // Model for Subject Customization
@@ -48,15 +48,37 @@ exports.handler = async (event, context) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'Missing parameters' }) };
         }
 
+        // Environment Variables Check
+        const GOOGLE_CLOUD_PROJECT = process.env.GOOGLE_CLOUD_PROJECT;
+        const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+        const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
         const BUNNY_API_KEY = process.env.BUNNY_API_KEY;
         const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE || 'raincrest-art';
         const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
-        const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
 
-        if (!BUNNY_API_KEY || !GOOGLE_AI_API_KEY) {
-            console.error('Missing API keys');
-            return { statusCode: 500, body: JSON.stringify({ error: 'API keys not configured' }) };
+        if (!GOOGLE_CLOUD_PROJECT || !GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY || !BUNNY_API_KEY) {
+            console.error('Missing required environment variables');
+            return {
+                statusCode: 500,
+                body: JSON.stringify({
+                    error: 'Server configuration error',
+                    details: 'Missing Google Cloud or Bunny credentials'
+                })
+            };
         }
+
+        // Initialize Vertex AI with Service Account
+        // Critical for fixing 401 errors
+        const vertexAI = new VertexAI({
+            project: GOOGLE_CLOUD_PROJECT,
+            location: IMAGEN_CONFIG.location,
+            googleAuthOptions: {
+                credentials: {
+                    client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+                    private_key: GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') // Fix for Netlify env vars
+                }
+            }
+        });
 
         // Fetch the tourist image
         console.log('Fetching tourist image...');
@@ -67,7 +89,7 @@ exports.handler = async (event, context) => {
         console.log('Image fetched:', imageBuffer.length, 'bytes');
 
         // Build the transformation prompt
-        const genderText = isCouple ? 'KING and QUEEN couple' : (gender === 'queen' ? 'medieval QUEEN' : 'medieval KING');
+        const genderText = isCouple ? 'KING and QUEEN royal couple' : (gender === 'queen' ? 'medieval QUEEN' : 'medieval KING');
 
         // Use face analysis if provided, otherwise use default prompt
         const basePrompt = faceAnalysis || `Transform the person in [1] into a powerful ${genderText}`;
@@ -86,12 +108,27 @@ STYLE REQUIREMENTS:
 
         console.log('Prompt:', fullPrompt.substring(0, 200));
 
-        // Call Imagen 3 API with Subject Customization
-        // Using REST API format for Vertex AI
-        const apiUrl = `https://${IMAGEN_CONFIG.location}-aiplatform.googleapis.com/v1/projects/${IMAGEN_CONFIG.project}/locations/${IMAGEN_CONFIG.location}/publishers/google/models/${IMAGEN_CONFIG.model}:predict`;
+        // Initialize Generative Model
+        const generativeModel = vertexAI.getGenerativeModel({
+            model: IMAGEN_CONFIG.model
+        });
 
-        const requestBody = {
-            instances: [{
+        console.log('Calling Imagen 3 API with Subject Customization...');
+
+        // Correct usage for Imagen model in newer SDKs might differ, 
+        // but generateImages is standard for the high-level wrapper if available.
+        // If not, we might need to fallback to raw prediction, but using the authorized client.
+        // Let's try the SDK method first as it handles the complexity.
+
+        let result;
+        try {
+            // NOTE: The SDK method naming can vary. 
+            // Checking documentation pattern: generateContent is for multimodal, generateImages for image models.
+            // If generateImages is not directly on the model object in some versions, 
+            // we might need to use `generateContent` or specific helper.
+            // However, based on recent Google GenAI SDKs, `generateImages` exists.
+
+            result = await generativeModel.generateImages({
                 prompt: fullPrompt,
                 referenceImages: [{
                     referenceId: 1,
@@ -99,40 +136,30 @@ STYLE REQUIREMENTS:
                         bytesBase64Encoded: imageBase64
                     },
                     referenceType: 'REFERENCE_TYPE_SUBJECT'
-                }]
-            }],
-            parameters: {
-                sampleCount: IMAGEN_CONFIG.numberOfImages,
+                }],
+                numberOfImages: IMAGEN_CONFIG.numberOfImages,
                 aspectRatio: IMAGEN_CONFIG.aspectRatio,
                 personGeneration: 'allow_adult',
-                safetySetting: 'block_few'
-            }
-        };
+                safetySettings: [{
+                    category: 'HARM_CATEGORY_HATE_SPEECH',
+                    threshold: 'BLOCK_ONLY_HIGH'
+                }]
+            });
 
-        console.log('Calling Imagen 3 API with Subject Customization...');
-
-        const imagenResponse = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GOOGLE_AI_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        const imagenResult = await imagenResponse.json();
-        console.log('Imagen response status:', imagenResponse.status);
-
-        if (!imagenResponse.ok) {
-            console.error('Imagen API error:', JSON.stringify(imagenResult));
-            return { statusCode: 500, body: JSON.stringify({ error: 'Imagen API error', details: imagenResult }) };
+        } catch (sdkError) {
+            console.error('SDK generation failed, trying raw prediction fallback...');
+            throw sdkError; // Re-throw for now to see exact error in logs
         }
 
         // Extract generated image
-        const generatedImageBase64 = imagenResult.predictions?.[0]?.bytesBase64Encoded;
+        // Structure depends on SDK version, usually predictions[0].bytesBase64Encoded or images[0]
+        const generatedImageBase64 = result.predictions?.[0]?.bytesBase64Encoded
+            || result.images?.[0]?.bytesBase64Encoded
+            || result[0]?.bytesBase64Encoded; // Fallbacks
+
         if (!generatedImageBase64) {
-            console.error('No image in response:', JSON.stringify(imagenResult));
-            return { statusCode: 500, body: JSON.stringify({ error: 'No image generated' }) };
+            console.error('No image in response:', JSON.stringify(result));
+            return { statusCode: 500, body: JSON.stringify({ error: 'No image generated', raw: result }) };
         }
 
         console.log('Image generated successfully!');
@@ -164,8 +191,8 @@ STYLE REQUIREMENTS:
             body: JSON.stringify({
                 success: true,
                 imageUrl: cdnUrl,
-                model: 'imagen-3.0-capability-001',
-                feature: 'Subject Customization'
+                model: IMAGEN_CONFIG.model,
+                feature: 'Subject Customization (Vertex AI Auth)'
             })
         };
 

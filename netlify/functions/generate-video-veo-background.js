@@ -90,10 +90,14 @@ exports.handler = async (event, context) => {
 
         // Add face identity preservation instruction to prompt
         const faceIdentityInstruction = "MAINTAIN EXACT FACIAL IDENTITY: The person's face must remain consistent and recognizable throughout. Preserve exact facial features, bone structure, and likeness from the source image.";
-        const enhancedPrompt = `${faceIdentityInstruction} ${videoPrompt}`;
+
+        // Add 1080p quality suffix (Reddit/Forum trick to force higher quality rendering)
+        const qualitySuffix = "1080p, native resolution, high detail, sharp facial features, cinematic quality";
+
+        const enhancedPrompt = `${faceIdentityInstruction} ${videoPrompt} ${qualitySuffix}`;
 
         // Negative prompt to prevent face issues
-        const negativePrompt = "face morphing, face melting, changing facial features, distorted face, blurry face, different person, identity change, warped features, ugly, deformed, disfigured, bad anatomy, wrong proportions";
+        const negativePrompt = "face morphing, face melting, changing facial features, distorted face, blurry face, different person, identity change, warped features, ugly, deformed, disfigured, bad anatomy, wrong proportions, low quality, 720p";
 
         // Request body - using instances format with image
         // IMPORTANT: Gemini API supports: aspectRatio, negativePrompt, resolution
@@ -107,7 +111,8 @@ exports.handler = async (event, context) => {
             }],
             parameters: {
                 aspectRatio: VEO_CONFIG.defaultAspectRatio,
-                negativePrompt: negativePrompt
+                negativePrompt: negativePrompt,
+                resolution: "1080p"
                 // Note: Audio is automatically included in Veo 3.1
             }
         };

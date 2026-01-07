@@ -20,7 +20,7 @@ const fetch = require('node-fetch');
 const IMAGEN_CONFIG = {
     location: 'us-central1',
     model: 'imagen-3.0-capability-001',
-    aspectRatio: '9:16',
+    aspectRatio: '16:9', // Optimized for video background
     numberOfImages: 1
 };
 // ============================================================================
@@ -81,9 +81,12 @@ exports.handler = async (event, context) => {
         const token = accessToken.token;
         console.log('Auth successful (token obtained)');
 
-        // 4. Construct Prompt
-        const genderText = isCouple ? 'KING and QUEEN royal couple' : (gender === 'queen' ? 'medieval QUEEN' : 'medieval KING');
-        const basePrompt = faceAnalysis || `Transform the person in [1] into a powerful ${genderText}`;
+        // 4. Construct Prompt (Singular for Subject Customization)
+        // Subject Customization works best with 1-to-1 mapping
+        const targetRole = gender === 'queen' ? 'QUEEN' : 'KING';
+        // Ensure we refer to "the person in [1]"
+        const basePrompt = faceAnalysis || `Transform the person in [1] into a powerful Game of Thrones ${targetRole}`;
+
         const fullPrompt = `${basePrompt}
         
 STYLE REQUIREMENTS:
@@ -95,7 +98,7 @@ STYLE REQUIREMENTS:
 - Professional cinematic photography
 - Sharp facial features with defined edges`;
 
-        // 5. Build Request Payload (Subject Customization)
+        // 5. Build Request Payload
         console.log('Calling Imagen 3 REST API...');
         const endpoint = `https://${IMAGEN_CONFIG.location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/${IMAGEN_CONFIG.location}/publishers/google/models/${IMAGEN_CONFIG.model}:predict`;
 

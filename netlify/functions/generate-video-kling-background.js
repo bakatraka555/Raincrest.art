@@ -16,7 +16,7 @@ const { getVideoPrompt } = require('./prompts');
 // CONFIGURATION
 // ============================================================================
 const KLING_CONFIG = {
-    // Replicate model version
+    // Replicate model
     model: 'kwaivgi/kling-v2.6',
 
     // Duration: 5 or 10 seconds
@@ -26,10 +26,7 @@ const KLING_CONFIG = {
     aspect_ratio: '9:16',
 
     // Enable audio generation (adds to cost)
-    with_audio: true,
-
-    // Pro mode for better quality
-    mode: 'pro'
+    generate_audio: true
 };
 // ============================================================================
 
@@ -84,14 +81,12 @@ exports.handler = async (event, context) => {
                 'Prefer': 'wait'
             },
             body: JSON.stringify({
-                model: KLING_CONFIG.model,
                 input: {
-                    image: imageUrl,
+                    start_image: imageUrl,
                     prompt: videoPrompt,
                     duration: KLING_CONFIG.duration,
                     aspect_ratio: KLING_CONFIG.aspect_ratio,
-                    with_audio: KLING_CONFIG.with_audio,
-                    mode: KLING_CONFIG.mode,
+                    generate_audio: KLING_CONFIG.generate_audio,
                     negative_prompt: "face morphing, face melting, distorted face, blurry face, different person, ugly, deformed"
                 }
             })

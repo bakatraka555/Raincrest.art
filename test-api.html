@@ -681,7 +681,7 @@
                     log('Step 2: Generating image with Imagen 3 (Subject Customization)...');
                     document.getElementById('loadingText').textContent = 'Creating 4K image with face lock...';
 
-                    const imagen3Response = await fetch('/.netlify/functions/generate-image-imagen3', {
+                    const imagen3Response = await fetch('/.netlify/functions/generate-image-imagen3-background', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

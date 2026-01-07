@@ -333,13 +333,13 @@
                 <div class="api-label">🎯 Kling Direct</div>
                 <div class="api-desc">Gemini+Kling (NO IMG)</div>
             </div>
-            <div class="api-option" data-api="gemini2-kling">
-                <div class="api-label">⚡ Gemini 2.0</div>
-                <div class="api-desc">Flash Gen + Kling</div>
-            </div>
-            <div class="api-option" data-api="face-first">
-                <div class="api-label">🎭 Face-First</div>
+            <div class="api-option" data-api="face-first-kling">
+                <div class="api-label">🎭 Face+Kling</div>
                 <div class="api-desc">Crop+Nano+Kling</div>
+            </div>
+            <div class="api-option" data-api="face-first-veo">
+                <div class="api-label">⚡ Face+Veo</div>
+                <div class="api-desc">Crop+Nano+Veo</div>
             </div>
             <div class="api-option" data-api="imagen3-kling">
                 <div class="api-label">🚀 Imagen+Kling</div>
@@ -933,13 +933,14 @@
                     if (!result) throw new Error('Kling video timed out');
                     log(`✅ Full pipeline completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
-                } else if (selectedApi === 'face-first') {
-                    // 🎭 FACE-FIRST PIPELINE (Crop + Nano Banana + Kling in ONE background function)
-                    const jobId = `facefirst-${Date.now()}`;
+                } else if (selectedApi === 'face-first-kling' || selectedApi === 'face-first-veo') {
+                    // 🎭 FACE-FIRST PIPELINE (Crop + Nano Banana + Kling/Veo)
+                    const videoModel = selectedApi === 'face-first-veo' ? 'veo' : 'kling';
+                    const jobId = `facefirst-${videoModel}-${Date.now()}`;
                     const outputFilename = `videos/facefirst-${jobId}.mp4`;
                     const videoCdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
 
-                    log('Starting Face-First Pipeline (Background)...');
+                    log(`Starting Face-First Pipeline with ${videoModel.toUpperCase()}...`);
                     document.getElementById('loadingText').textContent = 'Face detection + Transform + Animate...';
 
                     // Call the unified background function
@@ -952,15 +953,17 @@
                             isCouple,
                             gender,
                             jobId,
-                            outputFilename
+                            outputFilename,
+                            videoModel // 'kling' or 'veo'
                         })
                     });
 
                     log(`Background function started (status: ${faceFirstResponse.status})`);
 
                     // Poll for video completion
+                    const maxAttempts = videoModel === 'veo' ? 180 : 300; // Veo is faster than Kling
                     let videoAttempts = 0;
-                    while (videoAttempts < 300) { // 10 minutes max (face detection + transform + video)
+                    while (videoAttempts < maxAttempts) {
                         await new Promise(r => setTimeout(r, 2000));
                         videoAttempts++;
                         try {
@@ -972,14 +975,16 @@
                             }
                         } catch (e) { }
 
-                        const phase = videoAttempts < 30 ? 'Face detection...' :
-                            videoAttempts < 90 ? 'Style transfer...' :
-                                'Rendering video...';
+                        let phase = 'Processing...';
+                        if (videoAttempts < 30) phase = 'Face detection...';
+                        else if (videoAttempts < 90) phase = 'Style transfer...';
+                        else phase = `Rendering video (${videoModel})...`;
+
                         document.getElementById('loadingText').textContent = `${phase} (${videoAttempts * 2}s)`;
                         if (videoAttempts % 30 === 0) log(`Still processing... (${videoAttempts * 2}s)`);
                     }
 
-                    if (!result) throw new Error('Face-First pipeline timed out');
+                    if (!result) throw new Error(`Face-First ${videoModel} pipeline timed out`);
                     log(`✅ Face-First Pipeline completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
                 } else if (selectedApi === 'veo') {

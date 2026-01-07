@@ -3,15 +3,15 @@
  * 
  * FACE-FIRST HIGH-FIDELITY PIPELINE
  * 
- * Step 1: Face Detection (Gemini 1.5 Pro Vision)
+ * Step 1: Face Detection (Gemini 1.5 Flash - Robust Fallback)
  * Step 2: Smart Crop (Sharp) with 20% margin
  * Step 3: Style Transfer (Nano Banana Pro on Replicate)
- * Step 4: Animation (Kling 2.6 on Replicate)
+ * Step 4: Animation (Kling 2.6 or Veo 3.1)
  * 
  * This solves the "melting face" issue by:
  * - Cropping face from ORIGINAL high-res image
- * - Sending ONLY the high-quality face to Nano Banana
- * - Kling receives already-transformed image (no mid-video morphing)
+ * - Sending ONLY the high-quality face to Nano Banana (GoT Style)
+ * - Animating the ALREADY transformed face (no morphing)
  */
 
 // GoogleGenerativeAI SDK removed in favor of direct REST API for better compatibility
@@ -41,10 +41,12 @@ exports.handler = async (event, context) => {
     try {
         const body = JSON.parse(event.body || '{}');
         const { imageUrl, templateId, isCouple, gender, jobId, outputFilename } = body;
+        const videoModel = body.videoModel || 'kling'; // 'kling' or 'veo'
 
         console.log('Job:', jobId);
         console.log('Template:', templateId);
         console.log('Gender:', gender);
+        console.log('Video Model:', videoModel);
 
         // Validation
         if (!imageUrl || !jobId) {
@@ -77,11 +79,11 @@ exports.handler = async (event, context) => {
         console.log(`Original dimensions: ${metadata.width}x${metadata.height}`);
 
         // =====================================================================
-        // STEP 2: Face Detection with Gemini 1.5 Pro (Direct REST API)
+        // STEP 2: Face Detection with Gemini 1.5 Flash (Direct REST API)
         // =====================================================================
-        console.log('STEP 2: Detecting face with Gemini 1.5 Pro...');
+        console.log('STEP 2: Detecting face with Gemini 1.5 Flash...');
 
-        // Using gemini-1.5-flash-latest as a final attempt, but wrapped in valid try-catch for fallback
+        // Using gemini-1.5-flash-latest for reliability
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
         let faceBox;
@@ -113,7 +115,6 @@ Return ONLY the JSON, no other text or explanation.`;
             });
 
             if (!geminiResponse.ok) {
-                // Log warning but DO NOT THROW. Fallback to center crop.
                 console.warn(`Gemini API Warning: ${geminiResponse.status} - ${await geminiResponse.text()}`);
                 throw new Error('Gemini API request failed');
             }
@@ -242,7 +243,7 @@ Return ONLY the JSON, no other text or explanation.`;
         const transformedImageUrl = Array.isArray(nanoOutput) ? nanoOutput[0] : nanoOutput;
         console.log('Transformed image:', transformedImageUrl);
 
-        // Download and re-upload to Bunny (for Kling)
+        // Download and re-upload to Bunny (for Animation)
         const transformedResponse = await fetch(transformedImageUrl);
         const transformedBuffer = Buffer.from(await transformedResponse.arrayBuffer());
 
@@ -259,64 +260,141 @@ Return ONLY the JSON, no other text or explanation.`;
         console.log('Transformed uploaded to:', transformedCdnUrl);
 
         // =====================================================================
-        // STEP 5: Animation with Kling 2.6
+        // STEP 5: Animation (Kling 2.6 or Veo 3.1)
         // =====================================================================
-        console.log('STEP 5: Animating with Kling 2.6...');
+        console.log(`STEP 5: Animating with ${videoModel.toUpperCase()}...`);
 
-        const klingPrompt = `Subtle cinematic animation. Gentle hair movement in breeze. Slight chest breathing. Eyes shift naturally. Majestic royal presence. Remain still and regal. No drastic movements.`;
+        let videoUrl = null;
 
-        const klingResponse = await fetch(
-            `https://api.replicate.com/v1/models/${CONFIG.klingModel}/predictions`,
-            {
+        if (videoModel === 'veo') {
+            // --- VEO 3.1 IMPLEMENTATION ---
+            // Uses Google Gemini/Vertex API
+            const veoUrl = `https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-fast-generate-preview:predictLongRunning?key=${GOOGLE_AI_API_KEY}`;
+
+            // For Veo, we use the TRANSFORMED image (Game of Thrones style)
+            // But we need to fetch it as base64 first because Veo endpoint needs inline data
+            // We already have transformedBuffer!
+            const transformedBase64 = transformedBuffer.toString('base64');
+
+            const veoPrompt = `Cinematic shot of this character in Game of Thrones. Subtle movement, breathing, looking majestic. High quality, 4k.`;
+
+            const veoResponse = await fetch(veoUrl, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    input: {
-                        start_image: transformedCdnUrl,
-                        prompt: klingPrompt,
-                        duration: CONFIG.klingDuration,
-                        aspect_ratio: CONFIG.klingAspectRatio,
-                        mode: 'professional',
-                        negative_prompt: 'face morphing, face melting, distorted face, different person'
+                    instances: [{
+                        prompt: veoPrompt,
+                        image: {
+                            bytesBase64Encoded: transformedBase64,
+                            mimeType: 'image/jpeg'
+                        }
+                    }],
+                    parameters: {
+                        sampleCount: 1,
+                        negativePrompt: 'morphing, distortion, low quality'
                     }
                 })
-            }
-        );
-
-        const klingPrediction = await klingResponse.json();
-        console.log('Kling started:', klingPrediction.id);
-
-        // Poll for Kling completion
-        let videoUrl = null;
-        for (let i = 0; i < 180; i++) { // Max 6 minutes
-            await new Promise(r => setTimeout(r, 2000));
-
-            const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${klingPrediction.id}`, {
-                headers: { 'Authorization': `Bearer ${REPLICATE_API_TOKEN}` }
             });
-            const status = await statusResponse.json();
 
-            if (status.status === 'succeeded') {
-                videoUrl = status.output;
-                break;
-            } else if (status.status === 'failed') {
-                throw new Error('Kling failed: ' + status.error);
+            if (!veoResponse.ok) throw new Error(`Veo API Error: ${veoResponse.status} - ${await veoResponse.text()}`);
+
+            const veoResult = await veoResponse.json();
+            const operationName = veoResult.name; // "projects/.../operations/..."
+            console.log('Veo operation started:', operationName);
+
+            // Poll Veo
+            const operationUrl = `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${GOOGLE_AI_API_KEY}`;
+            for (let i = 0; i < 90; i++) { // Max 3 mins
+                await new Promise(r => setTimeout(r, 2000));
+                const opResp = await fetch(operationUrl);
+                const opJson = await opResp.json();
+
+                if (opJson.done) {
+                    // Check for error inside operation
+                    if (opJson.error) throw new Error(`Veo failed: ${opJson.error.message}`);
+
+                    // Robust response parsing (matching standalone function)
+                    if (opJson.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri) {
+                        videoUrl = opJson.response.generateVideoResponse.generatedSamples[0].video.uri;
+                    } else if (opJson.response?.generatedVideos?.[0]?.video?.uri) {
+                        videoUrl = opJson.response.generatedVideos[0].video.uri;
+                    } else if (opJson.response?.videoUri) {
+                        videoUrl = opJson.response.videoUri;
+                    } else if (opJson.response?.result?.videoUri) {
+                        videoUrl = opJson.response.result.videoUri;
+                    }
+
+                    if (!videoUrl) {
+                        console.error('Veo Response Dump:', JSON.stringify(opJson));
+                        throw new Error('No video URI found in Veo response');
+                    }
+
+                    break;
+                }
             }
 
-            if (i % 15 === 0) console.log(`Kling rendering... (${i * 2}s)`);
+        } else {
+            // --- KLING 2.6 IMPLEMENTATION ---
+            const klingPrompt = `Subtle cinematic animation. Gentle hair movement in breeze. Slight chest breathing. Eyes shift naturally. Majestic royal presence. Remain still and regal. No drastic movements.`;
+
+            const klingResponse = await fetch(
+                `https://api.replicate.com/v1/models/${CONFIG.klingModel}/predictions`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        input: {
+                            start_image: transformedCdnUrl,
+                            prompt: klingPrompt,
+                            duration: CONFIG.klingDuration,
+                            aspect_ratio: CONFIG.klingAspectRatio,
+                            mode: 'professional',
+                            negative_prompt: 'face morphing, face melting, distorted face, different person'
+                        }
+                    })
+                }
+            );
+
+            const klingPrediction = await klingResponse.json();
+            console.log('Kling started:', klingPrediction.id);
+
+            // Poll for Kling completion
+            for (let i = 0; i < 180; i++) { // Max 6 minutes
+                await new Promise(r => setTimeout(r, 2000));
+
+                const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${klingPrediction.id}`, {
+                    headers: { 'Authorization': `Bearer ${REPLICATE_API_TOKEN}` }
+                });
+                const status = await statusResponse.json();
+
+                if (status.status === 'succeeded') {
+                    videoUrl = Array.isArray(status.output) ? status.output[0] : status.output;
+                    break;
+                } else if (status.status === 'failed') {
+                    throw new Error('Kling failed: ' + status.error);
+                }
+
+                if (i % 15 === 0) console.log(`Kling rendering... (${i * 2}s)`);
+            }
         }
 
         if (!videoUrl) {
-            throw new Error('Kling timed out');
+            throw new Error(`Video generation (${videoModel}) timed out or failed`);
         }
 
         console.log('Video generated:', videoUrl);
 
         // Download and upload video to Bunny
-        const videoResponse = await fetch(videoUrl);
+        const downloadOptions = {};
+        if (videoModel === 'veo') {
+            // Veo download requires API key header
+            downloadOptions.headers = { 'x-goog-api-key': GOOGLE_AI_API_KEY };
+            downloadOptions.redirect = 'follow';
+        }
+        const videoResponse = await fetch(videoUrl, downloadOptions);
         const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
 
         const videoFilename = outputFilename || `videos/facefirst-${jobId}.mp4`;

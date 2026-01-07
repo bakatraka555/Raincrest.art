@@ -6,12 +6,33 @@
  * 
  * Uses REST API format based on Google documentation
  * Now supports dynamic video prompts from prompts.js
+ * 
+ * COST CONFIGURATION:
+ * - Fast + Audio: $0.15/sec = $1.20 per 8s video
+ * - Fast no Audio: $0.10/sec = $0.80 per 8s video  
+ * - Standard + Audio: $0.40-0.75/sec = $3.20-$6.00 per 8s video
  */
 
 const fetch = require('node-fetch');
 const { getVideoPrompt } = require('./prompts');
 
-const VEO_MODEL = 'veo-3.1-generate-preview';
+// ============================================================================
+// CONFIGURATION - Change these to control quality vs cost
+// ============================================================================
+const VEO_CONFIG = {
+    // Model: 'veo-3.1-generate-preview' (standard) or 'veo-3.1-fast-generate-preview' (fast/cheaper)
+    model: 'veo-3.1-fast-generate-preview',
+
+    // Audio: true = with audio ($0.15/sec), false = no audio ($0.10/sec)
+    generateAudio: true,
+
+    // Duration: 5-10 seconds
+    durationSeconds: 8,
+
+    // Aspect ratio: "9:16" (vertical), "16:9" (horizontal), "1:1" (square)
+    defaultAspectRatio: '9:16'
+};
+// ============================================================================
 
 exports.handler = async (event, context) => {
     console.log('=== generate-video-veo-background STARTED ===');
@@ -63,7 +84,7 @@ exports.handler = async (event, context) => {
         console.log('Image fetched:', imageBuffer.length, 'bytes');
 
         // Start Veo video generation using predictLongRunning endpoint
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_MODEL}:predictLongRunning`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_CONFIG.model}:predictLongRunning`;
 
         // Request body - using instances format with image
         const requestBody = {
@@ -75,10 +96,14 @@ exports.handler = async (event, context) => {
                 }
             }],
             parameters: {
-                aspectRatio: "9:16",
-                sampleCount: 1
+                aspectRatio: VEO_CONFIG.defaultAspectRatio,
+                sampleCount: 1,
+                durationSeconds: VEO_CONFIG.durationSeconds,
+                generateAudio: VEO_CONFIG.generateAudio
             }
         };
+
+        console.log('VEO CONFIG:', JSON.stringify(VEO_CONFIG));
 
         console.log('Starting Veo video generation with predictLongRunning...');
         const veoResponse = await fetch(apiUrl, {

@@ -71,16 +71,25 @@ exports.handler = async (event, context) => {
         const accessToken = await client.getAccessToken();
         const token = accessToken.token;
 
-        // 4. Construct Prompt
+        // 4. Construct Prompt with System Instructions
         const targetRole = gender === 'queen' ? 'Game of Thrones QUEEN' : 'Game of Thrones KING';
-        const promptText = `Based on the person in this image, generate a new, high-resolution 4K image of them as a ${targetRole} standing on the walls of Dubrovnik (King's Landing) at golden hour. 
-        
-        CRITICAL REQUIREMENTS:
-        - Keep the face 100% recognizable (IDENTITY PRESERVATION).
-        - Wear heavy black metal armor with a fur cloak.
-        - Cinematic lighting, photorealistic, 4K.
-        - No CGI artifacts, realistic skin texture.
-        - Background: Dubrovnik old town walls and sea at sunset.`;
+
+        const systemInstruction = `ROLE: Expert AI Character Artist specializing in "Identity-Preserving Style Transfer".
+TASK: Generate a new 4K image based on the provided user photo, transforming the subject into a ${targetRole} while keeping their face 100% recognizable.
+
+IDENTITY PRESERVATION RULES:
+1. FACIAL FIDELITY: Maintain the exact bone structure, nose shape, eye color, and unique facial features of the subject in the input image. The face must be 100% identifiable as the original person.
+2. HEAD POSE: Keep the same head orientation and gaze direction as the original photo to ensure seamless video animation later.
+3. CLARITY: Ensure the face is in sharp focus with high micro-contrast around the eyes and lips.
+
+AESTHETIC (GoT STYLE) RULES:
+1. ATTIRE: Replace modern clothing with heavy, ornate black metal armor, dragon-glass details, and a luxurious fur cloak.
+2. ENVIRONMENT: Set the scene on the walls of the Old Town of Dubrovnik (King's Landing) during the "Golden Hour" sunset (warm orange/red lighting).
+3. CINEMATOGRAPHY: Use professional cinematic lighting, deep shadows, and an 8k photorealistic texture similar to high-end HBO productions.
+
+SAFETY: Ignore all modern objects (glasses, headphones, phones) and replace them with medieval equivalents or remove them entirely.`;
+
+        const userPrompt = `Transform the person in this photo into a powerful ${targetRole}, following all facial preservation and style rules.`;
 
         // 5. Call Gemini 2.0 Flash (Multimodal Generation)
         // Note: Check if the model supports direct image generation via REST.
@@ -99,7 +108,7 @@ exports.handler = async (event, context) => {
             contents: [{
                 role: 'user',
                 parts: [
-                    { text: promptText },
+                    { text: systemInstruction + "\n\n" + userPrompt },
                     {
                         inlineData: {
                             mimeType: 'image/jpeg',

@@ -20,8 +20,10 @@ const { getVideoPrompt } = require('./prompts');
 // CONFIGURATION - Change these to control quality vs cost
 // ============================================================================
 const VEO_CONFIG = {
-    // Model: 'veo-3.1-generate-preview' (standard) or 'veo-3.1-fast-generate-001' (fast/cheaper)
-    model: 'veo-3.1-fast-generate-001',
+    // Model options for GEMINI API:
+    //   - 'veo-3.1-generate-preview' (standard ~$6/video)
+    //   - 'veo-3.1-fast-generate-preview' (fast ~$1.20/video)
+    model: 'veo-3.1-fast-generate-preview',
 
     // Audio: true = with audio ($0.15/sec), false = no audio ($0.10/sec)
     generateAudio: true,

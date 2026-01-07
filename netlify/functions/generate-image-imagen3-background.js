@@ -113,7 +113,7 @@ STYLE REQUIREMENTS:
                 sampleCount: IMAGEN_CONFIG.numberOfImages,
                 aspectRatio: IMAGEN_CONFIG.aspectRatio,
                 personGeneration: 'allow',
-                safetySetting: 'block_none',
+                safetySetting: 'block_only_high',
                 outputMimeType: 'image/jpeg'
             }
         };

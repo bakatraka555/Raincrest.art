@@ -20,8 +20,8 @@ const { getVideoPrompt } = require('./prompts');
 // CONFIGURATION - Change these to control quality vs cost
 // ============================================================================
 const VEO_CONFIG = {
-    // Model: 'veo-3.1-generate-preview' (standard) or 'veo-3.1-fast-generate-preview' (fast/cheaper)
-    model: 'veo-3.1-fast-generate-preview',
+    // Model: 'veo-3.1-generate-preview' (standard) or 'veo-3.1-fast-generate-001' (fast/cheaper)
+    model: 'veo-3.1-fast-generate-001',
 
     // Audio: true = with audio ($0.15/sec), false = no audio ($0.10/sec)
     generateAudio: true,

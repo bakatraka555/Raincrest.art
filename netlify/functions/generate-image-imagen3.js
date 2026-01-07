@@ -102,21 +102,23 @@ STYLE REQUIREMENTS:
         const requestBody = {
             instances: [{
                 prompt: fullPrompt,
-                referenceImages: [{
-                    referenceId: 1,
-                    referenceImage: {
-                        bytesBase64Encoded: imageBase64
-                    },
-                    referenceType: 'REFERENCE_TYPE_SUBJECT'
-                }]
+                image: {
+                    bytesBase64Encoded: imageBase64
+                }
             }],
             parameters: {
                 sampleCount: IMAGEN_CONFIG.numberOfImages,
                 aspectRatio: IMAGEN_CONFIG.aspectRatio,
-                personGeneration: 'allow_adult',
-                safetySetting: 'block_few'
+                personGeneration: 'allow',
+                safetySetting: 'block_none',
+                outputMimeType: 'image/jpeg'
             }
         };
+
+        // Debug Log Payload (without massive base64)
+        const debugBody = JSON.parse(JSON.stringify(requestBody));
+        debugBody.instances[0].image.bytesBase64Encoded = '...truncated...';
+        console.log('Request Payload:', JSON.stringify(debugBody, null, 2));
 
         const imagenResponse = await fetch(endpoint, {
             method: 'POST',

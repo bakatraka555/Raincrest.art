@@ -319,7 +319,11 @@
             </div>
             <div class="api-option" data-api="veo">
                 <div class="api-label">🎬 Veo 3.1</div>
-                <div class="api-desc">VIDEO (5 sec)</div>
+                <div class="api-desc">VIDEO ($0.56)</div>
+            </div>
+            <div class="api-option" data-api="kling">
+                <div class="api-label">🎬 Kling 2.6</div>
+                <div class="api-desc">VIDEO ($0.35)</div>
             </div>
         </div>
 
@@ -742,6 +746,99 @@
                     }
 
                     log(`✅ Video completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
+
+                } else if (selectedApi === 'kling') {
+                    // 🎬 KLING 2.6 VIDEO GENERATION (via Replicate)
+                    const jobId = `kling-${Date.now()}`;
+                    const outputFilename = `videos/${jobId}.mp4`;
+                    const cdnUrl = `https://raincrest-cdn.b-cdn.net/${outputFilename}`;
+
+                    // First, we need a generated image to animate
+                    log('Step 1: Generating image with Gemini...');
+                    document.getElementById('loadingText').textContent = 'Creating base image...';
+
+                    // Generate image first
+                    const bgImageResponse = await fetch('/.netlify/functions/generate-image-gemini-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId: `img-${jobId}`,
+                            outputFilename: `generated/img-${jobId}.jpg`
+                        })
+                    });
+
+                    log('Image generation started, waiting...');
+                    const generatedImageUrl = `https://raincrest-cdn.b-cdn.net/generated/img-${jobId}.jpg`;
+
+                    // Wait for image
+                    let imageReady = false;
+                    for (let i = 0; i < 90; i++) {  // 90 * 2s = 3 minutes
+                        await new Promise(r => setTimeout(r, 2000));
+                        try {
+                            const check = await fetch(generatedImageUrl, { method: 'HEAD' });
+                            if (check.ok) {
+                                imageReady = true;
+                                break;
+                            }
+                        } catch (e) { }
+                        document.getElementById('loadingText').textContent = `Creating image... (${(i + 1) * 2}s)`;
+                    }
+
+                    if (!imageReady) {
+                        throw new Error('Image generation timed out');
+                    }
+
+                    log('✅ Image ready! Step 2: Generating video with Kling 2.6...');
+                    document.getElementById('loadingText').textContent = 'Creating video with Kling 2.6 (this takes 1-2 min)...';
+
+                    // Start Kling video generation
+                    const klingResponse = await fetch('/.netlify/functions/generate-video-kling-background', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageUrl: generatedImageUrl,
+                            templateId,
+                            isCouple,
+                            gender,
+                            jobId,
+                            outputFilename
+                        })
+                    });
+
+                    log(`Kling video generation started (status: ${klingResponse.status})`);
+
+                    // Poll for video
+                    let attempts = 0;
+                    const maxAttempts = 180; // 6 minutes
+
+                    while (attempts < maxAttempts) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        attempts++;
+
+                        try {
+                            const checkResponse = await fetch(cdnUrl, { method: 'HEAD' });
+                            if (checkResponse.ok) {
+                                log(`✅ Video ready after ${attempts * 2}s`);
+                                result = { success: true, videoUrl: cdnUrl, isVideo: true };
+                                break;
+                            }
+                        } catch (e) { }
+
+                        document.getElementById('loadingText').textContent = `Rendering video... (${attempts * 2}s)`;
+                        if (attempts % 15 === 0) {
+                            log(`Still rendering video... (${attempts * 2}s)`);
+                        }
+                    }
+
+                    if (!result) {
+                        throw new Error('Video generation timed out');
+                    }
+
+                    log(`✅ Kling video completed in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
                 } else {
                     // Call Replicate API (async pattern)

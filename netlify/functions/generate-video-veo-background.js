@@ -88,31 +88,18 @@ exports.handler = async (event, context) => {
         // Start Veo video generation using predictLongRunning endpoint
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${VEO_CONFIG.model}:predictLongRunning`;
 
-        // Add face identity preservation instruction to prompt
-        const faceIdentityInstruction = "MAINTAIN EXACT FACIAL IDENTITY: The person's face must remain consistent and recognizable throughout. Preserve exact facial features, bone structure, and likeness from the source image.";
-
-        // Add 1080p quality suffix (Reddit/Forum trick to force higher quality rendering)
-        const qualitySuffix = "1080p, native resolution, high detail, sharp facial features, cinematic quality";
-
-        const enhancedPrompt = `${faceIdentityInstruction} ${videoPrompt} ${qualitySuffix}`;
-
-        // Negative prompt to prevent face issues
-        const negativePrompt = "face morphing, face melting, changing facial features, distorted face, blurry face, different person, identity change, warped features, ugly, deformed, disfigured, bad anatomy, wrong proportions, low quality, 720p";
-
         // Request body - using instances format with image
-        // IMPORTANT: Gemini API supports: aspectRatio, negativePrompt, resolution
+        // IMPORTANT: Gemini API supports: aspectRatio, negativePrompt
         const requestBody = {
             instances: [{
-                prompt: enhancedPrompt,
+                prompt: videoPrompt,
                 image: {
                     bytesBase64Encoded: imageBase64,
                     mimeType: imageMimeType
                 }
             }],
             parameters: {
-                aspectRatio: VEO_CONFIG.defaultAspectRatio,
-                negativePrompt: negativePrompt,
-                resolution: "1080p"
+                aspectRatio: VEO_CONFIG.defaultAspectRatio
                 // Note: Audio is automatically included in Veo 3.1
             }
         };

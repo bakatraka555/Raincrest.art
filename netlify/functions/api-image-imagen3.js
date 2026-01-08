@@ -2,28 +2,31 @@
  * api-image-imagen3.js
  * 
  * Google Vertex AI Imagen 3 for TEXT-TO-IMAGE generation.
- * Model: imagen-3.0-generate-001
+ * Based on official docs: https://cloud.google.com/vertex-ai/generative-ai/docs/image/generate-images
  * 
+ * Model: imagen-3.0-generate-002
  * COST: ~$0.03 per image (uses Google Cloud credits)
  * 
- * Required Environment Variables (already configured in Netlify):
+ * Required Environment Variables:
  * - GOOGLE_CLOUD_PROJECT: Your Google Cloud Project ID
  * - GOOGLE_SERVICE_ACCOUNT_EMAIL: Service account email
  * - GOOGLE_PRIVATE_KEY: Service account private key (PEM format)
+ * - GOOGLE_CLOUD_LOCATION: Region (default: us-central1)
  * 
  * Parameters:
  * - prompt: Text description of image to generate
- * - aspectRatio: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 9:16)
+ * - aspectRatio: 1:1, 3:4, 4:3, 9:16, 16:9 (default: 9:16)
  * - numberOfImages: 1-4 (default: 1)
  */
 
 const fetch = require('node-fetch');
 const crypto = require('crypto');
 
-const IMAGEN_MODEL = 'imagen-3.0-generate-001';
+// Latest Imagen 3 model per Google docs
+const IMAGEN_MODEL = 'imagen-3.0-generate-002';
 
 // Generate JWT for Service Account authentication
-function createJWT(serviceAccountEmail, privateKey, projectId) {
+function createJWT(serviceAccountEmail, privateKey) {
     const now = Math.floor(Date.now() / 1000);
     const expiry = now + 3600; // 1 hour
 
@@ -35,9 +38,10 @@ function createJWT(serviceAccountEmail, privateKey, projectId) {
     const payload = {
         iss: serviceAccountEmail,
         sub: serviceAccountEmail,
-        aud: 'https://aiplatform.googleapis.com/',
+        aud: 'https://oauth2.googleapis.com/token',
         iat: now,
-        exp: expiry
+        exp: expiry,
+        scope: 'https://www.googleapis.com/auth/cloud-platform'
     };
 
     const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
@@ -94,6 +98,7 @@ exports.handler = async (event, context) => {
         } = body;
 
         console.log('=== api-image-imagen3 (Vertex AI) START ===');
+        console.log('Model:', IMAGEN_MODEL);
         console.log('Prompt:', prompt?.substring(0, 100));
         console.log('Aspect Ratio:', aspectRatio);
         console.log('Number of Images:', numberOfImages);
@@ -131,19 +136,35 @@ exports.handler = async (event, context) => {
         const accessToken = await getAccessToken(GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY);
         console.log('Access token obtained');
 
-        // Build Vertex AI Imagen 3 request
+        // Build Vertex AI Imagen 3 request (per official docs)
+        // https://cloud.google.com/vertex-ai/generative-ai/docs/image/generate-images
         const requestBody = {
-            instances: [{ prompt: prompt }],
+            instances: [{
+                prompt: prompt
+            }],
             parameters: {
                 sampleCount: Math.min(Math.max(parseInt(numberOfImages) || 1, 1), 4),
-                aspectRatio: aspectRatio
+                aspectRatio: aspectRatio,
+                // Enable prompt enhancement for better quality
+                enhancePrompt: true,
+                // Allow adult person generation (required for portraits)
+                personGeneration: 'allow_adult',
+                // Medium safety filter (balanced)
+                safetySetting: 'block_medium_and_above',
+                // Enable watermark
+                addWatermark: true,
+                // Output as PNG
+                outputOptions: {
+                    mimeType: 'image/png'
+                }
             }
         };
 
-        // Vertex AI Imagen 3 endpoint
+        // Vertex AI Imagen 3 endpoint (per official docs)
         const apiUrl = `https://${GOOGLE_CLOUD_LOCATION}-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/${GOOGLE_CLOUD_LOCATION}/publishers/google/models/${IMAGEN_MODEL}:predict`;
 
         console.log('Calling Vertex AI Imagen 3...');
+        console.log('Endpoint:', apiUrl);
         console.log('Cost estimate: $' + (0.03 * requestBody.parameters.sampleCount).toFixed(2));
 
         const imagenResponse = await fetch(apiUrl, {
@@ -170,6 +191,7 @@ exports.handler = async (event, context) => {
         const imagenResult = JSON.parse(responseText);
 
         // Extract generated images from Vertex AI response
+        // Response format: { predictions: [{ bytesBase64Encoded: "...", mimeType: "..." }] }
         const generatedImages = [];
 
         if (imagenResult.predictions && Array.isArray(imagenResult.predictions)) {
@@ -208,7 +230,7 @@ exports.handler = async (event, context) => {
         }
 
         if (generatedImages.length === 0) {
-            console.error('No images generated');
+            console.error('No images generated. Response:', JSON.stringify(imagenResult).substring(0, 500));
             return { statusCode: 500, headers, body: JSON.stringify({ error: 'No images generated', details: 'Imagen 3 returned no predictions' }) };
         }
 

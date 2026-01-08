@@ -290,7 +290,7 @@
                         </button>
                         <button type="button" class="btn" id="mode-imagen3" onclick="setImageMode('imagen3')"
                             style="flex: 1; padding: 12px;">
-                            ✨ Imagen 3 (txt2img)<br><small style="color: #fbbf24;">$0.03/img</small>
+                            ✨ Gemini Flash (txt2img)<br><small style="color: #4ade80;">FREE</small>
                         </button>
                     </div>
                 </div>
@@ -303,20 +303,12 @@
                     </div>
                 </div>
 
-                <!-- IMAGEN 3 MODE: Number of Images -->
+                <!-- GEMINI FLASH MODE: Text-to-Image -->
                 <div id="imagen3-section" style="display: none;">
-                    <div class="form-group">
-                        <label>Number of Images</label>
-                        <select id="zoneA-num-images">
-                            <option value="1" selected>1 image ($0.03)</option>
-                            <option value="2">2 images ($0.06)</option>
-                            <option value="3">3 images ($0.09)</option>
-                            <option value="4">4 images ($0.12)</option>
-                        </select>
-                    </div>
                     <div
-                        style="background: #3b2f0a; border: 1px solid #fbbf24; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
-                        <span style="color: #fbbf24;">⚠️ Imagen 3 is NOT free - $0.03 per image</span>
+                        style="background: #0a3b2a; border: 1px solid #4ade80; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                        <span style="color: #4ade80;">🆓 Gemini 2.0 Flash - Text-to-Image is FREE!</span><br>
+                        <small style="color: #888;">No reference image needed. Just describe what you want.</small>
                     </div>
                 </div>
 
@@ -493,14 +485,14 @@
 
             // Update label
             const label = document.getElementById('zoneA-model-label');
-            label.textContent = mode === 'gemini' ? 'Gemini 3 Pro (img2img) - FREE' : 'Imagen 3 (txt2img) - $0.03/img';
-            label.style.color = mode === 'gemini' ? '#4ade80' : '#fbbf24';
+            label.textContent = mode === 'gemini' ? 'Gemini 3 Pro (img2img) - FREE' : 'Gemini 2.0 Flash (txt2img) - FREE';
+            label.style.color = '#4ade80'; // Both are FREE!
 
             // Update button text
             const btn = document.getElementById('zoneA-btn');
-            btn.textContent = mode === 'gemini' ? 'Generate Base Image 🎨' : 'Generate with Imagen 3 ✨';
+            btn.textContent = mode === 'gemini' ? 'Generate Base Image 🎨' : 'Generate from Text ✨';
 
-            // Update prompt placeholder for Imagen 3
+            // Update prompt placeholder for text-to-image mode
             const promptBox = document.getElementById('zoneA-prompt-preview');
             if (mode === 'imagen3') {
                 promptBox.placeholder = 'Describe the image you want to generate... Be detailed about style, lighting, composition.';
@@ -509,7 +501,7 @@
                 }
             }
 
-            log(`Mode switched to: ${mode === 'gemini' ? 'Gemini (FREE)' : 'Imagen 3 ($0.03/img)'}`, 'info');
+            log(`Mode switched to: ${mode === 'gemini' ? 'Gemini 3 Pro (img2img)' : 'Gemini Flash (txt2img)'} - FREE!`, 'success');
         }
 
         // FULL DETAILED PROMPTS (from prompts.js)
@@ -752,13 +744,10 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
 
             btn.disabled = true;
 
-            // ============ IMAGEN 3 MODE (Text-to-Image) ============
+            // ============ GEMINI FLASH MODE (Text-to-Image) ============
             if (currentImageMode === 'imagen3') {
-                const numImages = document.getElementById('zoneA-num-images').value;
-                const cost = (0.03 * parseInt(numImages)).toFixed(2);
-
-                btn.innerText = `Generating... (Imagen 3 - $${cost})`;
-                log(`Starting Imagen 3 Gen... (${aspectRatio}, ${numImages} images, ~$${cost})`, 'warning');
+                btn.innerText = "Generating... (Gemini Flash)";
+                log(`Starting FREE Text-to-Image Gen... (${aspectRatio})`, 'info');
 
                 try {
                     const res = await fetch(API_BASE + '/.netlify/functions/api-image-imagen3', {
@@ -766,33 +755,26 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             prompt: customPrompt,
-                            aspectRatio: aspectRatio,
-                            numberOfImages: parseInt(numImages)
+                            aspectRatio: aspectRatio
                         })
                     });
 
                     const data = await res.json();
                     if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
 
-                    // Show all generated images
-                    let imagesHtml = '';
-                    if (data.images && data.images.length > 0) {
-                        data.images.forEach((url, i) => {
-                            imagesHtml += `<img src="${url}" style="max-width: ${100 / data.images.length}%; margin: 2px;">`;
-                        });
-                    }
-                    document.getElementById('zoneA-result').innerHTML = imagesHtml || `<img src="${data.imageUrl}">`;
+                    // Show generated image
+                    document.getElementById('zoneA-result').innerHTML = `<img src="${data.imageUrl}">`;
 
                     generatedImageUrl = data.imageUrl;
                     document.getElementById('zoneB-source-url').value = generatedImageUrl;
 
-                    log(`✅ Imagen 3 Generated ${data.images?.length || 1} image(s)! Cost: ${data.cost}`, 'success');
+                    log(`✅ Text-to-Image Generated! Model: ${data.model} (${data.cost})`, 'success');
 
                 } catch (e) {
-                    log(`Imagen 3 Error: ${e.message}`, 'error');
+                    log(`Gemini Flash Error: ${e.message}`, 'error');
                 } finally {
                     btn.disabled = false;
-                    btn.innerText = "Generate with Imagen 3 ✨";
+                    btn.innerText = "Generate from Text ✨";
                 }
                 return;
             }

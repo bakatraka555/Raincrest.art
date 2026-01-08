@@ -1,20 +1,19 @@
 /**
  * api-image-imagen3.js
  * 
- * Google Imagen 3 API for TEXT-TO-IMAGE generation.
- * Model: imagen-3.0-generate-002
- * 
- * COST: $0.03 per image (NOT FREE!)
+ * Google Gemini 2.0 Flash for TEXT-TO-IMAGE generation.
+ * Model: gemini-2.0-flash-exp-image-generation (FREE!)
  * 
  * Parameters:
  * - prompt: Text description of image to generate
  * - aspectRatio: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 9:16)
- * - numberOfImages: 1-4 (default: 1)
+ * - numberOfImages: 1 (model generates 1 at a time)
  */
 
 const fetch = require('node-fetch');
 
-const IMAGEN_MODEL = 'imagen-3.0-generate-002';
+// Using Gemini 2.0 Flash for image generation (FREE and available!)
+const IMAGEN_MODEL = 'gemini-2.0-flash-exp-image-generation';
 
 exports.handler = async (event, context) => {
     const headers = {
@@ -35,10 +34,9 @@ exports.handler = async (event, context) => {
             numberOfImages = 1
         } = body;
 
-        console.log('=== api-image-imagen3 START ===');
+        console.log('=== api-image-imagen3 (Gemini 2.0 Flash) START ===');
         console.log('Prompt:', prompt?.substring(0, 100));
         console.log('Aspect Ratio:', aspectRatio);
-        console.log('Number of Images:', numberOfImages);
 
         // Validation
         if (!prompt || prompt.trim().length < 3) {
@@ -58,20 +56,24 @@ exports.handler = async (event, context) => {
             return { statusCode: 500, headers, body: JSON.stringify({ error: 'GOOGLE_AI_API_KEY not configured' }) };
         }
 
-        // Build Imagen 3 request
+        // Build Gemini 2.0 Flash request for image generation
         const requestBody = {
-            instances: [{ prompt: prompt }],
-            parameters: {
-                sampleCount: Math.min(Math.max(parseInt(numberOfImages) || 1, 1), 4),
-                aspectRatio: aspectRatio
+            contents: [{
+                parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+                responseModalities: ["IMAGE"],
+                imageConfig: {
+                    aspectRatio: aspectRatio
+                }
             }
         };
 
-        // Call Imagen 3 API
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:predict?key=${GOOGLE_AI_API_KEY}`;
+        // Call Gemini 2.0 Flash Image Generation API
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
 
-        console.log('Calling Imagen 3 API...');
-        console.log('Cost estimate: $' + (0.03 * requestBody.parameters.sampleCount).toFixed(2));
+        console.log('Calling Gemini 2.0 Flash Image Gen API...');
+        console.log('This is FREE! 🆓');
 
         const imagenResponse = await fetch(apiUrl, {
             method: 'POST',
@@ -80,74 +82,73 @@ exports.handler = async (event, context) => {
         });
 
         const responseText = await imagenResponse.text();
-        console.log('Imagen 3 status:', imagenResponse.status);
+        console.log('Gemini status:', imagenResponse.status);
 
         if (!imagenResponse.ok) {
-            console.error('Imagen 3 error:', responseText.substring(0, 500));
+            console.error('Gemini error:', responseText.substring(0, 500));
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'Imagen 3 API error', details: responseText.substring(0, 300) })
+                body: JSON.stringify({ error: 'Gemini API error', details: responseText.substring(0, 300) })
             };
         }
 
-        const imagenResult = JSON.parse(responseText);
+        const geminiResult = JSON.parse(responseText);
 
-        // Extract generated images
-        const generatedImages = [];
+        // Extract generated image from Gemini format (candidates[].content.parts[].inlineData)
+        let generatedImageBase64 = null;
+        let generatedMimeType = 'image/png';
 
-        if (imagenResult.predictions && Array.isArray(imagenResult.predictions)) {
-            for (let i = 0; i < imagenResult.predictions.length; i++) {
-                const prediction = imagenResult.predictions[i];
-                if (prediction.bytesBase64Encoded) {
-                    const imageBase64 = prediction.bytesBase64Encoded;
-                    const mimeType = prediction.mimeType || 'image/png';
-
-                    // Upload to BunnyCDN
-                    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
-                    const filename = `playground/imagen3-${Date.now()}-${i}.${ext}`;
-                    const uploadUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`;
-                    const imageBuffer = Buffer.from(imageBase64, 'base64');
-
-                    console.log(`Uploading image ${i + 1}:`, filename, imageBuffer.length, 'bytes');
-
-                    const uploadResponse = await fetch(uploadUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'AccessKey': BUNNY_API_KEY,
-                            'Content-Type': mimeType
-                        },
-                        body: imageBuffer
-                    });
-
-                    if (uploadResponse.ok || uploadResponse.status === 201) {
-                        const cdnUrl = `https://${BUNNY_CDN_DOMAIN}/${filename}`;
-                        generatedImages.push(cdnUrl);
-                        console.log(`✅ Image ${i + 1} uploaded:`, cdnUrl);
-                    } else {
-                        console.error(`Failed to upload image ${i + 1}:`, uploadResponse.status);
-                    }
+        if (geminiResult.candidates?.[0]?.content?.parts) {
+            for (const part of geminiResult.candidates[0].content.parts) {
+                if (part.inlineData) {
+                    generatedImageBase64 = part.inlineData.data;
+                    generatedMimeType = part.inlineData.mimeType || 'image/png';
+                    break;
                 }
             }
         }
 
-        if (generatedImages.length === 0) {
-            console.error('No images generated');
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'No images generated' }) };
+        if (!generatedImageBase64) {
+            console.error('No image in Gemini response');
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'No image generated' }) };
         }
 
-        console.log('✅ SUCCESS! Generated', generatedImages.length, 'images');
+        // Upload to BunnyCDN
+        const ext = generatedMimeType.includes('jpeg') ? 'jpg' : 'png';
+        const filename = `playground/txt2img-${Date.now()}.${ext}`;
+        const uploadUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`;
+        const imageBuffer = Buffer.from(generatedImageBase64, 'base64');
+
+        console.log('Uploading image:', filename, imageBuffer.length, 'bytes');
+
+        const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+                'AccessKey': BUNNY_API_KEY,
+                'Content-Type': generatedMimeType
+            },
+            body: imageBuffer
+        });
+
+        if (!uploadResponse.ok && uploadResponse.status !== 201) {
+            console.error('Bunny upload failed:', uploadResponse.status);
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'CDN upload failed' }) };
+        }
+
+        const cdnUrl = `https://${BUNNY_CDN_DOMAIN}/${filename}`;
+        console.log('✅ SUCCESS! Image at:', cdnUrl);
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                images: generatedImages,
-                imageUrl: generatedImages[0], // First image for compatibility
+                images: [cdnUrl],
+                imageUrl: cdnUrl,
                 model: IMAGEN_MODEL,
-                cost: '$' + (0.03 * generatedImages.length).toFixed(2),
-                settings: { aspectRatio, numberOfImages: generatedImages.length }
+                cost: 'FREE',
+                settings: { aspectRatio }
             })
         };
 

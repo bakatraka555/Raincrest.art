@@ -316,7 +316,42 @@
                         <option value="1:1">⬜ 1:1 (Square - Instagram)</option>
                         <option value="16:9">🖥️ 16:9 (Landscape - Desktop)</option>
                         <option value="4:5">📸 4:5 (Portrait - Instagram Feed)</option>
+                        <option value="4:3">📺 4:3 (Classic)</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Resolution</label>
+                    <select id="zoneA-resolution">
+                        <option value="1K">1K (Fast)</option>
+                        <option value="2K" selected>2K (Balanced)</option>
+                        <option value="4K">4K (High Quality)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label>Output Format</label>
+                        <select id="zoneA-format" style="width: 100%;">
+                            <option value="png" selected>PNG (Best Quality)</option>
+                            <option value="jpeg">JPEG (Smaller File)</option>
+                            <option value="webp">WebP (Web Optimized)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Safety Filter</label>
+                        <select id="zoneA-safety" style="width: 100%;">
+                            <option value="block_only_high" selected>Standard</option>
+                            <option value="block_medium_and_above">Strict</option>
+                            <option value="block_none">Off (Adults Only)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div
+                    style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: center;">
+                    <span style="color: #4ade80; font-weight: bold;">🆓 FREE API</span>
+                    <span style="color: #888;"> - gemini-3-pro-image-preview (Google AI)</span>
                 </div>
 
                 <button class="btn" id="zoneA-btn" onclick="generateImage()">
@@ -638,48 +673,50 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
         async function generateImage() {
             if (!generatedImageUrl) { log('Please upload an image first!', 'error'); return; }
 
-            const templateId = document.getElementById('zoneA-template').value;
+            // Gather all parameters
             const customPrompt = document.getElementById('zoneA-prompt-preview').value;
             const aspectRatio = document.getElementById('zoneA-aspect-ratio').value;
+            const resolution = document.getElementById('zoneA-resolution').value;
+            const outputFormat = document.getElementById('zoneA-format').value;
+            const safetyFilter = document.getElementById('zoneA-safety').value;
             const btn = document.getElementById('zoneA-btn');
 
             btn.disabled = true;
-            btn.innerText = "Generating... (Nano Banana)";
-            log(`Starting Image Gen... (${aspectRatio})`);
+            btn.innerText = "Generating... (Gemini 3 Pro)";
+            log(`Starting FREE Gemini Gen... (${aspectRatio}, ${resolution}, ${outputFormat})`);
 
             try {
-                const res = await fetch(API_BASE + '/.netlify/functions/api-image-nano', {
+                const res = await fetch(API_BASE + '/.netlify/functions/api-image-gemini', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        prompt: customPrompt,
                         imageUrl: generatedImageUrl,
-                        templateId: templateId,
-                        isCouple: false, // Default for playground
-                        gender: 'king', // Default test
-                        customPrompt: customPrompt, // SEND EDITABLE TEXT
-                        aspectRatio: aspectRatio // 9:16, 1:1, 16:9, 4:5
+                        aspectRatio: aspectRatio,
+                        resolution: resolution,
+                        outputFormat: outputFormat,
+                        safetyFilterLevel: safetyFilter
                     })
                 });
 
                 const data = await res.json();
-                if (data.error) throw new Error(data.error);
+                if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
 
-                const predictionId = data.id;
-                log(`Prediction started: ${predictionId}. Polling...`);
-
-                // Poll
-                const resultUrl = await pollReplicate(predictionId);
+                // Gemini returns the URL directly (no polling needed!)
+                const resultUrl = data.imageUrl;
+                log(`✅ Image Generated! Settings: ${JSON.stringify(data.settings)}`, 'success');
 
                 // Show Result
                 document.getElementById('zoneA-result').innerHTML = `<img src="${resultUrl}">`;
 
                 // Update for next stage
-                generatedImageUrl = resultUrl; // Now the source for video is this generated image!
+                generatedImageUrl = resultUrl;
                 document.getElementById('zoneB-source-url').value = generatedImageUrl;
 
-                log('✅ Image Generation Complete!', 'success');
+                log('✅ Ready for Video Generation!', 'success');
 
             } catch (e) {
-                log(`Gen Error: ${e.message}`, 'error');
+                log(`Gemini Error: ${e.message}`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Generate Base Image 🎨";

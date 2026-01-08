@@ -713,11 +713,11 @@
         async function pollReplicate(id) {
             let attempts = 0;
             while (attempts < 60) {
-                const res = await fetch(API_BASE + `/.netlify/functions/check-prediction-status?id=${id}`);
+                const res = await fetch(API_BASE + `/.netlify/functions/check-prediction-status?predictionId=${id}`);
                 const data = await res.json();
 
-                if (data.status === 'succeeded') return data.output[0] || data.output;
-                if (data.status === 'failed') throw new Error(data.error);
+                if (data.status === 'succeeded') return data.imageUrl;
+                if (data.status === 'failed') throw new Error(data.error || 'Generation failed');
 
                 await new Promise(r => setTimeout(r, 2000));
                 attempts++;

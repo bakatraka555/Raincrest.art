@@ -1,19 +1,78 @@
 /**
  * api-image-imagen3.js
  * 
- * Google Gemini 2.0 Flash for TEXT-TO-IMAGE generation.
- * Model: gemini-2.0-flash-exp-image-generation (FREE!)
+ * Google Vertex AI Imagen 3 for TEXT-TO-IMAGE generation.
+ * Model: imagen-3.0-generate-001
+ * 
+ * COST: ~$0.03 per image (uses Google Cloud credits)
+ * 
+ * Required Environment Variables (already configured in Netlify):
+ * - GOOGLE_CLOUD_PROJECT: Your Google Cloud Project ID
+ * - GOOGLE_SERVICE_ACCOUNT_EMAIL: Service account email
+ * - GOOGLE_PRIVATE_KEY: Service account private key (PEM format)
  * 
  * Parameters:
  * - prompt: Text description of image to generate
  * - aspectRatio: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 9:16)
- * - numberOfImages: 1 (model generates 1 at a time)
+ * - numberOfImages: 1-4 (default: 1)
  */
 
 const fetch = require('node-fetch');
+const crypto = require('crypto');
 
-// Using Gemini 2.0 Flash for image generation (FREE and available!)
-const IMAGEN_MODEL = 'gemini-2.0-flash-exp-image-generation';
+const IMAGEN_MODEL = 'imagen-3.0-generate-001';
+
+// Generate JWT for Service Account authentication
+function createJWT(serviceAccountEmail, privateKey, projectId) {
+    const now = Math.floor(Date.now() / 1000);
+    const expiry = now + 3600; // 1 hour
+
+    const header = {
+        alg: 'RS256',
+        typ: 'JWT'
+    };
+
+    const payload = {
+        iss: serviceAccountEmail,
+        sub: serviceAccountEmail,
+        aud: 'https://aiplatform.googleapis.com/',
+        iat: now,
+        exp: expiry
+    };
+
+    const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+    const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const signatureInput = `${base64Header}.${base64Payload}`;
+
+    // Fix private key format (Netlify may escape newlines)
+    const fixedKey = privateKey.replace(/\\n/g, '\n');
+
+    const signature = crypto.createSign('RSA-SHA256');
+    signature.update(signatureInput);
+    const base64Signature = signature.sign(fixedKey, 'base64url');
+
+    return `${signatureInput}.${base64Signature}`;
+}
+
+// Exchange JWT for Access Token
+async function getAccessToken(serviceAccountEmail, privateKey) {
+    const jwt = createJWT(serviceAccountEmail, privateKey);
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            assertion: jwt
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(`Auth failed: ${JSON.stringify(data)}`);
+    }
+    return data.access_token;
+}
 
 exports.handler = async (event, context) => {
     const headers = {
@@ -34,9 +93,10 @@ exports.handler = async (event, context) => {
             numberOfImages = 1
         } = body;
 
-        console.log('=== api-image-imagen3 (Gemini 2.0 Flash) START ===');
+        console.log('=== api-image-imagen3 (Vertex AI) START ===');
         console.log('Prompt:', prompt?.substring(0, 100));
         console.log('Aspect Ratio:', aspectRatio);
+        console.log('Number of Images:', numberOfImages);
 
         // Validation
         if (!prompt || prompt.trim().length < 3) {
@@ -47,108 +107,123 @@ exports.handler = async (event, context) => {
             };
         }
 
-        const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
+        // Google Cloud Configuration (from existing Netlify env vars)
+        const GOOGLE_CLOUD_PROJECT = process.env.GOOGLE_CLOUD_PROJECT;
+        const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+        const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
+        const GOOGLE_CLOUD_LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+
+        // BunnyCDN for storage
         const BUNNY_API_KEY = process.env.BUNNY_API_KEY;
         const BUNNY_STORAGE_ZONE = process.env.BUNNY_STORAGE_ZONE || 'raincrest-art';
         const BUNNY_CDN_DOMAIN = process.env.BUNNY_CDN_DOMAIN || 'raincrest-cdn.b-cdn.net';
 
-        if (!GOOGLE_AI_API_KEY) {
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'GOOGLE_AI_API_KEY not configured' }) };
+        // Check required credentials
+        if (!GOOGLE_CLOUD_PROJECT) {
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'GOOGLE_CLOUD_PROJECT not configured' }) };
+        }
+        if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY) {
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Service account credentials not configured' }) };
         }
 
-        // Build Gemini 2.0 Flash request for image generation
+        // Get access token from service account
+        console.log('Getting access token from service account...');
+        const accessToken = await getAccessToken(GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY);
+        console.log('Access token obtained');
+
+        // Build Vertex AI Imagen 3 request
         const requestBody = {
-            contents: [{
-                parts: [{ text: prompt }]
-            }],
-            generationConfig: {
-                responseModalities: ["IMAGE"],
-                imageConfig: {
-                    aspectRatio: aspectRatio
-                }
+            instances: [{ prompt: prompt }],
+            parameters: {
+                sampleCount: Math.min(Math.max(parseInt(numberOfImages) || 1, 1), 4),
+                aspectRatio: aspectRatio
             }
         };
 
-        // Call Gemini 2.0 Flash Image Generation API
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGEN_MODEL}:generateContent?key=${GOOGLE_AI_API_KEY}`;
+        // Vertex AI Imagen 3 endpoint
+        const apiUrl = `https://${GOOGLE_CLOUD_LOCATION}-aiplatform.googleapis.com/v1/projects/${GOOGLE_CLOUD_PROJECT}/locations/${GOOGLE_CLOUD_LOCATION}/publishers/google/models/${IMAGEN_MODEL}:predict`;
 
-        console.log('Calling Gemini 2.0 Flash Image Gen API...');
-        console.log('This is FREE! 🆓');
+        console.log('Calling Vertex AI Imagen 3...');
+        console.log('Cost estimate: $' + (0.03 * requestBody.parameters.sampleCount).toFixed(2));
 
         const imagenResponse = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
             body: JSON.stringify(requestBody)
         });
 
         const responseText = await imagenResponse.text();
-        console.log('Gemini status:', imagenResponse.status);
+        console.log('Imagen 3 status:', imagenResponse.status);
 
         if (!imagenResponse.ok) {
-            console.error('Gemini error:', responseText.substring(0, 500));
+            console.error('Imagen 3 error:', responseText.substring(0, 500));
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'Gemini API error', details: responseText.substring(0, 300) })
+                body: JSON.stringify({ error: 'Imagen 3 API error', details: responseText.substring(0, 300) })
             };
         }
 
-        const geminiResult = JSON.parse(responseText);
+        const imagenResult = JSON.parse(responseText);
 
-        // Extract generated image from Gemini format (candidates[].content.parts[].inlineData)
-        let generatedImageBase64 = null;
-        let generatedMimeType = 'image/png';
+        // Extract generated images from Vertex AI response
+        const generatedImages = [];
 
-        if (geminiResult.candidates?.[0]?.content?.parts) {
-            for (const part of geminiResult.candidates[0].content.parts) {
-                if (part.inlineData) {
-                    generatedImageBase64 = part.inlineData.data;
-                    generatedMimeType = part.inlineData.mimeType || 'image/png';
-                    break;
+        if (imagenResult.predictions && Array.isArray(imagenResult.predictions)) {
+            for (let i = 0; i < imagenResult.predictions.length; i++) {
+                const prediction = imagenResult.predictions[i];
+                if (prediction.bytesBase64Encoded) {
+                    const imageBase64 = prediction.bytesBase64Encoded;
+                    const mimeType = prediction.mimeType || 'image/png';
+
+                    // Upload to BunnyCDN
+                    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
+                    const filename = `playground/imagen3-${Date.now()}-${i}.${ext}`;
+                    const uploadUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`;
+                    const imageBuffer = Buffer.from(imageBase64, 'base64');
+
+                    console.log(`Uploading image ${i + 1}:`, filename, imageBuffer.length, 'bytes');
+
+                    const uploadResponse = await fetch(uploadUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'AccessKey': BUNNY_API_KEY,
+                            'Content-Type': mimeType
+                        },
+                        body: imageBuffer
+                    });
+
+                    if (uploadResponse.ok || uploadResponse.status === 201) {
+                        const cdnUrl = `https://${BUNNY_CDN_DOMAIN}/${filename}`;
+                        generatedImages.push(cdnUrl);
+                        console.log(`✅ Image ${i + 1} uploaded:`, cdnUrl);
+                    } else {
+                        console.error(`Failed to upload image ${i + 1}:`, uploadResponse.status);
+                    }
                 }
             }
         }
 
-        if (!generatedImageBase64) {
-            console.error('No image in Gemini response');
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'No image generated' }) };
+        if (generatedImages.length === 0) {
+            console.error('No images generated');
+            return { statusCode: 500, headers, body: JSON.stringify({ error: 'No images generated', details: 'Imagen 3 returned no predictions' }) };
         }
 
-        // Upload to BunnyCDN
-        const ext = generatedMimeType.includes('jpeg') ? 'jpg' : 'png';
-        const filename = `playground/txt2img-${Date.now()}.${ext}`;
-        const uploadUrl = `https://storage.bunnycdn.com/${BUNNY_STORAGE_ZONE}/${filename}`;
-        const imageBuffer = Buffer.from(generatedImageBase64, 'base64');
-
-        console.log('Uploading image:', filename, imageBuffer.length, 'bytes');
-
-        const uploadResponse = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-                'AccessKey': BUNNY_API_KEY,
-                'Content-Type': generatedMimeType
-            },
-            body: imageBuffer
-        });
-
-        if (!uploadResponse.ok && uploadResponse.status !== 201) {
-            console.error('Bunny upload failed:', uploadResponse.status);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'CDN upload failed' }) };
-        }
-
-        const cdnUrl = `https://${BUNNY_CDN_DOMAIN}/${filename}`;
-        console.log('✅ SUCCESS! Image at:', cdnUrl);
+        console.log('✅ SUCCESS! Generated', generatedImages.length, 'images');
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                images: [cdnUrl],
-                imageUrl: cdnUrl,
+                images: generatedImages,
+                imageUrl: generatedImages[0],
                 model: IMAGEN_MODEL,
-                cost: 'FREE',
-                settings: { aspectRatio }
+                cost: '$' + (0.03 * generatedImages.length).toFixed(2),
+                settings: { aspectRatio, numberOfImages: generatedImages.length }
             })
         };
 

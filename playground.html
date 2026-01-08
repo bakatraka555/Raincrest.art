@@ -307,8 +307,7 @@
                 <div id="imagen3-section" style="display: none;">
                     <div
                         style="background: #0a3b2a; border: 1px solid #4ade80; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
-                        <span style="color: #4ade80;">🆓 Gemini 2.0 Flash - Text-to-Image is FREE!</span><br>
-                        <small style="color: #888;">No reference image needed. Just describe what you want.</small>
+                        <small style="color: #888;">High quality photorealistic text-to-image generation.</small>
                     </div>
                 </div>
 
@@ -485,12 +484,12 @@
 
             // Update label
             const label = document.getElementById('zoneA-model-label');
-            label.textContent = mode === 'gemini' ? 'Gemini 3 Pro (img2img) - FREE' : 'Gemini 2.0 Flash (txt2img) - FREE';
-            label.style.color = '#4ade80'; // Both are FREE!
+            label.textContent = mode === 'gemini' ? 'Gemini 3 Pro (img2img) - FREE' : 'Imagen 3 (txt2img) - $0.03/img';
+            label.style.color = mode === 'gemini' ? '#4ade80' : '#fbbf24';
 
             // Update button text
             const btn = document.getElementById('zoneA-btn');
-            btn.textContent = mode === 'gemini' ? 'Generate Base Image 🎨' : 'Generate from Text ✨';
+            btn.textContent = mode === 'gemini' ? 'Generate Base Image 🎨' : 'Generate with Imagen 3 ✨';
 
             // Update prompt placeholder for text-to-image mode
             const promptBox = document.getElementById('zoneA-prompt-preview');
@@ -501,7 +500,7 @@
                 }
             }
 
-            log(`Mode switched to: ${mode === 'gemini' ? 'Gemini 3 Pro (img2img)' : 'Gemini Flash (txt2img)'} - FREE!`, 'success');
+            log(`Mode switched to: ${mode === 'gemini' ? 'Gemini 3 Pro (FREE)' : 'Imagen 3 ($0.03/img)'}`, mode === 'gemini' ? 'success' : 'warning');
         }
 
         // FULL DETAILED PROMPTS (from prompts.js)
@@ -744,10 +743,13 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
 
             btn.disabled = true;
 
-            // ============ GEMINI FLASH MODE (Text-to-Image) ============
+            // ============ IMAGEN 3 MODE (Text-to-Image - $0.03/img) ============
             if (currentImageMode === 'imagen3') {
-                btn.innerText = "Generating... (Gemini Flash)";
-                log(`Starting FREE Text-to-Image Gen... (${aspectRatio})`, 'info');
+                const numImages = document.getElementById('zoneA-num-images').value;
+                const cost = (0.03 * parseInt(numImages)).toFixed(2);
+
+                btn.innerText = `Generating... (Imagen 3 - $${cost})`;
+                log(`Starting Imagen 3 Gen... (${aspectRatio}, ${numImages} images, ~$${cost})`, 'warning');
 
                 try {
                     const res = await fetch(API_BASE + '/.netlify/functions/api-image-imagen3', {
@@ -755,26 +757,33 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             prompt: customPrompt,
-                            aspectRatio: aspectRatio
+                            aspectRatio: aspectRatio,
+                            numberOfImages: parseInt(numImages)
                         })
                     });
 
                     const data = await res.json();
                     if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
 
-                    // Show generated image
-                    document.getElementById('zoneA-result').innerHTML = `<img src="${data.imageUrl}">`;
+                    // Show all generated images
+                    let imagesHtml = '';
+                    if (data.images && data.images.length > 0) {
+                        data.images.forEach((url, i) => {
+                            imagesHtml += `<img src="${url}" style="max-width: ${100 / data.images.length}%; margin: 2px;">`;
+                        });
+                    }
+                    document.getElementById('zoneA-result').innerHTML = imagesHtml || `<img src="${data.imageUrl}">`;
 
                     generatedImageUrl = data.imageUrl;
                     document.getElementById('zoneB-source-url').value = generatedImageUrl;
 
-                    log(`✅ Text-to-Image Generated! Model: ${data.model} (${data.cost})`, 'success');
+                    log(`✅ Imagen 3 Generated ${data.images?.length || 1} image(s)! Cost: ${data.cost}`, 'success');
 
                 } catch (e) {
-                    log(`Gemini Flash Error: ${e.message}`, 'error');
+                    log(`Imagen 3 Error: ${e.message}`, 'error');
                 } finally {
                     btn.disabled = false;
-                    btn.innerText = "Generate from Text ✨";
+                    btn.innerText = "Generate with Imagen 3 ✨";
                 }
                 return;
             }

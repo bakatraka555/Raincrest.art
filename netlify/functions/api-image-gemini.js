@@ -107,8 +107,8 @@ exports.handler = async (event, context) => {
                 responseModalities: ["IMAGE"],
                 imageConfig: {
                     aspectRatio: aspectRatio,
-                    imageSize: resolution,
-                    outputFormat: outputFormat.toUpperCase()
+                    imageSize: resolution
+                    // Note: outputFormat is NOT supported by Gemini API - image format is determined by response
                 }
             }
         };

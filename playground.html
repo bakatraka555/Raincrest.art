@@ -303,10 +303,21 @@
                     </div>
                 </div>
 
-                <!-- GEMINI FLASH MODE: Text-to-Image -->
+                <!-- IMAGEN 3 MODE: Text-to-Image (Vertex AI) -->
                 <div id="imagen3-section" style="display: none;">
+                    <div class="form-group">
+                        <label>Number of Images</label>
+                        <select id="zoneA-num-images">
+                            <option value="1" selected>1 image ($0.03)</option>
+                            <option value="2">2 images ($0.06)</option>
+                            <option value="3">3 images ($0.09)</option>
+                            <option value="4">4 images ($0.12)</option>
+                        </select>
+                    </div>
                     <div
-                        style="background: #0a3b2a; border: 1px solid #4ade80; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                        style="background: #3b2f0a; border: 1px solid #fbbf24; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                        <span style="color: #fbbf24;">⚠️ Vertex AI Imagen 3 - $0.03 per image (uses Google Cloud
+                            credits)</span><br>
                         <small style="color: #888;">High quality photorealistic text-to-image generation.</small>
                     </div>
                 </div>

@@ -303,10 +303,20 @@
 
                 <div class="form-group">
                     <label>Image Prompt (EDITABLE)</label>
-                    <textarea id="zoneA-prompt-preview" rows="6"
+                    <textarea id="zoneA-prompt-preview" rows="8"
                         style="color: #fff; background: #222;">Select a template to see logic...</textarea>
                     <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">*You can edit this! The AI will use
                         exactly what you type here.*</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Aspect Ratio</label>
+                    <select id="zoneA-aspect-ratio">
+                        <option value="9:16" selected>📱 9:16 (Portrait - Social Media)</option>
+                        <option value="1:1">⬜ 1:1 (Square - Instagram)</option>
+                        <option value="16:9">🖥️ 16:9 (Landscape - Desktop)</option>
+                        <option value="4:5">📸 4:5 (Portrait - Instagram Feed)</option>
+                    </select>
                 </div>
 
                 <button class="btn" id="zoneA-btn" onclick="generateImage()">
@@ -396,12 +406,55 @@
         // GLOBALS
         let currentImageBlob = null;
         let generatedImageUrl = null;
-        // Hardcoded generic previews because API fetch is overkill for simple test
+
+        // FULL DETAILED PROMPTS (from prompts.js)
         const TEMPLATE_PREVIEWS = {
-            'template-01': 'A high-fidelity cinematographic shot of a medieval King and Queen breaking through the fourth wall of a magical trading card. Dubrovnik Old Town background.',
-            'template-02': 'An epic wide shot of a dragon rider flying over medieval Dubrovnik at sunset. Cinematic fantasy realism, golden hour lighting.',
-            'template-03': 'A playful 3D-rendered caricature of a couple riding a cute but epic dragon. Pixar-style animation.',
-            'custom': 'Write your own prompt here... describe the scene, lighting, and style.'
+            'template-01': `SCENE: A high-fidelity cinematographic shot of a medieval King and Queen breaking through the fourth wall of a magical trading card.
+LOCATION: Dubrovnik Old Town, reimagined in a dark fantasy medieval era. No modern elements.
+STYLE: Game of Thrones aesthetic, 8k resolution, dramatic volumetric lighting.
+SPECIAL: Ensure the "Raincrest" text at the top of the card is legible and metallic. The characters should look powerful and realistic, not cartoonish. The dragon in the background should be breathing fire towards the viewer.`,
+
+            'template-02': `SCENE: An epic wide shot of a dragon rider flying over medieval Dubrovnik at sunset.
+LOCATION: Aerial view of Dubrovnik walls and the Adriatic sea. Historical wooden ships in the harbor.
+STYLE: Cinematic fantasy realism, golden hour lighting, hyper-detailed dragon scales.
+SPECIAL: The dragon must be breathing fire FORWARD. The rider sits securely on the dragon's back. IMPORTANT: The fire should NOT obscure the rider's face. The rider looks confident and heroic.`,
+
+            'template-03': `SCENE: A playful 3D-rendered caricature of a couple riding a cute but epic dragon.
+LOCATION: Stylized miniature version of Dubrovnik.
+STYLE: Pixar-style animation, vibrant colors, exaggerated head proportions (bobblehead).
+SPECIAL: Characters have large heads and small bodies. Expressions should be joyful and excited. The dragon looks friendly but impressive. Bright, warm lighting.`,
+
+            'template-09': `SCENE: The character sitting powerfully on the Iron Throne in the Great Hall of the Red Keep.
+LOCATION: King's Landing, inside the Throne Room, swords, torches, massive columns.
+STYLE: Game of Thrones cinematic, dark moody lighting, royal, intimidating, high contrast.
+SPECIAL: Sitting on the Iron Throne. Wearing royal armor/crown. Looking powerful and slightly dangerous. Lighting shafts from high windows.`,
+
+            'template-10': `SCENE: Standing atop the massive Ice Wall looking out into the dark North.
+LOCATION: The Wall, Castle Black, snow, ice, dark forest in distance, blue cold atmosphere.
+STYLE: Cinematic fantasy, cold palette (blues and whites), gritty realism, snow particles.
+SPECIAL: Wearing heavy black fur cloak (Night Watch style). Snow falling. Grim and determined expression. Holding a sword or lantern.`,
+
+            'template-11': `SCENE: Transformed into a White Walker general leading an army of the dead.
+LOCATION: Beyond the Wall, blizzard, icy wasteland, glowing blue magic eyes.
+STYLE: Dark fantasy horror, cold blue tones, glowing eyes, crystalline ice armor.
+SPECIAL: Skin is pale/icy texture. Eyes glowing bright blue. Wearing armor made of ice. Aura of cold mist. Intimidating and supernatural.`,
+
+            'template-12': `SCENE: Riding a horse in the open grass sea, shouting a battle cry.
+LOCATION: The Dothraki Sea, open plains, golden grass, blue sky, fire pit in background.
+STYLE: Epic adventure, warm earth tones, dusty, savage beauty, dynamic motion.
+SPECIAL: Wearing leather tribal gear and war paint. Muscular and wild appearance. Riding a horse (or standing next to one).`,
+
+            'template-13': `SCENE: Standing majestically with three small baby dragons climbing on shoulders/arms.
+LOCATION: Dragonstone throne room or volcanic cliffs, dramatic coastline.
+STYLE: High fantasy, Targaryen red and black, mystical, regal.
+SPECIAL: Platinum blonde hair (optional/silver wig style). Wearing Targaryen colors (black/red). Three small dragons interacting (one on shoulder, one in hand).`,
+
+            'template-14': `SCENE: An ultra-photorealistic, gritty cinematic dark fantasy illustration depicting a hardened adventurer/sellsword dynamically bursting through the frame of an ancient trading card.
+LOCATION: Dubrovnik doubling as King's Landing, Red Keep in background.
+STYLE: Ultra-photorealistic, gritty cinematic dark fantasy, dramatic golden-hour lighting.
+SPECIAL: Bursting through stone border. Debris flying. Action pose. Background is King's Landing (Dubrovnik).`,
+
+            'custom': 'Write your own prompt here... describe the scene, location, style, and special instructions.'
         };
         // FILE HANDLING & COMPRESSION
         // ---------------------------------------------------------
@@ -554,8 +607,8 @@
         // INIT
         window.addEventListener('DOMContentLoaded', () => {
             updatePromptPreview();
-            log('Playground v1.1 Initialized ⚡');
-            log('Warning: Only 3 templates found in backup. Use CUSTOM to test new ideas!', 'warning');
+            log('Playground v2.0 Initialized ⚡');
+            log('9 GoT Templates loaded. Aspect Ratio: 9:16 (Social Media) default.', 'success');
         });
 
         // LOGGING SYSTEM
@@ -587,11 +640,12 @@
 
             const templateId = document.getElementById('zoneA-template').value;
             const customPrompt = document.getElementById('zoneA-prompt-preview').value;
+            const aspectRatio = document.getElementById('zoneA-aspect-ratio').value;
             const btn = document.getElementById('zoneA-btn');
 
             btn.disabled = true;
             btn.innerText = "Generating... (Nano Banana)";
-            log(`Starting Image Gen...`);
+            log(`Starting Image Gen... (${aspectRatio})`);
 
             try {
                 const res = await fetch(API_BASE + '/.netlify/functions/api-image-nano', {
@@ -601,7 +655,8 @@
                         templateId: templateId,
                         isCouple: false, // Default for playground
                         gender: 'king', // Default test
-                        customPrompt: customPrompt // SEND EDITABLE TEXT
+                        customPrompt: customPrompt, // SEND EDITABLE TEXT
+                        aspectRatio: aspectRatio // 9:16, 1:1, 16:9, 4:5
                     })
                 });
 

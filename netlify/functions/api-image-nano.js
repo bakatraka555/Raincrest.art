@@ -13,7 +13,7 @@ exports.handler = async (event, context) => {
 
     try {
         const body = JSON.parse(event.body || '{}');
-        const { imageUrl, templateId, isCouple, gender, customPrompt } = body;
+        const { imageUrl, templateId, isCouple, gender, customPrompt, aspectRatio } = body;
 
         // 1. Generate Prompt
         // If user provided a custom prompt (from Playground), use it. otherwise generate from ID.
@@ -39,7 +39,8 @@ exports.handler = async (event, context) => {
             negative_prompt: "cartoon, confusing, blurry, watermark, low quality, deformed, ugly, bad anatomy",
             num_inference_steps: 30,
             guidance_scale: 7.5,
-            disable_safety_checker: true
+            disable_safety_checker: true,
+            aspect_ratio: aspectRatio || "9:16" // Default 9:16 for social media (vertical)
         };
 
         // Add logo if needed, but for raw image test maybe we want clean image? 

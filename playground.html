@@ -277,15 +277,50 @@
             <div class="card">
                 <div class="card-header">
                     <h3>🧬 Zone A: Image Lab</h3>
-                    <span class="zone-label">Nano Banana / Gemini 3 Pro</span>
+                    <span class="zone-label" id="zoneA-model-label">Gemini 3 Pro (img2img)</span>
                 </div>
 
+                <!-- MODE TOGGLE -->
                 <div class="form-group">
-                    <label>Reference Image (User)</label>
-                    <input type="file" id="zoneA-upload" accept="image/*">
+                    <label>Generation Mode</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn selected" id="mode-gemini" onclick="setImageMode('gemini')"
+                            style="flex: 1; padding: 12px;">
+                            🔄 Gemini (img2img)<br><small style="color: #4ade80;">FREE</small>
+                        </button>
+                        <button type="button" class="btn" id="mode-imagen3" onclick="setImageMode('imagen3')"
+                            style="flex: 1; padding: 12px;">
+                            ✨ Imagen 3 (txt2img)<br><small style="color: #fbbf24;">$0.03/img</small>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-group">
+                <!-- GEMINI MODE: Image Upload Section -->
+                <div id="gemini-section">
+                    <div class="form-group">
+                        <label>Reference Image (User)</label>
+                        <input type="file" id="zoneA-upload" accept="image/*">
+                    </div>
+                </div>
+
+                <!-- IMAGEN 3 MODE: Number of Images -->
+                <div id="imagen3-section" style="display: none;">
+                    <div class="form-group">
+                        <label>Number of Images</label>
+                        <select id="zoneA-num-images">
+                            <option value="1" selected>1 image ($0.03)</option>
+                            <option value="2">2 images ($0.06)</option>
+                            <option value="3">3 images ($0.09)</option>
+                            <option value="4">4 images ($0.12)</option>
+                        </select>
+                    </div>
+                    <div
+                        style="background: #3b2f0a; border: 1px solid #fbbf24; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                        <span style="color: #fbbf24;">⚠️ Imagen 3 is NOT free - $0.03 per image</span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="template-section">
                     <label>Template Logic</label>
                     <select id="zoneA-template" onchange="updatePromptPreview()">
                         <option value="template-01">Trading Card (Epic)</option>
@@ -441,6 +476,41 @@
         // GLOBALS
         let currentImageBlob = null;
         let generatedImageUrl = null;
+        let currentImageMode = 'gemini'; // 'gemini' or 'imagen3'
+
+        // MODE SWITCHING
+        function setImageMode(mode) {
+            currentImageMode = mode;
+
+            // Update button styles
+            document.getElementById('mode-gemini').classList.toggle('selected', mode === 'gemini');
+            document.getElementById('mode-imagen3').classList.toggle('selected', mode === 'imagen3');
+
+            // Show/hide relevant sections
+            document.getElementById('gemini-section').style.display = mode === 'gemini' ? 'block' : 'none';
+            document.getElementById('imagen3-section').style.display = mode === 'imagen3' ? 'block' : 'none';
+            document.getElementById('template-section').style.display = mode === 'gemini' ? 'block' : 'none';
+
+            // Update label
+            const label = document.getElementById('zoneA-model-label');
+            label.textContent = mode === 'gemini' ? 'Gemini 3 Pro (img2img) - FREE' : 'Imagen 3 (txt2img) - $0.03/img';
+            label.style.color = mode === 'gemini' ? '#4ade80' : '#fbbf24';
+
+            // Update button text
+            const btn = document.getElementById('zoneA-btn');
+            btn.textContent = mode === 'gemini' ? 'Generate Base Image 🎨' : 'Generate with Imagen 3 ✨';
+
+            // Update prompt placeholder for Imagen 3
+            const promptBox = document.getElementById('zoneA-prompt-preview');
+            if (mode === 'imagen3') {
+                promptBox.placeholder = 'Describe the image you want to generate... Be detailed about style, lighting, composition.';
+                if (promptBox.value.startsWith('SCENE:')) {
+                    promptBox.value = 'A photorealistic portrait of a medieval dragon rider, dramatic lighting, cinematic composition, 8k quality';
+                }
+            }
+
+            log(`Mode switched to: ${mode === 'gemini' ? 'Gemini (FREE)' : 'Imagen 3 ($0.03/img)'}`, 'info');
+        }
 
         // FULL DETAILED PROMPTS (from prompts.js)
         const TEMPLATE_PREVIEWS = {
@@ -671,19 +741,74 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
         }
 
         async function generateImage() {
-            if (!generatedImageUrl) { log('Please upload an image first!', 'error'); return; }
-
-            // Gather all parameters
             const customPrompt = document.getElementById('zoneA-prompt-preview').value;
             const aspectRatio = document.getElementById('zoneA-aspect-ratio').value;
-            const resolution = document.getElementById('zoneA-resolution').value;
-            const outputFormat = document.getElementById('zoneA-format').value;
-            const safetyFilter = document.getElementById('zoneA-safety').value;
             const btn = document.getElementById('zoneA-btn');
 
+            if (!customPrompt || customPrompt.trim().length < 3) {
+                log('Please enter a prompt (min 3 characters)!', 'error');
+                return;
+            }
+
             btn.disabled = true;
+
+            // ============ IMAGEN 3 MODE (Text-to-Image) ============
+            if (currentImageMode === 'imagen3') {
+                const numImages = document.getElementById('zoneA-num-images').value;
+                const cost = (0.03 * parseInt(numImages)).toFixed(2);
+
+                btn.innerText = `Generating... (Imagen 3 - $${cost})`;
+                log(`Starting Imagen 3 Gen... (${aspectRatio}, ${numImages} images, ~$${cost})`, 'warning');
+
+                try {
+                    const res = await fetch(API_BASE + '/.netlify/functions/api-image-imagen3', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            prompt: customPrompt,
+                            aspectRatio: aspectRatio,
+                            numberOfImages: parseInt(numImages)
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
+
+                    // Show all generated images
+                    let imagesHtml = '';
+                    if (data.images && data.images.length > 0) {
+                        data.images.forEach((url, i) => {
+                            imagesHtml += `<img src="${url}" style="max-width: ${100 / data.images.length}%; margin: 2px;">`;
+                        });
+                    }
+                    document.getElementById('zoneA-result').innerHTML = imagesHtml || `<img src="${data.imageUrl}">`;
+
+                    generatedImageUrl = data.imageUrl;
+                    document.getElementById('zoneB-source-url').value = generatedImageUrl;
+
+                    log(`✅ Imagen 3 Generated ${data.images?.length || 1} image(s)! Cost: ${data.cost}`, 'success');
+
+                } catch (e) {
+                    log(`Imagen 3 Error: ${e.message}`, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "Generate with Imagen 3 ✨";
+                }
+                return;
+            }
+
+            // ============ GEMINI MODE (Image-to-Image) ============
+            if (!generatedImageUrl) {
+                log('Please upload a reference image first!', 'error');
+                btn.disabled = false;
+                return;
+            }
+
+            const resolution = document.getElementById('zoneA-resolution').value;
+            const safetyFilter = document.getElementById('zoneA-safety').value;
+
             btn.innerText = "Generating... (Gemini 3 Pro)";
-            log(`Starting FREE Gemini Gen... (${aspectRatio}, ${resolution}, ${outputFormat})`);
+            log(`Starting FREE Gemini Gen... (${aspectRatio}, ${resolution})`, 'info');
 
             try {
                 const res = await fetch(API_BASE + '/.netlify/functions/api-image-gemini', {
@@ -694,7 +819,6 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
                         imageUrl: generatedImageUrl,
                         aspectRatio: aspectRatio,
                         resolution: resolution,
-                        outputFormat: outputFormat,
                         safetyFilterLevel: safetyFilter
                     })
                 });
@@ -702,14 +826,10 @@ SPECIAL: Bursting through stone border. Debris flying. Action pose. Background i
                 const data = await res.json();
                 if (data.error) throw new Error(data.error + (data.details ? `: ${data.details}` : ''));
 
-                // Gemini returns the URL directly (no polling needed!)
                 const resultUrl = data.imageUrl;
-                log(`✅ Image Generated! Settings: ${JSON.stringify(data.settings)}`, 'success');
+                log(`✅ Gemini Image Generated! Settings: ${JSON.stringify(data.settings)}`, 'success');
 
-                // Show Result
                 document.getElementById('zoneA-result').innerHTML = `<img src="${resultUrl}">`;
-
-                // Update for next stage
                 generatedImageUrl = resultUrl;
                 document.getElementById('zoneB-source-url').value = generatedImageUrl;
 

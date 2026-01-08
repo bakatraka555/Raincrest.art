@@ -14,35 +14,95 @@
 const templateScenes = {
   'template-01': {
     name: 'Raincrest Trading Card (King & Queen)',
-    scene: 'Ultra-photorealistic, cinematic-style illustration depicting medieval royalty dynamically bursting through the CENTERED frame of a "Raincrest" trading card. The trading card frame should be CENTERED in the image with the royal couple positioned DIRECTLY IN FRONT of the card, breaking through its center.',
-    location: 'The trading card frame is CENTERED horizontally and vertically in the image. The stone-carved border surrounds the couple symmetrically. The border is partially shattered with dimensional cracks, energy and light, scattering dust and ancient stone fragments. Inside the card (background) is MEDIEVAL Dubrovnik - Stradun street in the MEDIEVAL ERA with wooden merchant carts, torches, medieval banners, NO MODERN ELEMENTS (no cars, no modern boats, no tourists). A massive dragon breathing fire FORWARD into the stormy sky. The title "Raincrest" and subtitle "Claim Your Throne" are visible at the TOP of the card frame.',
-    style: 'Epic, Game of Thrones-style lighting emphasizing royal power. Portrait format 4:5 aspect ratio. Ultra detailed, photorealistic, 8k resolution.',
-    specialInstructions: 'CENTERED COMPOSITION: Trading card frame fills the entire image as a decorative border. The couple stands IN THE CENTER of the frame, bursting through it. Symmetrical composition. Upper body shot from head to chest, facing camera directly. Sharp focus on faces, professional portrait photography, 85mm lens, shallow depth of field.',
+    scene: 'A high-fidelity cinematographic shot of a medieval King and Queen breaking through the fourth wall of a magical trading card.',
+    location: 'Dubrovnik Old Town, reimagined in a dark fantasy medieval era. No modern elements.',
+    style: 'Game of Thrones aesthetic, 8k resolution, dramatic volumetric lighting.',
+    specialInstructions: 'Ensure the "Raincrest" text at the top of the card is legible and metallic. The characters should look powerful and realistic, not cartoonish. The dragon in the background should be breathing fire towards the viewer.',
     hasGenderVariants: true,
-    kingPrompt: 'The KING wears magnificent golden crown with jewels, regal medieval armor with red velvet cape, golden embroidery. Powerful stance, sword raised high. Majestic and commanding presence.',
-    queenPrompt: 'The QUEEN wears elegant silver tiara with sapphires, flowing royal gown in deep crimson with golden thread embroidery. Graceful yet powerful pose. Regal beauty and authority.'
+    kingPrompt: 'A powerful King in golden armor with a heavy velvet cape.',
+    queenPrompt: 'A regal Queen in a crimson gown with silver embroidery.'
   },
 
   'template-02': {
     name: 'Raincrest Dragon Rider',
-    scene: 'Ultra-photorealistic fantasy portrait of a dragon rider soaring above MEDIEVAL Dubrovnik on the back of a massive dragon. Epic clouds, fire elements, dramatic sky.',
-    location: 'High above the ancient walled city of Dubrovnik IN THE MEDIEVAL ERA. Below: wooden sailing ships, medieval galleons, NO MODERN BOATS OR YACHTS. City walls with medieval banners, torch-lit towers. Adriatic Sea with period-accurate vessels. Massive dragon with detailed scales, wings spread wide. CRITICAL: Dragon breathes fire FORWARD towards the camera, flames shooting AHEAD of the dragon, NOT towards the rider.',
-    style: 'Epic fantasy, cinematic, dramatic lighting with sunset/sunrise colors. Ultra detailed dragon scales and rider armor. 8k resolution.',
-    specialInstructions: 'Full body shot on dragon back. Rider in fantasy armor/robes suitable for dragon riding. Confident, powerful pose. Wind-swept hair and clothes. DRAGON FIRE DIRECTION: Fire shoots FORWARD from dragon mouth towards camera, creating dramatic effect. Rider is BEHIND the fire, safe from flames.',
+    scene: 'An epic wide shot of a dragon rider flying over medieval Dubrovnik at sunset.',
+    location: 'Aerial view of Dubrovnik walls and the Adriatic sea. Historical wooden ships in the harbor.',
+    style: ' Cinematic fantasy realism, golden hour lighting, hyper-detailed dragon scales.',
+    specialInstructions: 'The dragon must be breathing fire FORWARD. The rider sits securely on the dragon\'s back. IMPORTANT: The fire should NOT obscure the rider\'s face. The rider looks confident and heroic.',
     hasGenderVariants: true,
-    kingPrompt: 'Dragon KING in black and red armor with dragon motifs, riding a massive fire-breathing dragon. Dragon breathes fire FORWARD (away from rider). Commanding presence, warrior stance.',
-    queenPrompt: 'Dragon QUEEN in flowing silver and blue robes with dragon scale details, riding a majestic dragon. Dragon breathes fire FORWARD (away from rider). Ethereal beauty combined with fierce power.'
+    kingPrompt: 'A male warrior king commanding the dragon.',
+    queenPrompt: 'A female dragon queen guiding the beast.'
   },
 
   'template-03': {
-    name: 'Dragon Rider Caricature (GoT Dubrovnik)',
-    scene: '3D caricature illustration of a romantic couple riding together on a massive flying dragon, Game of Thrones dark fantasy style. Exaggerated BIG HEADS with small bodies (bobblehead proportions). Fun, playful caricature art style but with epic fantasy theme. Both waving at camera with excited expressions.',
-    location: 'Bird\'s eye view of MEDIEVAL Dubrovnik old town from above. RECOGNIZABLE: City walls, terracotta rooftops, Old Port with WOODEN SAILING SHIPS and medieval galleons (NO MODERN BOATS OR YACHTS), Lokrum island, Adriatic Sea. DARK TRANSFORMATION: Stormy dramatic sky with dark swirling clouds, twilight/dusk lighting, moody ominous atmosphere, medieval fantasy King\'s Landing vibes, mist around the city walls, burning torches on walls.',
-    style: '3D caricature with fantasy epic quality. Dynamic flying pose with sense of motion and adventure. Dramatic camera angle from slightly below. Dark dramatic sky (deep blues, purples, greys). Dragon in dark tones with fiery orange accents. Couple in rich reds and golds. Dubrovnik in warm terracotta against cool shadows.',
-    specialInstructions: 'CARICATURE BOBBLEHEAD STYLE: Big heads, small bodies, fun expressions. THE DRAGON: Massive, detailed dragon with dark black/grey scales, glowing orange/red eyes, wings spread wide in flight, FIRE BREATHING FORWARD (away from riders, towards camera), detailed scales and spines. Both people sitting together on dragon back, waving happily. Riders are SAFE behind the dragon head.',
+    name: 'Dragon Rider Caricature (Bobblehead)',
+    scene: 'A playful 3D-rendered caricature of a couple riding a cute but epic dragon.',
+    location: 'Stylized miniature version of Dubrovnik.',
+    style: 'Pixar-style animation, vibrant colors, exaggerated head proportions (bobblehead).',
+    specialInstructions: 'Characters have large heads and small bodies. Expressions should be joyful and excited. The dragon looks friendly but impressive. Bright, warm lighting.',
     hasGenderVariants: true,
-    kingPrompt: 'KING caricature: Medieval armor, red cape flowing in wind, golden crown, excited waving expression, adventurous smile.',
-    queenPrompt: 'QUEEN caricature: Royal gown in deep crimson, silver tiara, hair flowing dramatically in wind, waving happily, joyful expression.'
+    kingPrompt: 'Male character with a comically large crown and small sword.',
+    queenPrompt: 'Female character with a large tiara and flowing animated hair.'
+  },
+  'template-09': {
+    name: 'Iron Throne Ruler (King/Queen)',
+    scene: 'The character sitting powerfully on the Iron Throne in the Great Hall of the Red Keep.',
+    location: 'King\'s Landing, inside the Throne Room, swords, torches, massive columns.',
+    style: 'Game of Thrones cinematic, dark moody lighting, royal, intimidating, high contrast.',
+    specialInstructions: 'Sitting on the Iron Throne. Wearing royal armor/crown. Looking powerful and slightly dangerous. Lighting shafts from high windows.',
+    hasGenderVariants: true,
+    kingPrompt: 'A ruthless King sitting on the Iron Throne, wearing black and gold armor.',
+    queenPrompt: 'A formidable Queen sitting on the Iron Throne, wearing a structured armored gown.'
+  },
+  'template-10': {
+    name: 'Night Watch Commander (The Wall)',
+    scene: 'Standing atop the massive Ice Wall looking out into the dark North.',
+    location: 'The Wall, Castle Black, snow, ice, dark forest in distance, blue cold atmosphere.',
+    style: 'Cinematic fantasy, cold palette (blues and whites), gritty realism, snow particles.',
+    specialInstructions: 'Wearing heavy black fur cloak (Night Watch style). Snow falling. Grim and determined expression. Holding a sword or lantern.',
+    hasGenderVariants: true,
+    kingPrompt: 'Lord Commander of the Night Watch, grizzled and tough.',
+    queenPrompt: 'Female Warrior of the Night Watch, fierce and resilient.'
+  },
+  'template-11': {
+    name: 'White Walker General (Ice King/Queen)',
+    scene: 'Transformed into a White Walker general leading an army of the dead.',
+    location: 'Beyond the Wall, blizzard, icy wasteland, glowing blue magic eyes.',
+    style: 'Dark fantasy horror, cold blue tones, glowing eyes, crystalline ice armor.',
+    specialInstructions: 'Skin is pale/icy texture. Eyes glowing bright blue. Wearing armor made of ice. Aura of cold mist. Intimidating and supernatural.',
+    hasGenderVariants: true,
+    kingPrompt: 'The Night King style commander, holding an ice spear.',
+    queenPrompt: 'The Night Queen, terrifyingly beautiful usage of ice magic.'
+  },
+  'template-12': {
+    name: 'Dothraki Warlord (Open Field)',
+    scene: 'Riding a horse in the open grass sea, shouting a battle cry.',
+    location: 'The Dothraki Sea, open plains, golden grass, blue sky, fire pit in background.',
+    style: 'Epic adventure, warm earth tones, dusty, savage beauty, dynamic motion.',
+    specialInstructions: 'Wearing leather tribal gear and war paint. Muscular and wild appearance. Riding a horse (or standing next to one).',
+    hasGenderVariants: true,
+    kingPrompt: 'Khal, powerful warrior leader, shirtless with leather harness, holding arakh.',
+    queenPrompt: 'Khaleesi, fierce warrior queen, leather outfit, wind in hair.'
+  },
+  'template-13': {
+    name: 'Mother/Father of Dragons (Targaryen)',
+    scene: 'Standing majestically with three small baby dragons climbing on shoulders/arms.',
+    location: 'Dragonstone throne room or volcanic cliffs, dramatic coastline.',
+    style: 'High fantasy, Targaryen red and black, mystical, regal.',
+    specialInstructions: 'Platinum blonde hair (optional/silver wig style). Wearing Targaryen colors (black/red). Three small dragons interacting (one on shoulder, one in hand).',
+    hasGenderVariants: true,
+    kingPrompt: 'Targaryen Prince, silver hair, regal black armor, commanding dragons.',
+    queenPrompt: 'Daenerys style Dragon Queen, silver hair, elegant dress with scales.'
+  },
+  'template-14': {
+    name: 'Westeros Trading Card (Sellsword)',
+    scene: 'An ultra-photorealistic, gritty cinematic dark fantasy illustration in the style of Game of Thrones, depicting a hardened adventurer/sellsword dynamically bursting through the frame of an ancient trading card.',
+    location: 'Dubrovnik doubling as King\'s Landing, Red Keep in background.',
+    style: 'Ultra-photorealistic, gritty cinematic dark fantasy, dramatic golden-hour lighting.',
+    specialInstructions: 'Bursting through stone border. Debris flying. Action pose. Background is King\'s Landing (Dubrovnik).',
+    hasGenderVariants: true,
+    kingPrompt: 'Male Sellsword warrior, gritty, battle-worn.',
+    queenPrompt: 'Female Sellsword adventurer, nimble and fierce.'
   }
 };
 

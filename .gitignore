@@ -48,3 +48,6 @@ node_modules/
 # Backup folder (old Love Stories code)
 backup_old/
 
+
+# Local Netlify folder
+.netlify

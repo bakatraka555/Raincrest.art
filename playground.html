@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Raincrest Playground v1.1</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #111111;
+            --accent-gold: #c9a227;
+            --accent-gold-dim: rgba(201, 162, 39, 0.2);
+            --text-main: #f0f0f0;
+            --text-muted: #888;
+            --border-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--accent-gold);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- CARDS --- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+        }
+
+        .zone-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* --- FORMS --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        select,
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        textarea {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 40px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--accent-gold);
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #8b7019 0%, var(--accent-gold) 100%);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(201, 162, 39, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: white;
+            margin-top: 10px;
+        }
+
+        /* --- PREVIEWS --- */
+        .preview-area {
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .preview-area img,
+        .preview-area video {
+            max-width: 100%;
+            max-height: 400px;
+        }
+
+        /* --- RADIO SELECTOR --- */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-option {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .radio-option.selected {
+            border-color: var(--accent-gold);
+            background: var(--accent-gold-dim);
+            color: white;
+        }
+
+        /* --- LOGS --- */
+        #console-log {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-ready {
+            background: #22c55e;
+            color: black;
+        }
+
+        .status-working {
+            background: #eab308;
+            color: black;
+            animation: pulse 1s infinite;
+        }
+
+        .status-error {
+            background: #ef4444;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>⚡ Raincrest Playground v1.1</h1>
+        <p style="color: #666;">Modular Test Environment | Manual Override Enabled</p>
+    </div>
+
+    <div class="container">
+
+        <!-- LEFT COLUMN: INPUTS & IMAGE GEN -->
+        <div class="col-left">
+
+            <!-- ZONE A: IMAGE LAB -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🧬 Zone A: Image Lab</h3>
+                    <span class="zone-label">Nano Banana / Gemini 3 Pro</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Reference Image (User)</label>
+                    <input type="file" id="zoneA-upload" accept="image/*">
+                </div>
+
+                <div class="form-group">
+                    <label>Template Logic</label>
+                    <select id="zoneA-template" onchange="updatePromptPreview()">
+                        <option value="template-01">Trading Card (Epic)</option>
+                        <option value="template-02" selected>Dragon Rider (Cinematic)</option>
+                        <option value="template-03">Bobblehead (Cartoon)</option>
+                        <option value="template-09">Iron Throne Ruler (King/Queen)</option>
+                        <option value="template-10">Night Watch (The Wall)</option>
+                        <option value="template-11">White Walker General (Ice)</option>
+                        <option value="template-12">Dothraki Warlord (Open Field)</option>
+                        <option value="template-13">Mother/Father of Dragons (Targaryen)</option>
+                        <option value="template-14">Westeros Trading Card (Sellsword)</option>
+                        <option value="custom">✨ CUSTOM (Write your own)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Image Prompt (EDITABLE)</label>
+                    <textarea id="zoneA-prompt-preview" rows="6"
+                        style="color: #fff; background: #222;">Select a template to see logic...</textarea>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">*You can edit this! The AI will use
+                        exactly what you type here.*</div>
+                </div>
+
+                <button class="btn" id="zoneA-btn" onclick="generateImage()">
+                    Generate Base Image 🎨
+                </button>
+
+                <!-- RESULT A -->
+                <div class="preview-area" id="zoneA-result" style="margin-top: 20px;">
+                    <p class="text-muted">Image will appear here</p>
+                </div>
+            </div>
+
+            <!-- LOGS -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📟 System Logs</h3>
+                </div>
+                <div id="console-log"></div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: VIDEO ARENA -->
+        <div class="col-right">
+
+            <!-- ZONE B: VIDEO ARENA -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>⚔️ Zone B: Video Arena</h3>
+                    <span class="zone-label">Kling vs Veo</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Source Image URL</label>
+                    <input type="text" id="zoneB-source-url" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label>Video Prompt (Editable)</label>
+                    <textarea id="zoneB-prompt"
+                        rows="3">Cinematic slow motion, dragon breathing fire, epic lighting, 4k.</textarea>
+                    <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">*Defaults to standard loop description.
+                        Change to test creativity.*</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Veo Model Version</label>
+                    <div class="radio-group" id="veo-model-select">
+                        <div class="radio-option selected" onclick="selectVeoModel('standard')" id="veo-opt-standard">
+                            Standard (v3.1)</div>
+                        <div class="radio-option" onclick="selectVeoModel('fast')" id="veo-opt-fast">Fast (Preview)
+                        </div>
+                    </div>
+                    <input type="hidden" id="veo-model-val" value="standard">
+                </div>
+
+                <div class="form-group">
+                    <label>Launch Generation</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn" style="background: linear-gradient(135deg, #4b5563, #1f2937);"
+                            onclick="generateVideo('kling')">KLING v1</button>
+                        <button class="btn" style="background: linear-gradient(135deg, #7c3aed, #4c1d95);"
+                            onclick="generateVideo('veo')">VEO 3.1</button>
+                    </div>
+                </div>
+
+                <!-- RESULT B -->
+                <div class="preview-area" id="zoneB-result" style="margin-top: 20px; min-height: 300px;">
+                    <p class="text-muted">Video result will appear here</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // =====================================================================
+        // API CONFIGURATION
+        // Set API_BASE to production so Playground uses LIVE Netlify functions
+        // (which have access to all env vars) instead of local dev server.
+        // To test locally: change to '' (empty string)
+        // =====================================================================
+        const API_BASE = 'https://raincrest.art';  // <-- PRODUCTION MODE
+        // const API_BASE = '';  // <-- LOCAL MODE (uncomment for local dev)
+
+        // GLOBALS
+        let currentImageBlob = null;
+        let generatedImageUrl = null;
+        // Hardcoded generic previews because API fetch is overkill for simple test
+        const TEMPLATE_PREVIEWS = {
+            'template-01': 'A high-fidelity cinematographic shot of a medieval King and Queen breaking through the fourth wall of a magical trading card. Dubrovnik Old Town background.',
+            'template-02': 'An epic wide shot of a dragon rider flying over medieval Dubrovnik at sunset. Cinematic fantasy realism, golden hour lighting.',
+            'template-03': 'A playful 3D-rendered caricature of a couple riding a cute but epic dragon. Pixar-style animation.',
+            'custom': 'Write your own prompt here... describe the scene, lighting, and style.'
+        };
+        // FILE HANDLING & COMPRESSION
+        // ---------------------------------------------------------
+
+        document.getElementById('zoneA-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Preview immediately
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('zoneA-result').innerHTML = `<img src="${e.target.result}" style="opacity: 0.5">`;
+            };
+            reader.readAsDataURL(file);
+
+            log(`File selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+            // SMART STRATEGY: 
+            // 1. If < 5MB, upload original directly (No compression).
+            // 2. If > 5MB, convert to High-Quality JPEG (95%) to reduce size without resizing dimensions.
+            // This preserves 100% of facial resolution.
+
+            let fileToUpload = file;
+            if (file.size > 5 * 1024 * 1024) { // > 5MB
+                log('Image > 5MB. Converting to High-Quality JPEG (Lossless-like)...', 'warning');
+                try {
+                    // Compress with 0.95 quality, keep MAX resolution (4000px)
+                    fileToUpload = await compressImage(file, 4000, 0.95);
+                    log(`Optimized to: ${(fileToUpload.size / 1024 / 1024).toFixed(2)} MB (Original Resolution Kept)`, 'success');
+                } catch (e) {
+                    log(`Optimization failed, trying original: ${e.message}`, 'error');
+                }
+            }
+
+            // Upload 
+            currentImageBlob = fileToUpload;
+            await uploadImageDirectly(fileToUpload);
+        });
+
+        // High Quality Compression (Only if needed)
+        async function compressImage(file, maxWidth = 4000, quality = 0.95) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Only resize if MASSIVE > 4000px (standard 4k limit)
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (!blob) reject(new Error('Canvas error'));
+                            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = (e) => reject(e);
+                };
+                reader.onerror = (e) => reject(e);
+            });
+        }
+
+        // UPLOAD (Tries Direct, Falls Back to Proxy)
+        async function uploadImageDirectly(file) {
+            const btn = document.getElementById('zoneA-btn');
+            btn.disabled = true;
+            btn.innerText = "Uploading... 🚀";
+
+            const fileExt = file.name.split('.').pop() || 'jpg';
+            const filename = `playground/src-${Date.now()}.${fileExt}`;
+
+            // --- ATTEMPT 1: Direct Upload (Fastest, Bypasses Limit) ---
+            log('Trying direct CDN upload...');
+            try {
+                const authRes = await fetch(API_BASE + '/.netlify/functions/get-upload-url', {
+                    method: 'POST',
+                    body: JSON.stringify({ filename: filename })
+                });
+
+                if (!authRes.ok) throw new Error('Auth not available');
+                const authData = await authRes.json();
+                if (!authData.accessKey) throw new Error('No key provided');
+
+                const uploadRes = await fetch(authData.uploadUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'AccessKey': authData.accessKey,
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: file
+                });
+
+                if (!uploadRes.ok) throw new Error('CDN PUT failed');
+
+                generatedImageUrl = authData.cdnUrl;
+                document.getElementById('zoneB-source-url').value = generatedImageUrl;
+                log(`✅ Direct Upload Success: ${generatedImageUrl}`, 'success');
+                btn.innerText = "Generate Base Image 🎨";
+                btn.disabled = false;
+                return; // Done!
+
+            } catch (e) {
+                log(`Direct upload unavailable (${e.message}). Falling back to proxy...`, 'warning');
+            }
+
+            // --- ATTEMPT 2: Proxy Upload (Works in Dev Mode) ---
+            try {
+                const toBase64 = f => new Promise((resolve, reject) => {
+                    const r = new FileReader();
+                    r.readAsDataURL(f);
+                    r.onload = () => resolve(r.result);
+                    r.onerror = e => reject(e);
+                });
+
+                const b64 = await toBase64(file);
+
+                const res = await fetch(API_BASE + '/.netlify/functions/upload-user-image', {
+                    method: 'POST',
+                    body: JSON.stringify({ imageBase64: b64, filename: filename })
+                });
+
+                if (!res.ok) throw new Error('Proxy upload failed');
+                const data = await res.json();
+
+                generatedImageUrl = data.url;
+                document.getElementById('zoneB-source-url').value = generatedImageUrl;
+                log(`✅ Proxy Upload Success: ${generatedImageUrl}`, 'success');
+                btn.innerText = "Generate Base Image 🎨";
+                btn.disabled = false;
+
+            } catch (e) {
+                log(`Upload Error: ${e.message}`, 'error');
+                btn.innerText = "Upload Failed ❌";
+                setTimeout(() => { btn.innerText = "Generate Base Image 🎨"; btn.disabled = false; }, 3000);
+            }
+        }
+
+        // INIT
+        window.addEventListener('DOMContentLoaded', () => {
+            updatePromptPreview();
+            log('Playground v1.1 Initialized ⚡');
+            log('Warning: Only 3 templates found in backup. Use CUSTOM to test new ideas!', 'warning');
+        });
+
+        // LOGGING SYSTEM
+        function log(msg, type = 'info') {
+            const el = document.getElementById('console-log');
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f55' : (type === 'success' ? '#5f5' : (type === 'warning' ? '#fa0' : '#0f0'));
+            el.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        // --- ZONE A: IMAGE GEN ---
+
+        function updatePromptPreview() {
+            const tId = document.getElementById('zoneA-template').value;
+            const promptBox = document.getElementById('zoneA-prompt-preview');
+            // Populate with a starting point, but let user edit
+            if (promptBox.value.startsWith('Select') || promptBox.value === "") {
+                promptBox.value = TEMPLATE_PREVIEWS[tId] || "";
+            } else {
+                // Dont overwrite if user typed, unless they switch to custom? 
+                // Simple logic: Just overwrite, user can Undo.
+                promptBox.value = TEMPLATE_PREVIEWS[tId] || "";
+            }
+        }
+
+        async function generateImage() {
+            if (!generatedImageUrl) { log('Please upload an image first!', 'error'); return; }
+
+            const templateId = document.getElementById('zoneA-template').value;
+            const customPrompt = document.getElementById('zoneA-prompt-preview').value;
+            const btn = document.getElementById('zoneA-btn');
+
+            btn.disabled = true;
+            btn.innerText = "Generating... (Nano Banana)";
+            log(`Starting Image Gen...`);
+
+            try {
+                const res = await fetch(API_BASE + '/.netlify/functions/api-image-nano', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        imageUrl: generatedImageUrl,
+                        templateId: templateId,
+                        isCouple: false, // Default for playground
+                        gender: 'king', // Default test
+                        customPrompt: customPrompt // SEND EDITABLE TEXT
+                    })
+                });
+
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                const predictionId = data.id;
+                log(`Prediction started: ${predictionId}. Polling...`);
+
+                // Poll
+                const resultUrl = await pollReplicate(predictionId);
+
+                // Show Result
+                document.getElementById('zoneA-result').innerHTML = `<img src="${resultUrl}">`;
+
+                // Update for next stage
+                generatedImageUrl = resultUrl; // Now the source for video is this generated image!
+                document.getElementById('zoneB-source-url').value = generatedImageUrl;
+
+                log('✅ Image Generation Complete!', 'success');
+
+            } catch (e) {
+                log(`Gen Error: ${e.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Generate Base Image 🎨";
+            }
+        }
+
+        // --- ZONE B: VIDEO GEN ---
+
+        function selectVeoModel(type) {
+            document.getElementById('veo-model-val').value = type;
+            document.getElementById('veo-opt-standard').classList.remove('selected');
+            document.getElementById('veo-opt-fast').classList.remove('selected');
+            document.getElementById(`veo-opt-${type}`).classList.add('selected');
+            log(`Veo Model set to: ${type.toUpperCase()}`);
+        }
+
+        async function generateVideo(model) {
+            const compiledPrompt = document.getElementById('zoneB-prompt').value;
+            const sourceUrl = document.getElementById('zoneB-source-url').value;
+            const veoModelType = document.getElementById('veo-model-val').value;
+
+            if (!sourceUrl) { log('No source image for video!', 'error'); return; }
+
+            const resultZone = document.getElementById('zoneB-result');
+            resultZone.innerHTML = '<p class="status-working">Generating Video...</p>';
+
+            log(`Starting Video Gen (${model.toUpperCase()})...`);
+
+            try {
+                if (model === 'kling') {
+                    // Call Kling API
+                    const res = await fetch(API_BASE + '/.netlify/functions/api-video-kling', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            imageUrl: sourceUrl,
+                            prompt: compiledPrompt
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error);
+
+                    const predId = data.id;
+                    log(`Kling Task: ${predId}`);
+
+                    const videoUrl = await pollReplicate(predId);
+                    resultZone.innerHTML = `<video src="${videoUrl}" controls autoplay loop></video>`;
+                    log('✅ Kling Video Ready!', 'success');
+
+                } else if (model === 'veo') {
+                    // Call Veo (Bunny Polling)
+                    const jobId = `veo-${Date.now()}`;
+                    const filename = `playground/veo-${Date.now()}.mp4`;
+
+                    log(`Sending Veo Request (Model: ${veoModelType})...`);
+
+                    const res = await fetch(API_BASE + '/.netlify/functions/generate-video-veo-background', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            imageUrl: sourceUrl,
+                            prompt: compiledPrompt,
+                            jobId: jobId,
+                            outputFilename: filename,
+                            modelType: veoModelType // SEND MODEL SELECTION
+                        })
+                    });
+
+                    log('Veo Request Sent. Waiting for render (may take 2 mins)...');
+
+                    // Manual Polling for BunnyCDN file
+                    const cdnUrl = `https://raincrest-cdn.b-cdn.net/${filename}`;
+                    await pollUrl(cdnUrl);
+
+                    resultZone.innerHTML = `<video src="${cdnUrl}" controls autoplay loop></video>`;
+                    log('✅ Veo Video Ready!', 'success');
+                }
+
+            } catch (e) {
+                log(`Video Error: ${e.message}`, 'error');
+                resultZone.innerHTML = `<p class="status-error">Failed: ${e.message}</p>`;
+            }
+        }
+
+
+        // --- UTILS ---
+
+        async function pollReplicate(id) {
+            let attempts = 0;
+            while (attempts < 60) {
+                const res = await fetch(API_BASE + `/.netlify/functions/check-prediction-status?id=${id}`);
+                const data = await res.json();
+
+                if (data.status === 'succeeded') return data.output[0] || data.output;
+                if (data.status === 'failed') throw new Error(data.error);
+
+                await new Promise(r => setTimeout(r, 2000));
+                attempts++;
+            }
+            throw new Error('Timeout');
+        }
+
+        async function pollUrl(url) {
+            let attempts = 0;
+            while (attempts < 120) { // 4 mins
+                try {
+                    const res = await fetch(url, { method: 'HEAD' });
+                    if (res.ok) return url;
+                } catch (e) { }
+                await new Promise(r => setTimeout(r, 2000));
+                attempts++;
+            }
+            throw new Error('Video generation timeout');
+        }
+
+        log('Playground Initialized ⚡');
+
+    </script>
+</body>
+
+</html>
